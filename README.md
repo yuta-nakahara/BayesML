@@ -106,14 +106,12 @@ Different settings of a loss function yield different optimal estimates.
 The following packages are currently available. In this library, a probabilistic data generative model, prior distribution, posterior distribution (or approximate posterior distribution), and predictive distribution (or approximate predictive distribution) are collectively called a model.
 
 * Bernoulli model
-* Categorical model
 * Poisson model
 * Normal model
 * Multivariate normal model
 * Exponential model
 * Linear regression model
 * Autoregressive model
-* Context tree model
 
 In the future, we will add packages to deal with a mixture normal model and a hidden Markov model, which are difficult to perform exact Bayesian inference, by using variational Bayes methods.
 
