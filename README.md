@@ -36,7 +36,7 @@ The following are required.
 
 We show an example of generating data drawn according to the Bernoulli distribution and learning from them.
 
-First, we create an instance of a probabilistic data generative model. Here, the parameter $\theta$, which represents an occurrence probability of 1, is set to 0.7.
+First, we create an instance of a probabilistic data generative model. Here, the parameter `theta`, which represents an occurrence probability of 1, is set to 0.7.
 
 ``` python
 from bayesml import bernoulli
@@ -58,7 +58,7 @@ gen_model.visualize_model()
 >x4:[1 1 1 0 1 1 0 1 1 1 1 1 1 1 1 1 0 1 1 0]  
 >![bernoulli_example1](./doc/images/README_ex_img1.png)
 
-After confirming that the frequency of occurrence of 1 is around $\theta$=0.7, we generate a sample and store it to variable x.
+After confirming that the frequency of occurrence of 1 is around `theta=0.7`, we generate a sample and store it to variable `x`.
 
 ``` python
 x = model.gen_sample(sample_size=20)
@@ -78,7 +78,7 @@ learn_model.visualize_posterior()
 
 >![bernoulli_example2](./doc/images/README_ex_img2.png)
 
-After learning from the data, we can see that the density of the posterior distribution is concentrated around the true parameter $\theta$=0.7.
+After learning from the data, we can see that the density of the posterior distribution is concentrated around the true parameter `theta=0.7`.
 
 ``` python
 learn_model.update_posterior(x)
@@ -87,7 +87,9 @@ learn_model.visualize_posterior()
 
 >![bernoulli_example3](./doc/images/README_ex_img3.png)
 
-We can derive the optimal estimator under the Bayes criterion as the following procedure. First, we set a loss function, e.g., a squared-error loss, absolute-error loss, and 0-1 loss. Then, the Bayes risk function is defined by taking the expectation of the loss function with respect to the distribution of data and parameters. By minimizing the Bayes risk function, we obtain the optimal estimator under the Bayes criterion. For example, if we set a squared-error loss, the optimal estimator under the Bayes criterion of the parameter $\theta$ is the mean of the posterior distribution.
+In Bayesian decision theory, the optimal estimator under the Bayes criterion is derived as follows. First, we set a loss function, e.g., a squared-error loss, absolute-error loss, and 0-1 loss. Then, the Bayes risk function is defined by taking the expectation of the loss function with respect to the distribution of data and parameters. By minimizing the Bayes risk function, we obtain the optimal estimator under the Bayes criterion. For example, if we set a squared-error loss, the optimal estimator under the Bayes criterion of the parameter `theta` is the mean of the posterior distribution.
+
+In BayesML, the above calclulation is performed by the following methods.
 
 ``` python
 print(learn_model.estimate_params(loss='squared'))
