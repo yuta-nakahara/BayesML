@@ -12,18 +12,9 @@ from scipy.stats import gamma as ss_gamma
 from scipy.stats import nbinom as ss_nbinom
 import matplotlib.pyplot as plt
 
-import matplotlib.pyplot as plt
-import os
-import sys
-sys.path.insert(0, os.path.abspath('.'))
-
-from bayesml import base
-from bayesml._exceptions import ParameterFormatError, DataFormatError, CriteriaError, ResultWarning
-from bayesml import _check
-
-# from .. import base
-# from .._exceptions import ParameterFormatError, DataFormatError, CriteriaError, ResultWarning
-# from .. import _check
+from .. import base
+from .._exceptions import ParameterFormatError, DataFormatError, CriteriaError, ResultWarning
+from .. import _check
 
 class GenModel(base.Generative):
     """The stochastic data generative model and the prior distribution.

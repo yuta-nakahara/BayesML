@@ -2,7 +2,6 @@
 # Yuta Nakahara <yuta.nakahara@aoni.waseda.jp>
 # Yuji Iikubo <yuji-iikubo.8@fuji.waseda.jp>
 import numpy as np
-from ._exceptions import ParameterFormatError, DataFormatError, CriteriaError, ResultWarning
 
 FLOATS = list({'float128','float64','float32','float16'} & set(dir(np)) | {float})
 INTS = list({'int64','int32','int16','int8'} & set(dir(np)) | {int})
@@ -157,6 +156,3 @@ def float_vecs(val,val_name,exception_class):
             return val
     raise(exception_class(val_name + " must be a numpy.ndarray whose ndim >= 1."))
 
-if __name__ == '__main__':
-    a = np.ones([1,1,2])
-    print(pos_floats(np.ones([3,4])*(1.0e-8),'tmp',DataFormatError))

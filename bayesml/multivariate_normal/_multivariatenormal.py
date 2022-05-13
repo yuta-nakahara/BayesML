@@ -6,56 +6,6 @@
 # Keito Tajima <wool812@akane.waseda.jp>
 # Naoki Ichijo <1jonao@fuji.waseda.jp>
 # Yuta Nakahara <yuta.nakahara@aoni.waseda.jp>
-r"""
-The multivariate normal distribution with normal-wishart prior distribution.
-
-The stochastic data generative model is as follows:
-
-* :math:`x \in \mathbb{R}^degree`: a data point
-* :math:`\bm{\mu} \in \mathbb{R}^degree`: a parameter
-* :math:`\Sigma \in \mathbb{R}^{degree\times degree}` : a parameter 
-
-.. math:: \mathcal{N}(\bm{x}|\bm{\mu},\Sigma) = \frac{1}{(2\pi)^{\frac{degree}{2}}|\Sigma|^{\frac{1}{2}}}e^{-\frac{1}{2}(\bm{x}-\bm{\mu})\Sigma^{-1}(\bm{x}-\bm{\mu})^\top}
-
-The prior distribution is as follows:
-
-* :math:`\bm{\mu}_0 \in \mathbb{R}^{degree}`: a hyperparameter
-* :math:`\kappa_0 \in \mathbb{R}_{>0}`: a hyperparameter
-* :math:`\nu_0 \in \mathbb{R}_{>degree-1}`: a hyperparameter
-* :math:`V_0 \in \mathbb{R}^{degree\times degree}`: a hyperparameter
-
-.. math:: f(\bm{\mu},\Lambda|\bm{\mu}_0,\kappa_0,\V_0,\nu_0) = mathcal{N}(\bm{\mu}|\bm{\mu}_0,(\lambda_0\Lambda)^{-1})\mathcal{W}(\Lambda|V_0,\nu_0)
-
-The posterior distribution is as follows:
-
-* :math:`\bm{x}^n = (\bm{x}_1, \bm{x}_2, \dots , \bm{x}_n) \in \mathbb{R}^{degree\times n}`: given data
-* :math:`\bm{\mu}_n \in \mathbb{R}^{degree}`: a hyperparameter
-* :math:`\kappa_n \in \mathbb{R}_{>0}`: a hyperparameter
-* :math:`\nu_n \in \mathbb{R}_{>degree-1}`: a hyperparameter
-* :math:`V_n \in \mathbb{R}^{degree\times degree}`: a hyperparameter
-
-.. math:: f(\bm{\mu},\Lambda|\bm{\mu}_n,\kappa_n,V_n,\nu_n) = \mathcal{N}(\bm{\mu}|\bm{\mu}_n,(\lambda_n\Lambda)^{-1})\mathcal{W}(\Lambda|V_n,\nu_n)
-
-where the updating rule of the hyperparameters is
-
-.. math::
-    \bm{\mu}_n=\frac{\kappa_0\bm{\mu}+n\bar{\bm{x}}}{\kappa_0+n}\\
-    \kappa_n=\kappa_0+n\\
-    V_n=\left(V_0^{-1}+C+\frac{\kappa_0 n}{\kappa_0+n}(\bar{\bm{x}}-\bm{\mu}_0)(\bar{\bm{x}}-\bm{\mu}_0)^\top\right)^{-1}\\
-    \nu_n=\nu_0+n\\
-    C=\sum_{i=1}^{n}(\bm{x}_i-\bar{\bm{x}})(\bm{x}_i-\bar{\bm{x}})^\top
-
-The predictive distribution is as follows:
-
-* :math:`x \in \mathbb{R}`: a new data point
-* :math:`\bm{\mu}_p`: the hyperparameter of the posterior
-* :math:`\kappa_p`: the hyperparameter of the posterior
-* :math:`V_p`: the hyperparameter of the posterior
-* :math:`\nu_p`: the hyperparameter of the posterior
-
-.. math::
-    p(x|\bm{\mu}_p,\kappa_p,V_p,\nu_p) = t_{\nu_p-degree+1}\left(\bm{\mu}_p,\frac{\kappa_p+1}{\kappa_p(\nu_p-degree+1)}V_p^{-1}\right)
-"""
 import warnings
 import numpy as np
 from scipy.stats import multivariate_normal as ss_multivariate_normal
@@ -63,18 +13,9 @@ from scipy.stats import wishart as ss_wishart
 from scipy.stats import multivariate_t as ss_multivariate_t
 import matplotlib.pyplot as plt
 
-# from .. import base
-# from .._exceptions import ParameterFormatError, DataFormatError, CriteriaError, ResultWarning, ParameterFormatWarning
-# from .. import _check
-
-import matplotlib.pyplot as plt
-import os
-import sys
-sys.path.insert(0, os.path.abspath('.'))
-
-from bayesml import base
-from bayesml._exceptions import ParameterFormatError, DataFormatError, CriteriaError, ResultWarning, ParameterFormatWarning
-from bayesml import _check
+from .. import base
+from .._exceptions import ParameterFormatError, DataFormatError, CriteriaError, ResultWarning, ParameterFormatWarning
+from .. import _check
 
 class GenModel(base.Generative):
     """The stochastic data generative model and the prior distribution
