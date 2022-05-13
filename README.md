@@ -27,10 +27,10 @@ pip install bayesml
 
 The following are required.
 
-* Python
-* NumPy
-* SciPy
-* MatplotLib
+* Python (>= 3.7)
+* NumPy (>= 1.20)
+* SciPy (>= 1.7)
+* MatplotLib (>= 3.5)
 
 ## Example
 

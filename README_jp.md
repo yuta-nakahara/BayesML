@@ -26,10 +26,10 @@ pip install bayesml
 
 BayesMLの実行には以下が必要です．
 
-* Python
-* NumPy
-* SciPy
-* MatplotLib
+* Python (>= 3.7)
+* NumPy (>= 1.20)
+* SciPy (>= 1.7)
+* MatplotLib (>= 3.5)
 
 ## 実行例
 
