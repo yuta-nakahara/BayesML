@@ -60,7 +60,7 @@ gen_model.visualize_model()
 1の出現頻度が`theta=0.7`程度であることを確認したら，サンプルを生成し変数`x`に保存します．
 
 ``` python
-x = model.gen_sample(sample_size=20)
+x = gen_model.gen_sample(sample_size=20)
 ```
 
 次に，事後分布学習用のモデルを作成します．

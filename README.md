@@ -61,7 +61,7 @@ gen_model.visualize_model()
 After confirming that the frequency of occurrence of 1 is around `theta=0.7`, we generate a sample and store it to variable `x`.
 
 ``` python
-x = model.gen_sample(sample_size=20)
+x = gen_model.gen_sample(sample_size=20)
 ```
 
 Next, we create an instance of a model for learning posterior distribution.
