@@ -200,17 +200,17 @@ class GenModel(base.Generative):
             ``get_h0_params`` of LearnModel or ``get_hn_params`` of LearnModel.
         """
         if kwargs.keys() == self._H_PARAM_KEYS:
-            self.h_m_vec = _check.float_vec(kwargs['h_m_vec'],'h_mu_vec',ParameterFormatError)
+            self.h_m_vec = _check.float_vec(kwargs['h_m_vec'],'h_m_vec',ParameterFormatError)
             self.h_kappa = _check.pos_float(kwargs['h_kappa'],'h_kappa',ParameterFormatError)
             self.h_nu = _check.pos_float(kwargs['h_nu'],'h_nu',ParameterFormatError)
             self.h_w_mat = _check.pos_def_sym_mat(kwargs['h_w_mat'],'h_w_mat',ParameterFormatError)
         elif kwargs.keys() == self._H0_PARAM_KEYS:
-            self.h_m_vec = _check.float_vec(kwargs['h0_m_vec'],'h_mu_vec',ParameterFormatError)
+            self.h_m_vec = _check.float_vec(kwargs['h0_m_vec'],'h_m_vec',ParameterFormatError)
             self.h_kappa = _check.pos_float(kwargs['h0_kappa'],'h_kappa',ParameterFormatError)
             self.h_nu = _check.pos_float(kwargs['h0_nu'],'h_nu',ParameterFormatError)
             self.h_w_mat = _check.pos_def_sym_mat(kwargs['h0_w_mat'],'h_w_mat',ParameterFormatError)
         elif kwargs.keys() == self._HN_PARAM_KEYS:
-            self.h_m_vec = _check.float_vec(kwargs['hn_m_vec'],'h_mu_vec',ParameterFormatError)
+            self.h_m_vec = _check.float_vec(kwargs['hn_m_vec'],'h_m_vec',ParameterFormatError)
             self.h_kappa = _check.pos_float(kwargs['hn_kappa'],'h_kappa',ParameterFormatError)
             self.h_nu = _check.pos_float(kwargs['hn_nu'],'h_nu',ParameterFormatError)
             self.h_w_mat = _check.pos_def_sym_mat(kwargs['hn_w_mat'],'h_w_mat',ParameterFormatError)
@@ -308,7 +308,7 @@ class GenModel(base.Generative):
     def save_sample(self,filename,sample_size):
         """Save the generated sample as NumPy ``.npz`` format.
 
-        It is saved as aNpzFile with keyword: \"x\".
+        It is saved as a NpzFile with keyword: \"x\".
 
         Parameters
         ----------
@@ -325,10 +325,11 @@ class GenModel(base.Generative):
         np.savez_compressed(filename,x=self.gen_sample(sample_size))
 
     def visualize_model(self,sample_size=100):
-        """
+        """Visualize the stochastic data generative model and generated samples.
+        
         Parameters
         ----------
-        n : int, optional
+        sample_size : int, optional
             A positive integer, by default 1
         
         Examples
@@ -522,17 +523,17 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             ``get_h0_params`` of LearnModel or ``get_hn_params`` of LearnModel.
         """
         if kwargs.keys() == self._H_PARAM_KEYS:
-            self.h0_m_vec = _check.float_vec(kwargs['h_m_vec'],'h0_mu_vec',ParameterFormatError)
+            self.h0_m_vec = _check.float_vec(kwargs['h_m_vec'],'h0_m_vec',ParameterFormatError)
             self.h0_kappa = _check.pos_float(kwargs['h_kappa'],'h0_kappa',ParameterFormatError)
             self.h0_nu = _check.pos_float(kwargs['h_nu'],'h0_nu',ParameterFormatError)
             self.h0_w_mat = _check.pos_def_sym_mat(kwargs['h_w_mat'],'h0_w_mat',ParameterFormatError)
         elif kwargs.keys() == self._H0_PARAM_KEYS:
-            self.h0_m_vec = _check.float_vec(kwargs['h0_m_vec'],'h0_mu_vec',ParameterFormatError)
+            self.h0_m_vec = _check.float_vec(kwargs['h0_m_vec'],'h0_m_vec',ParameterFormatError)
             self.h0_kappa = _check.pos_float(kwargs['h0_kappa'],'h0_kappa',ParameterFormatError)
             self.h0_nu = _check.pos_float(kwargs['h0_nu'],'h0_nu',ParameterFormatError)
             self.h0_w_mat = _check.pos_def_sym_mat(kwargs['h0_w_mat'],'h0_w_mat',ParameterFormatError)
         elif kwargs.keys() == self._HN_PARAM_KEYS:
-            self.h0_m_vec = _check.float_vec(kwargs['hn_m_vec'],'h0_mu_vec',ParameterFormatError)
+            self.h0_m_vec = _check.float_vec(kwargs['hn_m_vec'],'h0_m_vec',ParameterFormatError)
             self.h0_kappa = _check.pos_float(kwargs['hn_kappa'],'h0_kappa',ParameterFormatError)
             self.h0_nu = _check.pos_float(kwargs['hn_nu'],'h0_nu',ParameterFormatError)
             self.h0_w_mat = _check.pos_def_sym_mat(kwargs['hn_w_mat'],'h0_w_mat',ParameterFormatError)
@@ -581,17 +582,17 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             ``get_h0_params`` of LearnModel or ``get_hn_params`` of LearnModel.
         """
         if kwargs.keys() == self._H_PARAM_KEYS:
-            self.hn_m_vec = _check.float_vec(kwargs['h_m_vec'],'hn_mu_vec',ParameterFormatError)
+            self.hn_m_vec = _check.float_vec(kwargs['h_m_vec'],'hn_m_vec',ParameterFormatError)
             self.hn_kappa = _check.pos_float(kwargs['h_kappa'],'hn_kappa',ParameterFormatError)
             self.hn_nu = _check.pos_float(kwargs['h_nu'],'hn_nu',ParameterFormatError)
             self.hn_w_mat = _check.pos_def_sym_mat(kwargs['h_w_mat'],'hn_w_mat',ParameterFormatError)
         elif kwargs.keys() == self._H0_PARAM_KEYS:
-            self.hn_m_vec = _check.float_vec(kwargs['h0_m_vec'],'hn_mu_vec',ParameterFormatError)
+            self.hn_m_vec = _check.float_vec(kwargs['h0_m_vec'],'hn_m_vec',ParameterFormatError)
             self.hn_kappa = _check.pos_float(kwargs['h0_kappa'],'hn_kappa',ParameterFormatError)
             self.hn_nu = _check.pos_float(kwargs['h0_nu'],'hn_nu',ParameterFormatError)
             self.hn_w_mat = _check.pos_def_sym_mat(kwargs['h0_w_mat'],'hn_w_mat',ParameterFormatError)
         elif kwargs.keys() == self._HN_PARAM_KEYS:
-            self.hn_m_vec = _check.float_vec(kwargs['hn_m_vec'],'hn_mu_vec',ParameterFormatError)
+            self.hn_m_vec = _check.float_vec(kwargs['hn_m_vec'],'hn_m_vec',ParameterFormatError)
             self.hn_kappa = _check.pos_float(kwargs['hn_kappa'],'hn_kappa',ParameterFormatError)
             self.hn_nu = _check.pos_float(kwargs['hn_nu'],'hn_nu',ParameterFormatError)
             self.hn_w_mat = _check.pos_def_sym_mat(kwargs['hn_w_mat'],'hn_w_mat',ParameterFormatError)
@@ -690,8 +691,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         ----------
         loss : str, optional
             Loss function underlying the Bayes risk function, by default \"squared\".
-            This function supports \"squared\", \"0-1\", \"abs\", and \"KL\" for estimating ``mu_vec``,
-            and \"squared\", \"0-1\", and \"KL\" for estimating ``lambda_mat``.
+            This function supports \"squared\", \"0-1\", and \"KL\".
 
         Returns
         -------
@@ -716,9 +716,6 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             else:
                 warnings.warn("MAP estimate of lambda_mat doesn't exist for the current hn_nu.",ResultWarning)
                 return self.hn_m_vec, None
-        elif loss == "abs":
-            warnings.warn("We cannot ontain the median of Wishart distribution by our method.", ResultWarning)
-            return self.hn_m_vec, None
         elif loss == "KL":
             return (ss_multivariate_t(loc=self.hn_m_vec,
                                         shape=self.hn_w_mat_inv / self.hn_kappa / (self.hn_nu - self.degree + 1),
@@ -726,7 +723,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                     ss_wishart(df=self.hn_nu,scale=self.hn_w_mat))
         else:
             raise(CriteriaError("Unsupported loss function! "
-                                +"This function supports \"squared\", \"0-1\", \"abs\", and \"KL\"."))
+                                +"This function supports \"squared\", \"0-1\", and \"KL\"."))
     
     def visualize_posterior(self):
         """Visualize the posterior distribution for the parameter.
@@ -834,7 +831,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         ----------
         loss : str, optional
             Loss function underlying the Bayes risk function, by default \"squared\".
-            This function supports \"squared\", \"0-1\", \"abs\" and \"KL\".
+            This function supports \"squared\", \"0-1\", and \"KL\".
 
         Returns
         -------
@@ -842,8 +839,13 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             The predicted value under the given loss function. 
             If the loss function is \"KL\", the posterior distribution itself will be returned
             as rv_frozen object of scipy.stats.
+
+        See Also
+        --------
+        scipy.stats.rv_continuous
+        scipy.stats.rv_discrete
         """
-        if loss == "squared" or loss == "0-1" or loss == "abs":
+        if loss == "squared" or loss == "0-1":
             return self.p_m_vec
         elif loss == "KL":
             return ss_multivariate_t(loc=self.p_m_vec,
@@ -851,7 +853,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                                      df=self.p_nu)
         else:
             raise(CriteriaError("Unsupported loss function! "
-                                +"This function supports \"squared\", \"0-1\", \"abs\", and \"KL\"."))
+                                +"This function supports \"squared\", \"0-1\", and \"KL\"."))
 
     def pred_and_update(self,x,loss="squared"):
         """Predict a new data point and update the posterior sequentially.
@@ -862,7 +864,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             It must be a degree-dimensional vector
         loss : str, optional
             Loss function underlying the Bayes risk function, by default \"squared\".
-            This function supports \"squared\", \"0-1\", \"abs\", and \"KL\".
+            This function supports \"squared\", \"0-1\", and \"KL\".
 
         Returns
         -------
