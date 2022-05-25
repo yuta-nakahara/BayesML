@@ -4,8 +4,6 @@
 # Yuta Nakahara <yuta.nakahara@aoni.waseda.jp>
 import warnings
 import numpy as np
-import os
-import sys
 from scipy.stats import beta as ss_beta
 # from scipy.stats import betabino as ss_betabinom
 import matplotlib.pyplot as plt
@@ -155,29 +153,33 @@ class GenModel(base.Generative):
         >>> model = bernoulli.GenModel()
         >>> model.visualize_model()
         p:0.5
-        x0:[0 0 1 1 1 1 1 1 1 0 1 0 1 1 1 0 1 0 1 0]
-        x1:[1 0 0 1 1 0 1 0 0 0 0 0 0 0 0 1 0 1 0 1]
-        x2:[1 1 1 1 0 1 0 1 0 0 0 1 1 0 0 1 1 1 0 1]
-        x3:[0 0 1 1 1 0 0 1 1 0 0 1 0 0 1 0 0 1 0 1]
-        x4:[0 1 0 1 1 0 1 0 1 1 1 1 1 0 1 0 0 1 1 0]
-
+        x0:[1 1 0 0 0 1 0 1 0 0 0 1 0 1 0 1 0 1 0 0]
+        x1:[1 1 0 0 0 0 0 1 1 0 0 0 1 0 1 0 0 0 0 0]
+        x2:[0 1 0 1 0 0 1 0 0 0 1 0 1 1 1 0 1 0 1 1]
+        x3:[0 0 0 1 1 0 1 0 1 0 0 0 1 0 1 0 1 0 1 1]
+        x4:[1 0 1 1 1 1 0 1 0 0 1 1 0 0 0 0 0 0 1 1]
+        
         .. image:: ./images/bernoulli_example.png
         """
         _check.pos_int(sample_size,'sample_size',DataFormatError)
         _check.pos_int(sample_num,'sample_num',DataFormatError)
         print(f"p:{self.p}")
-        fig, ax = plt.subplots(figsize=(5,sample_num))
+        fig, ax = plt.subplots(2,1,figsize=(5, sample_num+1),gridspec_kw={'height_ratios': [1,sample_num]})
+        ax[0].set_title("True distribution")
+        ax[0].barh(0,self.p,label=1,color="C0")
+        ax[0].barh(0,1.0-self.p,left=self.p,label=0,color="C1")
+        ax[1].set_title("Generated sample")
         for i in range(sample_num):
             x = self.gen_sample(sample_size)
             print(f"x{i}:{x}")
             if i == 0:
-                ax.barh(i,x.sum(),label=1,color="C0")
-                ax.barh(i,sample_size-x.sum(),left=x.sum(),label=0,color="C1")
+                ax[1].barh(i,x.sum(),label=1,color="C0")
+                ax[1].barh(i,sample_size-x.sum(),left=x.sum(),label=0,color="C1")
             else:
-                ax.barh(i,x.sum(),color="C0")
-                ax.barh(i,sample_size-x.sum(),left=x.sum(),color="C1")
-        ax.legend()
-        ax.set_xlabel("Number of occurrences")
+                ax[1].barh(i,x.sum(),color="C0")
+                ax[1].barh(i,sample_size-x.sum(),left=x.sum(),color="C1")
+        ax[1].legend()
+        ax[1].set_xlabel("Number of occurrences")
         plt.show()
 
 class LearnModel(base.Posterior,base.PredictiveMixin):
