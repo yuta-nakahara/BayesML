@@ -56,7 +56,7 @@ You can visualize the characteristics of the created model by the following meth
 
 Outputs:
 
-   | p:0.7  
+   | theta:0.7  
    | x0:[1 1 1 0 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0]  
    | x1:[1 0 1 0 1 0 0 0 0 1 1 1 1 1 1 1 1 0 1 1]  
    | x2:[1 0 1 0 1 1 1 1 1 1 1 0 0 0 0 1 1 0 1 1]  
