@@ -1,0 +1,904 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>bayesml.exponential package &#8212; BayesML</title>
+    
+  <link href="_static/css/theme.css" rel="stylesheet">
+  <link href="_static/css/index.ff1ffe594081f20da1ef19478df9384b.css" rel="stylesheet">
+
+    
+  <link rel="stylesheet"
+    href="_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    
+      
+
+    
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/css/customize.css" />
+    
+  <link rel="preload" as="script" href="_static/js/index.be7d3bbb2ef33a8344ce.js">
+
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx-book-theme.9d8b4a8b9bb19db25eeaddc40d639ba2.js"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <link rel="shortcut icon" href="_static/BayesML_favicon.ico"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="bayesml.linearregression package" href="bayesml.linearregression.html" />
+    <link rel="prev" title="bayesml.categorical package" href="bayesml.categorical.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="None">
+    
+
+    <!-- Google Analytics -->
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+<!-- Checkboxes to toggle the left sidebar -->
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle navigation sidebar">
+<label class="overlay" for="__navigation">
+    <div class="visually-hidden">Toggle navigation sidebar</div>
+</label>
+<div class="col-12 col-md-3 bd-sidebar site-navigation " id="site-navigation">
+    
+        <div class="navbar-brand-box">
+    <a class="navbar-brand text-wrap" href="index.html">
+      
+        <!-- `logo` is deprecated in Sphinx 4.0, so remove this when we stop supporting 3 -->
+        
+      
+      
+      <img src="_static/BayesML_logo.png" class="logo" alt="logo">
+      
+      
+    </a>
+</div><form class="bd-search d-flex align-items-center" action="search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item active">
+        <ul class="current nav bd-sidenav">
+ <li class="toctree-l1 current active has-children">
+  <a class="reference internal" href="bayesml.html">
+   bayesml package
+  </a>
+  <input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/>
+  <label for="toctree-checkbox-1">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul class="current">
+   <li class="toctree-l2">
+    <a class="reference internal" href="bayesml.autoregressive.html">
+     bayesml.autoregressive package
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="bayesml.bernoulli.html">
+     bayesml.bernoulli package
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="bayesml.categorical.html">
+     bayesml.categorical package
+    </a>
+   </li>
+   <li class="toctree-l2 current active">
+    <a class="current reference internal" href="#">
+     bayesml.exponential package
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="bayesml.linearregression.html">
+     bayesml.linearregression package
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="bayesml.multivariate_normal.html">
+     bayesml.multivariate_normal package
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="bayesml.normal.html">
+     bayesml.normal package
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="bayesml.poisson.html">
+     bayesml.poisson package
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="developers.html">
+   BayesML Developers
+  </a>
+ </li>
+</ul>
+
+    </div>
+</nav> <!-- To handle the deprecated key -->
+
+<div class="navbar_extra_footer">
+  Theme by the <a href="https://ebp.jupyterbook.org">Executable Book Project</a>
+</div>
+
+</div>
+
+
+          
+
+
+          
+<!-- This is an invisible pixel that we watch to see if we've scrolled. -->
+<div class="sbt-scroll-pixel-helper"></div>
+<main class="col py-md-3 pl-md-4 bd-content overflow-auto" role="main">
+    
+    <div class="topbar container-xl fixed-top">
+    <div class="topbar-contents row">
+        <div class="col-12 col-md-3 bd-topbar-whitespace site-navigation show"></div>
+        <div class="col pl-md-4 topbar-main">
+            <div class="topbar-left">
+                
+                <label class="nav-toggle-button" for="__navigation">
+                    <div class="visually-hidden">Toggle navigation</div>
+                    <i class="fas fa-bars"></i>
+                </label>
+                
+            </div>
+            
+<div class="dropdown-buttons-trigger">
+    <button id="dropdown-buttons-trigger" class="btn btn-secondary topbarbtn" aria-label="Download this page"><i
+            class="fas fa-download"></i></button>
+
+    <div class="dropdown-buttons">
+        <!-- ipynb file if we had a myst markdown file -->
+        
+        <!-- Download raw file -->
+        <a class="dropdown-buttons" href="_sources/bayesml.exponential.rst.txt"><button type="button"
+                class="btn btn-secondary topbarbtn" title="Download source file" data-toggle="tooltip"
+                data-placement="left">.rst</button></a>
+        <!-- Download PDF via print -->
+        <button type="button" id="download-print" class="btn btn-secondary topbarbtn" title="Print to PDF"
+                onclick="printPdf(this)" data-toggle="tooltip" data-placement="left">.pdf</button>
+    </div>
+</div>
+
+            <!-- Source interaction buttons -->
+
+<div class="dropdown-buttons-trigger">
+    <button id="dropdown-buttons-trigger" class="btn btn-secondary topbarbtn"
+        aria-label="Connect with source repository"><i class="fab fa-github"></i></button>
+    <div class="dropdown-buttons sourcebuttons">
+        <a class="repository-button"
+            href="https://github.com/yuta-nakahara/BayesML/"><button type="button" class="btn btn-secondary topbarbtn"
+                data-toggle="tooltip" data-placement="left" title="Source repository"><i
+                    class="fab fa-github"></i>repository</button></a>
+        
+        
+    </div>
+</div>
+
+            <!-- Full screen (wrap in <a> to have style consistency -->
+
+<a class="full-screen-button"><button type="button" class="btn btn-secondary topbarbtn" data-toggle="tooltip"
+        data-placement="bottom" onclick="toggleFullScreen()" aria-label="Fullscreen mode"
+        title="Fullscreen mode"><i
+            class="fas fa-expand"></i></button></a>
+
+            <!-- Launch buttons -->
+
+        </div>
+
+        <!-- Table of contents -->
+        <div class="d-none d-md-block col-md-2 bd-toc show noprint">
+            
+            <div class="tocsection onthispage pt-5 pb-3">
+                <i class="fas fa-list"></i> Contents
+            </div>
+            <nav id="bd-toc-nav" aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#module-bayesml.exponential">
+   Module contents
+  </a>
+ </li>
+</ul>
+
+            </nav>
+        </div>
+    </div>
+</div>
+    <div id="main-content" class="row">
+        <div class="col-12 col-md-9 pl-md-3 pr-md-0">
+            <!-- Table of contents that is only displayed when printing the page -->
+            <div id="jb-print-docs-body" class="onlyprint">
+                <h1>bayesml.exponential package</h1>
+                <!-- Table of contents -->
+                <div id="print-main-content">
+                    <div id="jb-print-toc">
+                        
+                        <div>
+                            <h2> Contents </h2>
+                        </div>
+                        <nav aria-label="Page">
+                            <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#module-bayesml.exponential">
+   Module contents
+  </a>
+ </li>
+</ul>
+
+                        </nav>
+                    </div>
+                </div>
+            </div>
+            
+              <div>
+                
+  <div class="section" id="bayesml-exponential-package">
+<h1>bayesml.exponential package<a class="headerlink" href="#bayesml-exponential-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-bayesml.exponential">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-bayesml.exponential" title="Permalink to this headline">¶</a></h2>
+<p>The exponential distribution with the gamma prior distribution.</p>
+<p>The stochastic data generative model is as follows:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(x \in \mathbb{R}_{\geq 0}\)</span>: a data point</p></li>
+<li><p><span class="math notranslate nohighlight">\(\lambda \in \mathbb{R}_{&gt;0}\)</span>: a parameter</p></li>
+</ul>
+<div class="math notranslate nohighlight">
+\[p(x | \lambda) = \mathrm{Exp}(x|\lambda) = \lambda\exp(-\lambda x).\]</div>
+<div class="math notranslate nohighlight">
+\[\begin{split}\mathbb{E}[x] &amp;= \frac{1}{\lambda}, \\
+\mathbb{V}[x] &amp;= \frac{1}{\lambda^2}.\end{split}\]</div>
+<p>The prior distribution is as follows:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(\alpha_0 \in \mathbb{R}_{&gt;0}\)</span>: a hyperparameter</p></li>
+<li><p><span class="math notranslate nohighlight">\(\beta_0 \in \mathbb{R}_{&gt;0}\)</span>: a hyperparameter</p></li>
+<li><p><span class="math notranslate nohighlight">\(\Gamma(\cdot): \mathbb{R}_{&gt;0} \to \mathbb{R}_{&gt;0}\)</span>: the Gamma function</p></li>
+</ul>
+<div class="math notranslate nohighlight">
+\[p(\lambda) = \mathrm{Gam}(\lambda|\alpha_0,\beta_0) = \frac{\beta_0^{\alpha_0}}{\Gamma (\alpha_0)} \lambda^{\alpha_0 - 1} \exp \{ -\beta_0 \lambda \},\]</div>
+<div class="math notranslate nohighlight">
+\[\begin{split}\mathbb{E}[\lambda] &amp;= \frac{\alpha_0}{\beta_0}, \\
+\mathbb{V}[\lambda] &amp;= \frac{\alpha_0}{\beta_0^2}.\end{split}\]</div>
+<p>The posterior distribution is as follows:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(x^n = (x_1, x_2, \dots , x_n) \in \mathbb{R}_{\geq 0}^n\)</span>: given data</p></li>
+<li><p><span class="math notranslate nohighlight">\(\alpha_n \in \mathbb{R}_{&gt;0}\)</span>: a hyperparameter</p></li>
+<li><p><span class="math notranslate nohighlight">\(\beta_n \in \mathbb{R}_{&gt;0}\)</span>: a hyperparameter</p></li>
+</ul>
+<div class="math notranslate nohighlight">
+\[p(\lambda | x^n) = \mathrm{Gam}(\lambda|\alpha_n,\beta_n) = \frac{\beta_n^{\alpha_n}}{\Gamma (\alpha_n)} \lambda^{\alpha_n - 1} \exp \{ -\beta_n \lambda \},\]</div>
+<div class="math notranslate nohighlight">
+\[\begin{split}\mathbb{E}[\lambda | x^n] &amp;= \frac{\alpha_n}{\beta_n}, \\
+\mathbb{V}[\lambda | x^n] &amp;= \frac{\alpha_n}{\beta_n^2}.\end{split}\]</div>
+<p>where the updating rule of the hyperparameters is</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\alpha_n &amp;= \alpha_0 + n\\
+\beta_n &amp;= \beta_0 + \sum_{i=1}^n x_i\end{split}\]</div>
+<p>The predictive distribution is as follows:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(x_{n+1} \in \mathbb{R}_{\geq 0}\)</span>: a new data point</p></li>
+<li><p><span class="math notranslate nohighlight">\(\alpha_\mathrm{p} \in \mathbb{R}_{&gt;0}\)</span>: the hyperparameter of the posterior</p></li>
+<li><p><span class="math notranslate nohighlight">\(\eta_\mathrm{p} \in \mathbb{R}_{&gt;0}\)</span>: the hyperparameter of the posterior</p></li>
+</ul>
+<div class="math notranslate nohighlight">
+\[p(x_{n+1}|x^n)=\mathrm{Lomax}(x_{n+1}|\alpha_\mathrm{p},\eta_\mathrm{p}) = \frac{\alpha_\mathrm{p}}{\eta_\mathrm{p}}\left(1+\frac{x}{\eta_\mathrm{p}}\right)^{-(\alpha_\mathrm{p}+1)},\]</div>
+<div class="math notranslate nohighlight">
+\[\begin{split}\mathbb{E}[x_{n+1} | x^n] &amp;=
+\begin{cases}
+\frac{\eta_\mathrm{p}}{\alpha_\mathrm{p}-1}, &amp; \alpha_\mathrm{p}&gt;1,\\
+\mathrm{undefined}, &amp; \text{otherwise},
+\end{cases}\\
+\mathbb{V}[x_{n+1} | x^n] &amp;=
+\begin{cases}
+\frac{\eta_\mathrm{p}^2 \alpha_\mathrm{p}}{(\alpha_\mathrm{p}-1)^2(\alpha_\mathrm{p}-2)}, &amp; \alpha_\mathrm{p}&gt;2,\\
+\infty, &amp; 1&lt;\alpha_\mathrm{p}\leq 2,\\
+\mathrm{undefined}, &amp; \text{otherwise},
+\end{cases}\end{split}\]</div>
+<p>where the parameters are obtained from the hyperparameters of the posterior distribution as follows:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}&amp;\alpha_\mathrm{p} = \alpha_n, \\
+&amp;\eta_\mathrm{p} = \beta_n.\end{split}\]</div>
+<dl class="py class">
+<dt class="sig sig-object py" id="bayesml.exponential.GenModel">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">bayesml.exponential.</span></span><span class="sig-name descname"><span class="pre">GenModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lambda_</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h_alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h_beta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.exponential.GenModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="bayesml.html#bayesml.base.Generative" title="bayesml.base.Generative"><code class="xref py py-class docutils literal notranslate"><span class="pre">bayesml.base.Generative</span></code></a></p>
+<p>The stochastic data generative model and the prior distribution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>lambda_</strong><span class="classifier">float, optional</span></dt><dd><p>a positive real number, 1.0 by default.</p>
+</dd>
+<dt><strong>h_alpha</strong><span class="classifier">float, optional</span></dt><dd><p>a positive real number, 1.0 by default.</p>
+</dd>
+<dt><strong>h_beta</strong><span class="classifier">float, optional</span></dt><dd><p>a positive real number, 1.0 by default.</p>
+</dd>
+<dt><strong>seed</strong><span class="classifier">{None, int}, optional</span></dt><dd><p>A seed to initialize numpy.random.default_rng(),
+by default None</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bayesml.exponential.GenModel.gen_params" title="bayesml.exponential.GenModel.gen_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gen_params</span></code></a>()</p></td>
+<td><p>Generate the parameter from the prior distribution.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#bayesml.exponential.GenModel.gen_sample" title="bayesml.exponential.GenModel.gen_sample"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gen_sample</span></code></a>(sample_size)</p></td>
+<td><p>Generate a sample from the stochastic data generative model.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bayesml.exponential.GenModel.get_h_params" title="bayesml.exponential.GenModel.get_h_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_h_params</span></code></a>()</p></td>
+<td><p>Get the hyperparameters of the prior distribution.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#bayesml.exponential.GenModel.get_params" title="bayesml.exponential.GenModel.get_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_params</span></code></a>()</p></td>
+<td><p>Get the parameter of the sthocastic data generative model.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_h_params</span></code>(filename)</p></td>
+<td><p>Load the hyperparameters to h_params.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_params</span></code>(filename)</p></td>
+<td><p>Load the parameters saved by <code class="docutils literal notranslate"><span class="pre">save_params</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_h_params</span></code>(filename)</p></td>
+<td><p>Save the hyperparameters using python <code class="docutils literal notranslate"><span class="pre">pickle</span></code> module.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_params</span></code>(filename)</p></td>
+<td><p>Save the parameters using python <code class="docutils literal notranslate"><span class="pre">pickle</span></code> module.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bayesml.exponential.GenModel.save_sample" title="bayesml.exponential.GenModel.save_sample"><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_sample</span></code></a>(filename, sample_size)</p></td>
+<td><p>Save the generated sample as NumPy <code class="docutils literal notranslate"><span class="pre">.npz</span></code> format.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#bayesml.exponential.GenModel.set_h_params" title="bayesml.exponential.GenModel.set_h_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_h_params</span></code></a>(**kwargs)</p></td>
+<td><p>Set the hyperparameters of the prior distribution.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bayesml.exponential.GenModel.set_params" title="bayesml.exponential.GenModel.set_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_params</span></code></a>(lambda_)</p></td>
+<td><p>Set the parameter of the sthocastic data generative model.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#bayesml.exponential.GenModel.visualize_model" title="bayesml.exponential.GenModel.visualize_model"><code class="xref py py-obj docutils literal notranslate"><span class="pre">visualize_model</span></code></a>([sample_size, hist_bins])</p></td>
+<td><p>Visualize the stochastic data generative model and generated samples.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="bayesml.exponential.GenModel.set_h_params">
+<span class="sig-name descname"><span class="pre">set_h_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.exponential.GenModel.set_h_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the hyperparameters of the prior distribution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>**kwargs</strong></dt><dd><p>a python dictionary {‘h_alpha’:float, ‘h_beta’:float} or
+{‘h0_alpha’:float, ‘h0_beta’:float} or {‘hn_alpha’:float, ‘hn_beta’:float}
+They are obtained by <code class="docutils literal notranslate"><span class="pre">get_h_params()</span></code> of GenModel,
+<code class="docutils literal notranslate"><span class="pre">get_h0_params</span></code> of LearnModel or <code class="docutils literal notranslate"><span class="pre">get_hn_params</span></code> of LearnModel.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bayesml.exponential.GenModel.get_h_params">
+<span class="sig-name descname"><span class="pre">get_h_params</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.exponential.GenModel.get_h_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the hyperparameters of the prior distribution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>h_params</strong><span class="classifier">dict of {str: float}</span></dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;h_alpha&quot;</span></code> : The value of <code class="docutils literal notranslate"><span class="pre">self.h_alpha</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;h_beta&quot;</span></code> : The value of <code class="docutils literal notranslate"><span class="pre">self.h_beta</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bayesml.exponential.GenModel.gen_params">
+<span class="sig-name descname"><span class="pre">gen_params</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.exponential.GenModel.gen_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate the parameter from the prior distribution.</p>
+<p>The generated vaule is set at <code class="docutils literal notranslate"><span class="pre">self.lambda_</span></code>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bayesml.exponential.GenModel.set_params">
+<span class="sig-name descname"><span class="pre">set_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lambda_</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.exponential.GenModel.set_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the parameter of the sthocastic data generative model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>lambda_</strong><span class="classifier">float</span></dt><dd><p>a positive real number</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bayesml.exponential.GenModel.get_params">
+<span class="sig-name descname"><span class="pre">get_params</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.exponential.GenModel.get_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the parameter of the sthocastic data generative model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>params</strong><span class="classifier">dict of {str:float}</span></dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;lambda_&quot;</span></code> : The value of <code class="docutils literal notranslate"><span class="pre">self.lambda_</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bayesml.exponential.GenModel.gen_sample">
+<span class="sig-name descname"><span class="pre">gen_sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sample_size</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.exponential.GenModel.gen_sample" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a sample from the stochastic data generative model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>sample_size</strong><span class="classifier">int</span></dt><dd><p>A positive integer</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>x</strong><span class="classifier">numpy ndarray</span></dt><dd><p>1 dimensional array whose size is <code class="docutils literal notranslate"><span class="pre">sammple_size</span></code> and elements are positive real numbers.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bayesml.exponential.GenModel.save_sample">
+<span class="sig-name descname"><span class="pre">save_sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_size</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.exponential.GenModel.save_sample" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save the generated sample as NumPy <code class="docutils literal notranslate"><span class="pre">.npz</span></code> format.</p>
+<p>It is saved as aNpzFile with keyword: “x”.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>filename</strong><span class="classifier">str</span></dt><dd><p>The filename to which the sample is saved.
+<code class="docutils literal notranslate"><span class="pre">.npz</span></code> will be appended if it isn’t there.</p>
+</dd>
+<dt><strong>sample_size</strong><span class="classifier">int</span></dt><dd><p>A positive integer</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.savez_compressed.html#numpy.savez_compressed" title="(in NumPy v1.22)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy.savez_compressed</span></code></a></dt><dd></dd>
+</dl>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bayesml.exponential.GenModel.visualize_model">
+<span class="sig-name descname"><span class="pre">visualize_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sample_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hist_bins</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.exponential.GenModel.visualize_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visualize the stochastic data generative model and generated samples.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>sample_size</strong><span class="classifier">int, optional</span></dt><dd><p>A positive integer, by default 100</p>
+</dd>
+<dt><strong>hist_bins</strong><span class="classifier">float, optional</span></dt><dd><p>A positive float, by default 10</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">bayesml</span> <span class="kn">import</span> <span class="n">normal</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">normal</span><span class="o">.</span><span class="n">GenModel</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">visualize_model</span><span class="p">()</span>
+<span class="go">lambda_:1.0</span>
+</pre></div>
+</div>
+<img alt="_images/exponential_example.png" src="_images/exponential_example.png" />
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bayesml.exponential.LearnModel">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">bayesml.exponential.</span></span><span class="sig-name descname"><span class="pre">LearnModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">h0_alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h0_beta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.exponential.LearnModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="bayesml.html#bayesml.base.Posterior" title="bayesml.base.Posterior"><code class="xref py py-class docutils literal notranslate"><span class="pre">bayesml.base.Posterior</span></code></a>, <a class="reference internal" href="bayesml.html#bayesml.base.PredictiveMixin" title="bayesml.base.PredictiveMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">bayesml.base.PredictiveMixin</span></code></a></p>
+<p>The posterior distribution and the predictive distribution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>h0_alpha</strong><span class="classifier">float, optional</span></dt><dd><p>a positive real number, by default 0.5</p>
+</dd>
+<dt><strong>h0_beta</strong><span class="classifier">float, optional</span></dt><dd><p>a positibe real number, by default 0.5</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Attributes</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>hn_alpha</strong><span class="classifier">float</span></dt><dd><p>a positive real number</p>
+</dd>
+<dt><strong>hn_beta</strong><span class="classifier">float</span></dt><dd><p>a positibe real number</p>
+</dd>
+<dt><strong>p_kappa</strong><span class="classifier">float</span></dt><dd><p>a positive real number</p>
+</dd>
+<dt><strong>p_lambda</strong><span class="classifier">float</span></dt><dd><p>a positibe real number</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bayesml.exponential.LearnModel.calc_pred_dist" title="bayesml.exponential.LearnModel.calc_pred_dist"><code class="xref py py-obj docutils literal notranslate"><span class="pre">calc_pred_dist</span></code></a>()</p></td>
+<td><p>Calculate the parameters of the predictive distribution.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#bayesml.exponential.LearnModel.estimate_interval" title="bayesml.exponential.LearnModel.estimate_interval"><code class="xref py py-obj docutils literal notranslate"><span class="pre">estimate_interval</span></code></a>([credibility])</p></td>
+<td><p>Credible interval of the parameter.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bayesml.exponential.LearnModel.estimate_params" title="bayesml.exponential.LearnModel.estimate_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">estimate_params</span></code></a>([loss])</p></td>
+<td><p>Estimate the parameter of the stochastic data generative model under the given criterion.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#bayesml.exponential.LearnModel.get_h0_params" title="bayesml.exponential.LearnModel.get_h0_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_h0_params</span></code></a>()</p></td>
+<td><p>Get the initial values of the hyperparameters of the posterior distribution.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bayesml.exponential.LearnModel.get_hn_params" title="bayesml.exponential.LearnModel.get_hn_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_hn_params</span></code></a>()</p></td>
+<td><p>Get the hyperparameters of the posterior distribution.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#bayesml.exponential.LearnModel.get_p_params" title="bayesml.exponential.LearnModel.get_p_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_p_params</span></code></a>()</p></td>
+<td><p>Get the parameters of the predictive distribution.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_h0_params</span></code>(filename)</p></td>
+<td><p>Load the hyperparameters to h0_params.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_hn_params</span></code>(filename)</p></td>
+<td><p>Load the hyperparameters to hn_params.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bayesml.exponential.LearnModel.make_prediction" title="bayesml.exponential.LearnModel.make_prediction"><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_prediction</span></code></a>([loss])</p></td>
+<td><p>Predict a new data point under the given criterion.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#bayesml.exponential.LearnModel.overwrite_h0_params" title="bayesml.exponential.LearnModel.overwrite_h0_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">overwrite_h0_params</span></code></a>()</p></td>
+<td><p>Overwrite the initial values of the hyperparameters of the posterior distribution by the learned values.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bayesml.exponential.LearnModel.pred_and_update" title="bayesml.exponential.LearnModel.pred_and_update"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pred_and_update</span></code></a>(x[, loss])</p></td>
+<td><p>Predict a new data point and update the posterior sequentially.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#bayesml.exponential.LearnModel.reset_hn_params" title="bayesml.exponential.LearnModel.reset_hn_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">reset_hn_params</span></code></a>()</p></td>
+<td><p>Reset the hyperparameters of the posterior distribution to their initial values.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_h0_params</span></code>(filename)</p></td>
+<td><p>Save the hyperparameters using python <code class="docutils literal notranslate"><span class="pre">pickle</span></code> module.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_hn_params</span></code>(filename)</p></td>
+<td><p>Save the hyperparameters using python <code class="docutils literal notranslate"><span class="pre">pickle</span></code> module.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bayesml.exponential.LearnModel.set_h0_params" title="bayesml.exponential.LearnModel.set_h0_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_h0_params</span></code></a>(**kwargs)</p></td>
+<td><p>Set initial values of the hyperparameter of the posterior distribution.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#bayesml.exponential.LearnModel.set_hn_params" title="bayesml.exponential.LearnModel.set_hn_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_hn_params</span></code></a>(**kwargs)</p></td>
+<td><p>Set updated values of the hyperparameter of the posterior distribution.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bayesml.exponential.LearnModel.update_posterior" title="bayesml.exponential.LearnModel.update_posterior"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_posterior</span></code></a>(x)</p></td>
+<td><p>Update the hyperparameters of the posterior distribution using traning data.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#bayesml.exponential.LearnModel.visualize_posterior" title="bayesml.exponential.LearnModel.visualize_posterior"><code class="xref py py-obj docutils literal notranslate"><span class="pre">visualize_posterior</span></code></a>()</p></td>
+<td><p>Visualize the posterior distribution for the parameter.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="bayesml.exponential.LearnModel.set_h0_params">
+<span class="sig-name descname"><span class="pre">set_h0_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.exponential.LearnModel.set_h0_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set initial values of the hyperparameter of the posterior distribution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>**kwargs</strong></dt><dd><p>a python dictionary {‘h_alpha’:float, ‘h_beta’:float} or
+{‘h0_alpha’:float, ‘h0_beta’:float} or {‘hn_alpha’:float, ‘hn_beta’:float}
+They are obtained by <code class="docutils literal notranslate"><span class="pre">get_h_params()</span></code> of GenModel,
+<code class="docutils literal notranslate"><span class="pre">get_h0_params</span></code> of LearnModel or <code class="docutils literal notranslate"><span class="pre">get_hn_params</span></code> of LearnModel.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bayesml.exponential.LearnModel.get_h0_params">
+<span class="sig-name descname"><span class="pre">get_h0_params</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.exponential.LearnModel.get_h0_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the initial values of the hyperparameters of the posterior distribution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>h0_params</strong><span class="classifier">dict of {str: float}</span></dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;h0_alpha&quot;</span></code> : The value of <code class="docutils literal notranslate"><span class="pre">self.h0_alpha</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;h0_beta&quot;</span></code> : The value of <code class="docutils literal notranslate"><span class="pre">self.h0_beta</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bayesml.exponential.LearnModel.set_hn_params">
+<span class="sig-name descname"><span class="pre">set_hn_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.exponential.LearnModel.set_hn_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set updated values of the hyperparameter of the posterior distribution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>**kwargs</strong></dt><dd><p>a python dictionary {‘h_alpha’:float, ‘h_beta’:float} or
+{‘h0_alpha’:float, ‘h0_beta’:float} or {‘hn_alpha’:float, ‘hn_beta’:float}
+They are obtained by <code class="docutils literal notranslate"><span class="pre">get_h_params()</span></code> of GenModel,
+<code class="docutils literal notranslate"><span class="pre">get_h0_params</span></code> of LearnModel or <code class="docutils literal notranslate"><span class="pre">get_hn_params</span></code> of LearnModel.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bayesml.exponential.LearnModel.get_hn_params">
+<span class="sig-name descname"><span class="pre">get_hn_params</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.exponential.LearnModel.get_hn_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the hyperparameters of the posterior distribution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>hn_params</strong><span class="classifier">dict of {str: float}</span></dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;hn_alpha&quot;</span></code> : The value of <code class="docutils literal notranslate"><span class="pre">self.hn_alpha</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;hn_beta&quot;</span></code> : The value of <code class="docutils literal notranslate"><span class="pre">self.hn_beta</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bayesml.exponential.LearnModel.reset_hn_params">
+<span class="sig-name descname"><span class="pre">reset_hn_params</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.exponential.LearnModel.reset_hn_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reset the hyperparameters of the posterior distribution to their initial values.</p>
+<p>They are reset to <cite>self.h0_alpha</cite> and <cite>self.h0_beta</cite>.
+Note that the parameters of the predictive distribution are also calculated from <cite>self.h0_alpha</cite> and <cite>self.h0_beta</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bayesml.exponential.LearnModel.overwrite_h0_params">
+<span class="sig-name descname"><span class="pre">overwrite_h0_params</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.exponential.LearnModel.overwrite_h0_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Overwrite the initial values of the hyperparameters of the posterior distribution by the learned values.</p>
+<p>They are overwritten by <cite>self.hn_alpha</cite> and <cite>self.hn_beta</cite>.
+Note that the parameters of the predictive distribution are also calculated from <cite>self.hn_alpha</cite> and <cite>self.hn_beta</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bayesml.exponential.LearnModel.update_posterior">
+<span class="sig-name descname"><span class="pre">update_posterior</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.exponential.LearnModel.update_posterior" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update the hyperparameters of the posterior distribution using traning data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>x</strong><span class="classifier">numpy.ndarray</span></dt><dd><p>All the elements must be positive real numbers.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bayesml.exponential.LearnModel.estimate_params">
+<span class="sig-name descname"><span class="pre">estimate_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loss</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'squared'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.exponential.LearnModel.estimate_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimate the parameter of the stochastic data generative model under the given criterion.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>loss</strong><span class="classifier">str, optional</span></dt><dd><p>Loss function underlying the Bayes risk function, by default “squared”.
+This function supports “squared”, “0-1”, “abs”, and “KL”.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>Estimator</strong><span class="classifier">{float, None, rv_frozen}</span></dt><dd><p>The estimated values under the given loss function. If it is not exist, <cite>None</cite> will be returned.
+If the loss function is “KL”, the posterior distribution itself will be returned
+as rv_frozen object of scipy.stats.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.rv_continuous.html#scipy.stats.rv_continuous" title="(in SciPy v1.8.1)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scipy.stats.rv_continuous</span></code></a></dt><dd></dd>
+<dt><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.rv_discrete.html#scipy.stats.rv_discrete" title="(in SciPy v1.8.1)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scipy.stats.rv_discrete</span></code></a></dt><dd></dd>
+</dl>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bayesml.exponential.LearnModel.estimate_interval">
+<span class="sig-name descname"><span class="pre">estimate_interval</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">credibility</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.95</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.exponential.LearnModel.estimate_interval" title="Permalink to this definition">¶</a></dt>
+<dd><p>Credible interval of the parameter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>credibility</strong><span class="classifier">float, optional</span></dt><dd><p>A posterior probability that the interval conitans the paramter, by default 0.95</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>lower, upper: float</dt><dd><p>The lower and the upper bound of the interval</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bayesml.exponential.LearnModel.visualize_posterior">
+<span class="sig-name descname"><span class="pre">visualize_posterior</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.exponential.LearnModel.visualize_posterior" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visualize the posterior distribution for the parameter.</p>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">bayesml</span> <span class="kn">import</span> <span class="n">exponential</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gen_model</span> <span class="o">=</span> <span class="n">exponential</span><span class="o">.</span><span class="n">GenModel</span><span class="p">(</span><span class="n">lambda_</span><span class="o">=</span><span class="mf">2.0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">gen_model</span><span class="o">.</span><span class="n">gen_sample</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">learn_model</span> <span class="o">=</span> <span class="n">exponential</span><span class="o">.</span><span class="n">LearnModel</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">learn_model</span><span class="o">.</span><span class="n">update_posterior</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">learn_model</span><span class="o">.</span><span class="n">visualize_posterior</span><span class="p">()</span>
+</pre></div>
+</div>
+<img alt="_images/exponential_posterior.png" src="_images/exponential_posterior.png" />
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bayesml.exponential.LearnModel.get_p_params">
+<span class="sig-name descname"><span class="pre">get_p_params</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.exponential.LearnModel.get_p_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the parameters of the predictive distribution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>p_params</strong><span class="classifier">dict of {str: float}</span></dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;p_kappa&quot;</span></code> : The value of <code class="docutils literal notranslate"><span class="pre">self.p_kappa</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;p_lambda&quot;</span></code> : The value of <code class="docutils literal notranslate"><span class="pre">self.p_lambda</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bayesml.exponential.LearnModel.calc_pred_dist">
+<span class="sig-name descname"><span class="pre">calc_pred_dist</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.exponential.LearnModel.calc_pred_dist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the parameters of the predictive distribution.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bayesml.exponential.LearnModel.make_prediction">
+<span class="sig-name descname"><span class="pre">make_prediction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loss</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'squared'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.exponential.LearnModel.make_prediction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Predict a new data point under the given criterion.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>loss</strong><span class="classifier">str, optional</span></dt><dd><p>Loss function underlying the Bayes risk function, by default “squared”.
+This function supports “squared”, “0-1”, “abs”, and “KL”.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>Predicted_value</strong><span class="classifier">{int, numpy.ndarray}</span></dt><dd><p>The predicted value under the given loss function.
+If the loss function is “KL”, the predictive distribution itself will be returned
+as numpy.ndarray.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bayesml.exponential.LearnModel.pred_and_update">
+<span class="sig-name descname"><span class="pre">pred_and_update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'squared'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.exponential.LearnModel.pred_and_update" title="Permalink to this definition">¶</a></dt>
+<dd><p>Predict a new data point and update the posterior sequentially.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>x</strong><span class="classifier">float</span></dt><dd><p>a positive real number</p>
+</dd>
+<dt><strong>loss</strong><span class="classifier">str, optional</span></dt><dd><p>Loss function underlying the Bayes risk function, by default “squared”.
+This function supports “squared”, “0-1”, “abs”, and “KL”.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>Predicted_value</strong><span class="classifier">{float, numpy.ndarray}</span></dt><dd><p>The predicted value under the given loss function.
+If the loss function is “KL”, the predictive distribution itself will be returned
+as numpy.ndarray.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+              </div>
+              
+            
+                <!-- Previous / next buttons -->
+<div class='prev-next-area'> 
+    <a class='left-prev' id="prev-link" href="bayesml.categorical.html" title="previous page">
+        <i class="fas fa-angle-left"></i>
+        <div class="prev-next-info">
+            <p class="prev-next-subtitle">previous</p>
+            <p class="prev-next-title">bayesml.categorical package</p>
+        </div>
+    </a>
+    <a class='right-next' id="next-link" href="bayesml.linearregression.html" title="next page">
+    <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">bayesml.linearregression package</p>
+    </div>
+    <i class="fas fa-angle-right"></i>
+    </a>
+</div>
+            
+        </div>
+    </div>
+    <footer class="footer">
+  <p>
+    
+      By BayesML Developers<br/>
+    
+        &copy; Copyright 2022, BayesML Developers.<br/>
+  </p>
+</footer>
+</main>
+
+
+      </div>
+    </div>
+  
+  <script src="_static/js/index.be7d3bbb2ef33a8344ce.js"></script>
+
+  </body>
+</html>
