@@ -5,11 +5,15 @@ Subpackages
 -----------
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 1
 
    bayesml.autoregressive
    bayesml.bernoulli
-   bayesml.metatree
+   bayesml.categorical
+   bayesml.exponential
+   bayesml.linearregression
+   bayesml.multivariate_normal
+   bayesml.normal
    bayesml.poisson
 
 Submodules
@@ -19,14 +23,6 @@ bayesml.base module
 -------------------
 
 .. automodule:: bayesml.base
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: bayesml
    :members:
    :undoc-members:
    :show-inheritance:

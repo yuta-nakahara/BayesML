@@ -493,6 +493,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
     
     def get_p_params(self):
         """Get the parameters of the predictive distribution.
+
         Returns
         -------
         p_params : dict of {str: float}
@@ -510,11 +511,13 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
 
     def make_prediction(self,loss="squared"):
         """Predict a new data point under the given criterion.
+
         Parameters
         ----------
         loss : str, optional
             Loss function underlying the Bayes risk function, by default \"squared\".
             This function supports \"squared\", \"0-1\", \"abs\", and \"KL\".
+        
         Returns
         -------
         Predicted_value : {int, numpy.ndarray}
@@ -532,6 +535,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
 
     def pred_and_update(self,x,loss="squared"):
         """Predict a new data point and update the posterior sequentially.
+
         Parameters
         ----------
         x : int
@@ -539,6 +543,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         loss : str, optional
             Loss function underlying the Bayes risk function, by default \"squared\".
             This function supports \"squared\", \"0-1\", \"abs\", and \"KL\".
+        
         Returns
         -------
         Predicted_value : {int, numpy.ndarray}
