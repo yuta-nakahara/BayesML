@@ -190,6 +190,7 @@ class GenModel(base.Generative):
         
     def set_h_params(self,**kwargs):
         """Set the hyperparameters of the prior distribution.
+
         Parameters
         ----------
         **kwargs
@@ -238,7 +239,8 @@ class GenModel(base.Generative):
             warnings.warn("lambda_mat is reinitialized to the identity matrix because dimension of lambda_mat and h_params are mismatched.", ParameterFormatWarning)
 
     def get_h_params(self):
-        """
+        """Get the hyperparameters of the prior distribution.
+        
         Returns
         -------
         h_params : {str:float, np.ndarray}
@@ -258,7 +260,8 @@ class GenModel(base.Generative):
         self.mu_vec[:] = self.rng.multivariate_normal(mean=self.h_m_vec,cov=np.linalg.inv(self.h_kappa*self.lambda_mat))
     
     def set_params(self,mu_vec,lambda_mat):
-        """
+        """Set the parameter of the sthocastic data generative model.
+
         Parameters
         ----------
         mu_vec : numpy.ndarray
@@ -280,7 +283,8 @@ class GenModel(base.Generative):
             warnings.warn("h_w_mat is reinitialized to the identity matrix because dimension of h_w_mat and lambda_mat are mismatched.", ParameterFormatWarning)
 
     def get_params(self):
-        """
+        """Get the parameter of the sthocastic data generative model.
+
         Returns
         -------
         params : {str:float, numpy.ndarray}
@@ -736,7 +740,6 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         >>> learn_model = multivariate_normal.LearnModel()
         >>> learn_model.update_posterior(x)
         >>> learn_model.visualize_posterior()
-
         hn_m_vec:
         [-0.06924909  0.08126454]
         hn_kappa:
