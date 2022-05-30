@@ -50,12 +50,12 @@ You can visualize the characteristics of the created model by the following meth
 gen_model.visualize_model()
 ```
 
->p:0.7  
->x0:[1 1 1 0 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0]  
->x1:[1 0 1 0 1 0 0 0 0 1 1 1 1 1 1 1 1 0 1 1]  
->x2:[1 0 1 0 1 1 1 1 1 1 1 0 0 0 0 1 1 0 1 1]  
->x3:[0 1 0 1 1 1 1 0 0 0 1 0 0 1 1 1 0 0 1 0]  
->x4:[1 1 1 0 1 1 0 1 1 1 1 1 1 1 1 1 0 1 1 0]  
+>theta:0.7  
+>x0:[1 1 1 1 1 0 1 0 0 1 1 1 1 0 1 1 0 1 1 1]  
+>x1:[1 0 1 1 1 1 1 1 0 0 1 1 1 1 1 1 1 1 1 1]  
+>x2:[0 0 1 1 0 1 0 1 1 1 1 1 1 0 1 0 1 1 1 1]  
+>x3:[1 0 1 1 1 1 1 0 0 0 1 0 0 1 0 1 1 0 1 0]  
+>x4:[1 1 0 1 0 1 1 1 0 1 1 1 0 0 1 1 1 1 1 1]  
 >![bernoulli_example1](./doc/images/README_ex_img1.png)
 
 After confirming that the frequency of occurrence of 1 is around `theta=0.7`, we generate a sample and store it to variable `x`.
@@ -108,6 +108,7 @@ Different settings of a loss function yield different optimal estimates.
 The following packages are currently available. In this library, a probabilistic data generative model, prior distribution, posterior distribution (or approximate posterior distribution), and predictive distribution (or approximate predictive distribution) are collectively called a model.
 
 * Bernoulli model
+* Categorical model
 * Poisson model
 * Normal model
 * Multivariate normal model

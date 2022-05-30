@@ -17,7 +17,7 @@ class GenModel(base.Generative):
 
     Parameters
     ----------
-    p : float, optional
+    theta : float, optional
         a real number in :math:`[0, 1]`, by default 0.5
     h_alpha : float, optional
         a positive real number, by default 0.5
@@ -27,8 +27,8 @@ class GenModel(base.Generative):
         A seed to initialize numpy.random.default_rng(),
         by default None
     """
-    def __init__(self,*,p=0.5,h_alpha=0.5,h_beta=0.5,seed=None):
-        self.p = _check.float_in_closed01(p,'p',ParameterFormatError)
+    def __init__(self,*,theta=0.5,h_alpha=0.5,h_beta=0.5,seed=None):
+        self.theta = _check.float_in_closed01(theta,'theta',ParameterFormatError)
         self.h_alpha = _check.pos_float(h_alpha,'h_alpha',ParameterFormatError)
         self.h_beta = _check.pos_float(h_beta,'h_beta',ParameterFormatError)
         self.rng = np.random.default_rng(seed)
@@ -78,19 +78,19 @@ class GenModel(base.Generative):
     def gen_params(self):
         """Generate the parameter from the prior distribution.
         
-        The generated vaule is set at ``self.p``.
+        The generated vaule is set at ``self.theta``.
         """
-        self.p = self.rng.beta(self.h_alpha,self.h_beta)
+        self.theta = self.rng.beta(self.h_alpha,self.h_beta)
         
-    def set_params(self,p):
+    def set_params(self,theta):
         """Set the parameter of the sthocastic data generative model.
 
         Parameters
         ----------
-        p : float
-            a real number :math:`p \in [0, 1]`
+        theta : float
+            a real number :math:`\theta \in [0, 1]`
         """
-        self.p = _check.float_in_closed01(p,'p',ParameterFormatError)
+        self.theta = _check.float_in_closed01(theta,'theta',ParameterFormatError)
 
     def get_params(self):
         """Get the parameter of the sthocastic data generative model.
@@ -98,9 +98,9 @@ class GenModel(base.Generative):
         Returns
         -------
         params : dict of {str:float}
-            * ``"p"`` : The value of ``self.p``.
+            * ``"theta"`` : The value of ``self.theta``.
         """
-        return {"p":self.p}
+        return {"theta":self.theta}
 
     def gen_sample(self,sample_size):
         """Generate a sample from the stochastic data generative model.
@@ -116,7 +116,7 @@ class GenModel(base.Generative):
             1 dimensional array whose size is ``sammple_size`` and elements are 0 or 1.
         """
         _check.pos_int(sample_size,'sample_size',DataFormatError)
-        return self.rng.binomial(1,self.p,sample_size)
+        return self.rng.binomial(1,self.theta,sample_size)
         
     def save_sample(self,filename,sample_size):
         """Save the generated sample as NumPy ``.npz`` format.
@@ -152,7 +152,7 @@ class GenModel(base.Generative):
         >>> from bayesml import bernoulli
         >>> model = bernoulli.GenModel()
         >>> model.visualize_model()
-        p:0.5
+        theta:0.5
         x0:[1 1 0 0 0 1 0 1 0 0 0 1 0 1 0 1 0 1 0 0]
         x1:[1 1 0 0 0 0 0 1 1 0 0 0 1 0 1 0 0 0 0 0]
         x2:[0 1 0 1 0 0 1 0 0 0 1 0 1 1 1 0 1 0 1 1]
@@ -163,11 +163,11 @@ class GenModel(base.Generative):
         """
         _check.pos_int(sample_size,'sample_size',DataFormatError)
         _check.pos_int(sample_num,'sample_num',DataFormatError)
-        print(f"p:{self.p}")
+        print(f"theta:{self.theta}")
         fig, ax = plt.subplots(2,1,figsize=(5, sample_num+1),gridspec_kw={'height_ratios': [1,sample_num]})
         ax[0].set_title("True distribution")
-        ax[0].barh(0,self.p,label=1,color="C0")
-        ax[0].barh(0,1.0-self.p,left=self.p,label=0,color="C1")
+        ax[0].barh(0,self.theta,label=1,color="C0")
+        ax[0].barh(0,1.0-self.theta,left=self.theta,label=0,color="C1")
         ax[1].set_title("Generated sample")
         for i in range(sample_num):
             x = self.gen_sample(sample_size)
@@ -198,18 +198,15 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         a positive real number
     hn_beta : float
         a positibe real number
-    p_alpha : float
-        a positive real number
-    p_beta : float
-        a positibe real number
+    p_theta : float
+        a real number :math:`\theta_\mathrm{p} \in [0, 1]`
     """
     def __init__(self,h0_alpha=0.5,h0_beta=0.5):
         self.h0_alpha = _check.pos_float(h0_alpha,'h0_alpha',ParameterFormatError)
         self.h0_beta = _check.pos_float(h0_beta,'h0_beta',ParameterFormatError)
         self.hn_alpha = self.h0_alpha
         self.hn_beta = self.h0_beta
-        self.p_alpha = self.hn_alpha
-        self.p_beta = self.hn_beta
+        self.p_theta = self.hn_alpha / (self.hn_alpha + self.hn_beta)
         self._H_PARAM_KEYS = {'h_alpha','h_beta'}
         self._H0_PARAM_KEYS = {'h0_alpha','h0_beta'}
         self._HN_PARAM_KEYS = {'hn_alpha','hn_beta'}
@@ -390,11 +387,11 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         --------
         >>> from bayesml import bernoulli
         >>> gen_model = bernoulli.GenModel()
-        >>> X = gen_model.gen_sample(20)
-        >>> print(X)
-        [1 0 1 0 0 0 0 0 0 0 1 1 1 1 0 1 0 0 1 0]
+        >>> x = gen_model.gen_sample(20)
+        >>> print(x)
+        [0 1 1 0 1 0 0 0 0 1 0 0 0 1 0 1 0 0 1 0]
         >>> learn_model = bernoulli.LearnModel()
-        >>> learn_model.update_posterior(X)
+        >>> learn_model.update_posterior(x)
         >>> learn_model.visualize_posterior()
         
         .. image:: ./images/bernoulli_posterior.png
@@ -402,7 +399,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         p_range = np.linspace(0,1,100,endpoint=False)
         fig, ax = plt.subplots()
         ax.plot(p_range,self.estimate_params(loss="KL").pdf(p_range))
-        ax.set_xlabel("p")
+        ax.set_xlabel("p_theta")
         ax.set_ylabel("posterior")
         plt.show()
     
@@ -412,28 +409,13 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         Returns
         -------
         p_params : dict of {str: float}
-            * ``"p_alpha"`` : The value of ``self.p_alpha``
-            * ``"p_beta"`` : The value of ``self.p_beta``
+            * ``"p_theta"`` : The value of ``self.p_theta``
         """
-        return {"p_alpha":self.p_alpha, "p_beta":self.p_beta}
+        return {"p_theta":self.p_theta}
     
-    def set_p_params(self,p_alpha,p_beta):
-        """Set the parameters of the predictive distribution.
-
-        Parameters
-        ----------
-        p_alpha : float
-            a positive real number
-        p_beta : float
-            a positibe real number
-        """
-        self.p_alpha = _check.pos_float(p_alpha,'p_alpha',ParameterFormatError)
-        self.p_beta = _check.pos_float(p_beta,'p_beta',ParameterFormatError)
-
     def calc_pred_dist(self):
         """Calculate the parameters of the predictive distribution."""
-        self.p_alpha = self.hn_alpha
-        self.p_beta = self.hn_beta
+        self.p_theta = self.hn_alpha / (self.hn_alpha + self.hn_beta)
 
     def make_prediction(self,loss="squared"):
         """Predict a new data point under the given criterion.
@@ -452,16 +434,15 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             as numpy.ndarray.
         """
         if loss == "squared":
-            return self.p_alpha / (self.p_alpha + self.p_beta)
+            return self.p_theta
         elif loss == "0-1" or loss == "abs":
-            if self.p_alpha > self.p_beta:
+            if self.p_theta > 0.5:
                 return 1
             else:
                 return 0
         elif loss == "KL":
-            return np.array((self.p_beta / (self.p_alpha + self.p_beta),
-                             self.p_alpha / (self.p_alpha + self.p_beta)))
-            # return ss_betabinom(1,self.p_alpha,self.p_beta)
+            return np.array((1.0 - self.p_theta,
+                             self.p_theta))
         else:
             raise(CriteriaError("Unsupported loss function! "
                                 "This function supports \"squared\", \"0-1\", \"abs\", and \"KL\"."))

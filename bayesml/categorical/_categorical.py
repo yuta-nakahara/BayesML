@@ -32,9 +32,9 @@ class GenModel(base.Generative):
         ``h_alpha_vec`` is used. If all of them are not given, 
         degree is assumed to be 3.
     theta_vec : numpy ndarray, optional
-        a real vector in :math:`[0, 1]^d`, by default [1/d. 1/d, ... , 1/d]
+        a real vector in :math:`[0, 1]^d`, by default [1/d, 1/d, ... , 1/d]
     h_alpha_vec : numpy ndarray, optional
-        a real vector, by default [1/2, 1/2, ... , 1/2]
+        a vector of positive real numbers, by default [1/2, 1/2, ... , 1/2]
     seed : {None, int}, optional
         A seed to initialize numpy.random.default_rng(),
         by default None
@@ -116,7 +116,8 @@ class GenModel(base.Generative):
             warnings.warn("theta_vec is reinitialized to [1.0/self.degree, 1.0/self.degree, ..., 1.0/self.degree] because dimension of theta_vec and h_alpha_vec are mismatched.", ParameterFormatWarning)
 
     def get_h_params(self):
-        """
+        """Get the hyperparameters of the prior distribution.
+
         Returns
         -------
         h_params : {str:numpy ndarray}
@@ -125,15 +126,15 @@ class GenModel(base.Generative):
         return {"h_alpha_vec": self.h_alpha_vec}
 
     def gen_params(self):
-        """
-        Generate the parameter of the stochastic data generative model from the prior distribution.
+        """Generate the parameter from the prior distribution.
         
         The generated vaule is set at ``self.theta_vec``.
         """
         self.theta_vec[:] = self.rng.dirichlet(self.h_alpha_vec)
 
     def set_params(self, theta_vec):
-        """
+        """Set the parameter of the sthocastic data generative model.
+
         Parameters
         ----------
         p : numpy ndarray
@@ -147,7 +148,8 @@ class GenModel(base.Generative):
             warnings.warn("h_alpha_vec is reinitialized to [1/2, 1/2, ..., 1/2] because dimension of h_m_vec and mu_vec are mismatched.", ParameterFormatWarning)
 
     def get_params(self):
-        """
+        """Get the parameter of the sthocastic data generative model.
+
         Returns
         -------
         params : {str:numpy ndarray}
@@ -251,6 +253,18 @@ class GenModel(base.Generative):
         plt.show()
 
 class LearnModel(base.Posterior, base.PredictiveMixin):
+    """The posterior distribution and the predictive distribution.
+
+    Parameters
+    ----------
+    degree : int, optional
+        a positive integer. Default is None, in which case 
+        a value consistent with ``h_alpha_vec`` is used. 
+        If ``h_alpha_vec`` is also None, 
+        degree is assumed to be 3.
+    h0_alpha_vec : numpy.ndarray, optional
+        a vector of positive real numbers, by default [1/2, 1/2, ... , 1/2]
+    """
     def __init__(self, degree=None, h0_alpha_vec=None):
         if degree is not None:
             self.degree = _check.pos_int(degree,'degree',ParameterFormatError)
@@ -530,6 +544,23 @@ class LearnModel(base.Posterior, base.PredictiveMixin):
             )
 
     def pred_and_update(self, x, loss="squared"):
+        """Predict a new data point and update the posterior sequentially.
+
+        Parameters
+        ----------
+        x : numpy.ndarray
+            2-dimensional array whose shape is ``(sample_size,degree)`` whose rows are one-hot vectors.
+        loss : str, optional
+            Loss function underlying the Bayes risk function, by default \"squared\".
+            This function supports \"squared\", \"0-1\", and \"KL\".
+
+        Returns
+        -------
+        Predicted_value : {int, numpy.ndarray}
+            The predicted value under the given loss function. 
+            If the loss function is \"KL\", the predictive distribution itself will be returned
+            as numpy.ndarray.
+        """
         self.calc_pred_dist()
         prediction = self.make_prediction(loss=loss)
         self.update_posterior(x)

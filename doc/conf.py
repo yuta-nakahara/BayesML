@@ -69,6 +69,8 @@ myst_enable_extensions = ["dollarmath", "amsmath","html_image"]
 
 html_theme_options = {
   "logo_only": True,
+  "repository_url": "https://github.com/yuta-nakahara/BayesML/",
+  "use_repository_button": True,
 }
 
 napoleon_use_rtype = False
@@ -79,7 +81,7 @@ autodoc_default_options = {
 
 #numpydoc_show_class_members = False
 
-#html_style = 'css/customize.css'
+html_style = 'css/customize.css'
 
 autosummary_generate = True
 
@@ -88,3 +90,5 @@ intersphinx_mapping = {'python': ('https://docs.python.org/3', None),
                        'numpy': ('https://numpy.org/doc/stable/', None),
                        'scipy':('https://docs.scipy.org/doc/scipy/reference/', None)
 }
+
+html_favicon = 'logos/BayesML_favicon.ico'

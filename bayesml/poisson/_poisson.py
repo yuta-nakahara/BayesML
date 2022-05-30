@@ -158,7 +158,7 @@ class GenModel(base.Generative):
         lambda:1.0
         x:[2 1 1 0 0 5 0 2 2 2 1 1 0 1 3 0 0 1 1 0]
 
-        .. image:: ./images/bernoulli_example.png
+        .. image:: ./images/poisson_example.png
         """
         _check.pos_int(sample_size,'sample_size',DataFormatError)
         print(f"lambda:{self.lambda_}")
@@ -195,7 +195,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         a positibe real number, by default 1.0
     p_r : float
         a positive real number, by default 1.0
-    p_p : float
+    p_theta : float
         a real number in :math:`[0, 1]`, by default 0.5
     """
     def __init__(self,h0_alpha=1.0,h0_beta=1.0):
@@ -204,7 +204,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self.hn_alpha = self.h0_alpha
         self.hn_beta = self.h0_beta
         self.p_r = self.hn_alpha
-        self.p_p = 1.0 / (1.0+self.hn_beta)
+        self.p_theta = 1.0 / (1.0+self.hn_beta)
         self._H_PARAM_KEYS = {'h_alpha','h_beta'}
         self._H0_PARAM_KEYS = {'h0_alpha','h0_beta'}
         self._HN_PARAM_KEYS = {'hn_alpha','hn_beta'}
@@ -404,15 +404,15 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         Returns
         -------
         p_params : dict of {str: float}
-            * ``"p_alpha"`` : The value of ``self.p_alpha``
-            * ``"p_beta"`` : The value of ``self.p_beta``
+            * ``"p_r"`` : The value of ``self.p_r``
+            * ``"p_theta"`` : The value of ``self.p_theta``
         """
-        return {"p_r":self.p_r, "p_p":self.p_p}
+        return {"p_r":self.p_r, "p_theta":self.p_theta}
     
     def calc_pred_dist(self):
         """Calculate the parameters of the predictive distribution."""
         self.p_r = self.hn_alpha
-        self.p_p = 1.0 / (1.0+self.hn_beta)
+        self.p_theta = 1.0 / (1.0+self.hn_beta)
 
     def make_prediction(self,loss="squared"):
         """Predict a new data point under the given criterion.
@@ -431,16 +431,16 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             as numpy.ndarray.
         """
         if loss == "squared":
-            return self.p_r * self.p_p / (1.0-self.p_p)
+            return self.p_r * self.p_theta / (1.0-self.p_theta)
         elif loss == "0-1":
             if self.p_r > 1.0 :
-                return np.floor((self.p_r-1.0) * self.p_p / (1.0-self.p_p))
+                return np.floor((self.p_r-1.0) * self.p_theta / (1.0-self.p_theta))
             else:
                 return 0
         elif loss == "abs":
-            return ss_nbinom.median(n=self.p_r,p=(1.0-self.p_p))
+            return ss_nbinom.median(n=self.p_r,p=(1.0-self.p_theta))
         elif loss == "KL":
-            return ss_nbinom(n=self.p_r,p=(1.0-self.p_p))
+            return ss_nbinom(n=self.p_r,p=(1.0-self.p_theta))
         else:
             raise(CriteriaError("Unsupported loss function! "
                                 "This function supports \"squared\", \"0-1\", \"abs\", and \"KL\"."))

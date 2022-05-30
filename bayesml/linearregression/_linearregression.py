@@ -302,7 +302,7 @@ class GenModel(base.Generative):
         >>> model = linearregression.GenModel(theta_vec=np.array([2,1]))
         >>> model.visualize_model()
 
-        .. image:: ./images/autoregressive_example.png
+        .. image:: ./images/linearregression_example.png
         """
         if self.degree == 2 and constant==True:
             print(f"theta_vec:\n{self.theta_vec}")
@@ -669,7 +669,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         >>> learn_model.update_posterior(x,y)
         >>> learn_model.visualize_posterior()
         
-        .. image:: ./images/autoregressive_posterior.png
+        .. image:: ./images/linearregression_posterior.png
         """
         theta_vec_pdf, tau_pdf = self.estimate_params(loss="KL")
         if self.degree == 1:
@@ -731,6 +731,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
     
     def get_p_params(self):
         """Get the parameters of the predictive distribution.
+
         Returns
         -------
         p_params : dict of {str: float}
@@ -784,17 +785,19 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             raise(CriteriaError("Unsupported loss function! "
                                 "This function supports \"squared\", \"0-1\", \"abs\", and \"KL\"."))
 
-    def pred_and_update(self,Phi,t,loss="squared"):
+    def pred_and_update(self,x,y,loss="squared"):
         """Predict a new data and update the posterior sequentially.
+
         Parameters
         ----------
-        Phi : numpy ndarray
+        x : numpy ndarray
             1 dimensional float array whose size is ``self.degree``.
-        t : numpy ndarray
-            1 dimensional float array whose size is 1.
+        y : float
+
         loss : str, optional
             Loss function underlying the Bayes risk function, by default \"squared\".
             This function supports \"squared\", \"0-1\", \"abs\", and \"KL\".
+
         Returns
         -------
         Predicted_value : {float, rv_frozen}
@@ -802,7 +805,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             If the loss function is \"KL\", the predictive distribution itself will be returned
             as rv_frozen object of scipy.stats.
         """
-        self.calc_pred_dist(Phi)
+        self.calc_pred_dist(x)
         prediction = self.make_prediction(loss=loss)
-        self.update_posterior(Phi,t)
+        self.update_posterior(x,y)
         return prediction
