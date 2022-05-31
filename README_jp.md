@@ -16,6 +16,8 @@ BayesMLは以下の特徴を持っています．
 * 学習アルゴリズムの多くはデータ生成確率モデルと事前分布の共役性を効果的に用いているため，MCMC法などの汎用的なベイズ学習アルゴリズムと比べて非常に高速で，オンライン学習にも適しています．
 * 2~3次元空間上で，データ生成確率モデル，生成された人工データ，学習された事後分布を可視化するメソッドが全てのパッケージに備わっています．そのため，人工データの生成と学習を通じて確率モデル，アルゴリズムの特性を効果的に把握することができます．
 
+詳細は[Webサイト](https://yuta-nakahara.github.io/BayesML/ "BayesML's Documentation")をご覧ください．
+
 ## インストール
 
 以下のコマンドによりインストール可能です．
@@ -104,14 +106,14 @@ print(learn_model.estimate_params(loss='0-1'))
 
 現在，以下のモデルに関するパッケージが利用可能です．本ライブラリでは，データ生成確率モデル，事前分布，事後分布（または近似事後分布），予測分布（または近似予測分布）を合わせてモデルと呼んでいます．
 
-* ベルヌーイモデル
-* カテゴリカルモデル
-* ポアソンモデル
-* 正規モデル
-* 多変量正規モデル
-* 指数モデル
-* 線形回帰モデル
-* 自己回帰モデル
+* [ベルヌーイモデル](https://yuta-nakahara.github.io/BayesML/bayesml.bernoulli.html, "Bayesml Bernoulli Model")
+* [カテゴリカルモデル](https://yuta-nakahara.github.io/BayesML/bayesml.categorical.html "BayesML Categorical Model")
+* [ポアソンモデル](https://yuta-nakahara.github.io/BayesML/bayesml.poisson.html, "BayesML Poisson Model")
+* [正規モデル](https://yuta-nakahara.github.io/BayesML/bayesml.normal.html, "BayesML Normal Model")
+* [多変量正規モデル](https://yuta-nakahara.github.io/BayesML/bayesml.multivariate_normal.html "BayesML Multivariate Normal Model")
+* [指数モデル](https://yuta-nakahara.github.io/BayesML/bayesml.exponential.html "BayesML Exponential Model")
+* [線形回帰モデル](https://yuta-nakahara.github.io/BayesML/bayesml.linearregression.html "BayesML Lenear Regression Model")
+* [自己回帰モデル](https://yuta-nakahara.github.io/BayesML/bayesml.autoregressive.html "BayesML Autoregressive Model")
 
 また，今後は混合正規モデルや隠れマルコフモデルなどの厳密なベイズ推論が困難なモデルを変分ベイズ法で学習するパッケージが追加される予定です．
 

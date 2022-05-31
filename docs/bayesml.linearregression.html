@@ -412,15 +412,13 @@ by default None</p>
 <dt class="sig sig-object py" id="bayesml.linearregression.GenModel.set_h_params">
 <span class="sig-name descname"><span class="pre">set_h_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.linearregression.GenModel.set_h_params" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set the hyperparameters of the prior distribution.</p>
-<dl class="field-list">
+<dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><dl>
+<dd class="field-odd"><dl class="simple">
 <dt><strong>**kwargs</strong></dt><dd><p>a python dictionary {‘h_mu_vec’:ndarray, ‘h_lambda_mat’:ndarray, ‘h_alpha’:float, ‘h_beta’:float} or
-{‘h0_mu_vec’:ndarray, ‘h0_lambda_mat’:ndarray, ‘h0_alpha’:float, ‘h0_beta’:float}</p>
-<blockquote>
-<div><p>or {‘hn_mu_vec’:ndarray, ‘hn_lambda_mat’:ndarray, ‘hn_alpha’:float, ‘hn_beta’:float}</p>
-</div></blockquote>
-<p>They are obtained by <code class="docutils literal notranslate"><span class="pre">get_h_params()</span></code> of GenModel,
+{‘h0_mu_vec’:ndarray, ‘h0_lambda_mat’:ndarray, ‘h0_alpha’:float, ‘h0_beta’:float}
+or {‘hn_mu_vec’:ndarray, ‘hn_lambda_mat’:ndarray, ‘hn_alpha’:float, ‘hn_beta’:float}
+They are obtained by <code class="docutils literal notranslate"><span class="pre">get_h_params()</span></code> of GenModel,
 <code class="docutils literal notranslate"><span class="pre">get_h0_params</span></code> of LearnModel or <code class="docutils literal notranslate"><span class="pre">get_hn_params</span></code> of LearnModel.</p>
 </dd>
 </dl>
@@ -684,15 +682,13 @@ degree is assumed to be 1.</p>
 <dd><p>Set initial values of the hyperparameter of the posterior distribution.</p>
 <p>Note that the parameters of the predictive distribution are also calculated from 
 <code class="docutils literal notranslate"><span class="pre">self.h0_mu_vec</span></code>, <code class="docutils literal notranslate"><span class="pre">slef.h0_lambda_mat</span></code>, <code class="docutils literal notranslate"><span class="pre">self.h0_alpha</span></code> and <code class="docutils literal notranslate"><span class="pre">self.h0_beta</span></code>.</p>
-<dl class="field-list">
+<dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><dl>
+<dd class="field-odd"><dl class="simple">
 <dt><strong>**kwargs</strong></dt><dd><p>a python dictionary {‘h_mu_vec’:ndarray, ‘h_lambda_mat’:ndarray, ‘h_alpha’:float, ‘h_beta’:float} or
-{‘h0_mu_vec’:ndarray, ‘h0_lambda_mat’:ndarray, ‘h0_alpha’:float, ‘h0_beta’:float}</p>
-<blockquote>
-<div><p>or {‘hn_mu_vec’:ndarray, ‘hn_lambda_mat’:ndarray, ‘hn_alpha’:float, ‘hn_beta’:float}</p>
-</div></blockquote>
-<p>They are obtained by <code class="docutils literal notranslate"><span class="pre">get_h_params()</span></code> of GenModel,
+{‘h0_mu_vec’:ndarray, ‘h0_lambda_mat’:ndarray, ‘h0_alpha’:float, ‘h0_beta’:float}
+or {‘hn_mu_vec’:ndarray, ‘hn_lambda_mat’:ndarray, ‘hn_alpha’:float, ‘hn_beta’:float}
+They are obtained by <code class="docutils literal notranslate"><span class="pre">get_h_params()</span></code> of GenModel,
 <code class="docutils literal notranslate"><span class="pre">get_h0_params</span></code> of LearnModel or <code class="docutils literal notranslate"><span class="pre">get_hn_params</span></code> of LearnModel.</p>
 </dd>
 </dl>
@@ -725,15 +721,13 @@ degree is assumed to be 1.</p>
 <dd><p>Set updated values of the hyperparameter of the posterior distribution.</p>
 <p>Note that the parameters of the predictive distribution are also calculated from 
 <code class="docutils literal notranslate"><span class="pre">self.hn_mu_vec</span></code>, <code class="docutils literal notranslate"><span class="pre">slef.hn_lambda_mat</span></code>, <code class="docutils literal notranslate"><span class="pre">self.hn_alpha</span></code> and <code class="docutils literal notranslate"><span class="pre">self.hn_beta</span></code>.</p>
-<dl class="field-list">
+<dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><dl>
+<dd class="field-odd"><dl class="simple">
 <dt><strong>**kwargs</strong></dt><dd><p>a python dictionary {‘h_mu_vec’:ndarray, ‘h_lambda_mat’:ndarray, ‘h_alpha’:float, ‘h_beta’:float} or
-{‘h0_mu_vec’:ndarray, ‘h0_lambda_mat’:ndarray, ‘h0_alpha’:float, ‘h0_beta’:float}</p>
-<blockquote>
-<div><p>or {‘hn_mu_vec’:ndarray, ‘hn_lambda_mat’:ndarray, ‘hn_alpha’:float, ‘hn_beta’:float}</p>
-</div></blockquote>
-<p>They are obtained by <code class="docutils literal notranslate"><span class="pre">get_h_params()</span></code> of GenModel,
+{‘h0_mu_vec’:ndarray, ‘h0_lambda_mat’:ndarray, ‘h0_alpha’:float, ‘h0_beta’:float}
+or {‘hn_mu_vec’:ndarray, ‘hn_lambda_mat’:ndarray, ‘hn_alpha’:float, ‘hn_beta’:float}
+They are obtained by <code class="docutils literal notranslate"><span class="pre">get_h_params()</span></code> of GenModel,
 <code class="docutils literal notranslate"><span class="pre">get_h0_params</span></code> of LearnModel or <code class="docutils literal notranslate"><span class="pre">get_hn_params</span></code> of LearnModel.</p>
 </dd>
 </dl>
