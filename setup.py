@@ -33,15 +33,15 @@ from setuptools import setup, find_packages
 
 setup(
     name='bayesml',
-    version='0.0.3',
+    version='0.1.0',
     packages=find_packages(),
     author='Yuta Nakahara et al.',
     author_email='yuta.nakahara@aoni.waseda.jp',
-    url='https://github.com/yuta-nakahara/BayesML',
+    url='https://yuta-nakahara.github.io/BayesML/',
     description=DOCLINES[0],
     long_description="\n".join(DOCLINES[2:]),
     long_description_content_type='text/markdown',
-    classifiers=['Development Status :: 2 - Pre-Alpha',
+    classifiers=['Development Status :: 3 - Alpha',
                  'License :: OSI Approved :: BSD License',
                  'Intended Audience :: Education',
                  'Intended Audience :: Science/Research',
