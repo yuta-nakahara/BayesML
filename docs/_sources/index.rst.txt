@@ -2,6 +2,9 @@
    sphinx-quickstart on Mon Feb 21 21:21:00 2022.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
+.. Document Author
+   Yuta Nakahara <yuta.nakahara@aoni.waseda.jp>
+   Shota Saito <shota.s@gunma-u.ac.jp>
 
 BayesML's Documentation
 =======================
@@ -41,7 +44,7 @@ Example
 
 We show an example of generating data drawn according to the Bernoulli distribution and learning from them.
 
-First, we create an instance of a probabilistic data generative model. Here, the parameter $\theta$, which represents an occurrence probability of 1, is set to 0.7.
+First, we create an instance of a probabilistic data generative model. Here, the parameter `theta`, which represents an occurrence probability of 1, is set to 0.7.
 
 .. code-block::
 
@@ -64,7 +67,7 @@ Outputs:
    | x4:[1 1 1 0 1 1 0 1 1 1 1 1 1 1 1 1 0 1 1 0]  
    .. image:: ./images/README_ex_img1.png
 
-After confirming that the frequency of occurrence of 1 is around $\theta$=0.7, we generate a sample and store it to variable x.
+After confirming that the frequency of occurrence of 1 is around `theta=0.7`, we generate a sample and store it to variable `x`.
 
 .. code-block::
 
@@ -88,7 +91,7 @@ Outputs:
 
    .. image:: ./images/README_ex_img2.png
 
-After learning from the data, we can see that the density of the posterior distribution is concentrated around the true parameter $\theta$=0.7.
+After learning from the data, we can see that the density of the posterior distribution is concentrated around the true parameter `theta=0.7`.
 
 .. code-block::
 
