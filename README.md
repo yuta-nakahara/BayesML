@@ -109,10 +109,10 @@ Different settings of a loss function yield different optimal estimates.
 
 The following packages are currently available. In this library, a probabilistic data generative model, prior distribution, posterior distribution (or approximate posterior distribution), and predictive distribution (or approximate predictive distribution) are collectively called a model.
 
-* [Bernoulli model](https://yuta-nakahara.github.io/BayesML/bayesml.bernoulli.html, "Bayesml Bernoulli Model")
+* [Bernoulli model](https://yuta-nakahara.github.io/BayesML/bayesml.bernoulli.html "Bayesml Bernoulli Model")
 * [Categorical model](https://yuta-nakahara.github.io/BayesML/bayesml.categorical.html "BayesML Categorical Model")
-* [Poisson model](https://yuta-nakahara.github.io/BayesML/bayesml.poisson.html, "BayesML Poisson Model")
-* [Normal model](https://yuta-nakahara.github.io/BayesML/bayesml.normal.html, "BayesML Normal Model")
+* [Poisson model](https://yuta-nakahara.github.io/BayesML/bayesml.poisson.html "BayesML Poisson Model")
+* [Normal model](https://yuta-nakahara.github.io/BayesML/bayesml.normal.html "BayesML Normal Model")
 * [Multivariate normal model](https://yuta-nakahara.github.io/BayesML/bayesml.multivariate_normal.html "BayesML Multivariate Normal Model")
 * [Exponential model](https://yuta-nakahara.github.io/BayesML/bayesml.exponential.html "BayesML Exponential Model")
 * [Linear regression model](https://yuta-nakahara.github.io/BayesML/bayesml.linearregression.html "BayesML Lenear Regression Model")

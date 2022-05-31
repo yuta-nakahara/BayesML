@@ -106,10 +106,10 @@ print(learn_model.estimate_params(loss='0-1'))
 
 現在，以下のモデルに関するパッケージが利用可能です．本ライブラリでは，データ生成確率モデル，事前分布，事後分布（または近似事後分布），予測分布（または近似予測分布）を合わせてモデルと呼んでいます．
 
-* [ベルヌーイモデル](https://yuta-nakahara.github.io/BayesML/bayesml.bernoulli.html, "Bayesml Bernoulli Model")
+* [ベルヌーイモデル](https://yuta-nakahara.github.io/BayesML/bayesml.bernoulli.html "Bayesml Bernoulli Model")
 * [カテゴリカルモデル](https://yuta-nakahara.github.io/BayesML/bayesml.categorical.html "BayesML Categorical Model")
-* [ポアソンモデル](https://yuta-nakahara.github.io/BayesML/bayesml.poisson.html, "BayesML Poisson Model")
-* [正規モデル](https://yuta-nakahara.github.io/BayesML/bayesml.normal.html, "BayesML Normal Model")
+* [ポアソンモデル](https://yuta-nakahara.github.io/BayesML/bayesml.poisson.html "BayesML Poisson Model")
+* [正規モデル](https://yuta-nakahara.github.io/BayesML/bayesml.normal.html "BayesML Normal Model")
 * [多変量正規モデル](https://yuta-nakahara.github.io/BayesML/bayesml.multivariate_normal.html "BayesML Multivariate Normal Model")
 * [指数モデル](https://yuta-nakahara.github.io/BayesML/bayesml.exponential.html "BayesML Exponential Model")
 * [線形回帰モデル](https://yuta-nakahara.github.io/BayesML/bayesml.linearregression.html "BayesML Lenear Regression Model")
