@@ -17,6 +17,8 @@ BayesML has the following characteristics.
 * Many of our learning algorithms are much faster than general-purpose Bayesian learning algorithms such as MCMC methods because they effectively use the conjugate property of a probabilistic data generative model and a prior distribution. Moreover, they are suitable for online learning.
 * All packages have methods to visualize the probabilistic data generative model, generated data from that model, and the posterior distribution learned from the data in 2~3 dimensional space. Thus, you can effectively understand the characteristics of probabilistic data generative models and algorithms through the generation of synthetic data and learning from them.
 
+For more details, see our [website](https://yuta-nakahara.github.io/BayesML/ "BayesML's Documentation").
+
 ## Installation
 
 Please use the following commands to install BayesML.
@@ -107,14 +109,14 @@ Different settings of a loss function yield different optimal estimates.
 
 The following packages are currently available. In this library, a probabilistic data generative model, prior distribution, posterior distribution (or approximate posterior distribution), and predictive distribution (or approximate predictive distribution) are collectively called a model.
 
-* Bernoulli model
-* Categorical model
-* Poisson model
-* Normal model
-* Multivariate normal model
-* Exponential model
-* Linear regression model
-* Autoregressive model
+* [Bernoulli model](https://yuta-nakahara.github.io/BayesML/bayesml.bernoulli.html "Bayesml Bernoulli Model")
+* [Categorical model](https://yuta-nakahara.github.io/BayesML/bayesml.categorical.html "BayesML Categorical Model")
+* [Poisson model](https://yuta-nakahara.github.io/BayesML/bayesml.poisson.html "BayesML Poisson Model")
+* [Normal model](https://yuta-nakahara.github.io/BayesML/bayesml.normal.html "BayesML Normal Model")
+* [Multivariate normal model](https://yuta-nakahara.github.io/BayesML/bayesml.multivariate_normal.html "BayesML Multivariate Normal Model")
+* [Exponential model](https://yuta-nakahara.github.io/BayesML/bayesml.exponential.html "BayesML Exponential Model")
+* [Linear regression model](https://yuta-nakahara.github.io/BayesML/bayesml.linearregression.html "BayesML Lenear Regression Model")
+* [Autoregressive model](https://yuta-nakahara.github.io/BayesML/bayesml.autoregressive.html "BayesML Autoregressive Model")
 
 In the future, we will add packages to deal with a mixture normal model and a hidden Markov model, which are difficult to perform exact Bayesian inference, by using variational Bayes methods.
 

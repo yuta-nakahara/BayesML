@@ -123,7 +123,7 @@ class GenModel(base.Generative):
         **kwargs
             a python dictionary {'h_mu_vec':ndarray, 'h_lambda_mat':ndarray, 'h_alpha':float, 'h_beta':float} or
             {'h0_mu_vec':ndarray, 'h0_lambda_mat':ndarray, 'h0_alpha':float, 'h0_beta':float}
-             or {'hn_mu_vec':ndarray, 'hn_lambda_mat':ndarray, 'hn_alpha':float, 'hn_beta':float}
+            or {'hn_mu_vec':ndarray, 'hn_lambda_mat':ndarray, 'hn_alpha':float, 'hn_beta':float}
             They are obtained by ``get_h_params()`` of GenModel,
             ``get_h0_params`` of LearnModel or ``get_hn_params`` of LearnModel.
         """
@@ -449,7 +449,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         **kwargs
             a python dictionary {'h_mu_vec':ndarray, 'h_lambda_mat':ndarray, 'h_alpha':float, 'h_beta':float} or
             {'h0_mu_vec':ndarray, 'h0_lambda_mat':ndarray, 'h0_alpha':float, 'h0_beta':float}
-             or {'hn_mu_vec':ndarray, 'hn_lambda_mat':ndarray, 'hn_alpha':float, 'hn_beta':float}
+            or {'hn_mu_vec':ndarray, 'hn_lambda_mat':ndarray, 'hn_alpha':float, 'hn_beta':float}
             They are obtained by ``get_h_params()`` of GenModel,
             ``get_h0_params`` of LearnModel or ``get_hn_params`` of LearnModel.
         """
@@ -507,7 +507,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         **kwargs
             a python dictionary {'h_mu_vec':ndarray, 'h_lambda_mat':ndarray, 'h_alpha':float, 'h_beta':float} or
             {'h0_mu_vec':ndarray, 'h0_lambda_mat':ndarray, 'h0_alpha':float, 'h0_beta':float}
-             or {'hn_mu_vec':ndarray, 'hn_lambda_mat':ndarray, 'hn_alpha':float, 'hn_beta':float}
+            or {'hn_mu_vec':ndarray, 'hn_lambda_mat':ndarray, 'hn_alpha':float, 'hn_beta':float}
             They are obtained by ``get_h_params()`` of GenModel,
             ``get_h0_params`` of LearnModel or ``get_hn_params`` of LearnModel.
         """

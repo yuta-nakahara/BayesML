@@ -372,7 +372,7 @@
 <div class="section" id="example">
 <h2>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h2>
 <p>We show an example of generating data drawn according to the Bernoulli distribution and learning from them.</p>
-<p>First, we create an instance of a probabilistic data generative model. Here, the parameter $theta$, which represents an occurrence probability of 1, is set to 0.7.</p>
+<p>First, we create an instance of a probabilistic data generative model. Here, the parameter <cite>theta</cite>, which represents an occurrence probability of 1, is set to 0.7.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">bayesml</span> <span class="kn">import</span> <span class="n">bernoulli</span>
 <span class="n">gen_model</span> <span class="o">=</span> <span class="n">bernoulli</span><span class="o">.</span><span class="n">GenModel</span><span class="p">(</span><span class="n">theta</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
 </pre></div>
@@ -393,7 +393,7 @@
 </div>
 <img alt="_images/README_ex_img1.png" src="_images/README_ex_img1.png" />
 </div></blockquote>
-<p>After confirming that the frequency of occurrence of 1 is around $theta$=0.7, we generate a sample and store it to variable x.</p>
+<p>After confirming that the frequency of occurrence of 1 is around <cite>theta=0.7</cite>, we generate a sample and store it to variable <cite>x</cite>.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">x</span> <span class="o">=</span> <span class="n">gen_model</span><span class="o">.</span><span class="n">gen_sample</span><span class="p">(</span><span class="n">sample_size</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -409,7 +409,7 @@
 <blockquote>
 <div><img alt="_images/README_ex_img2.png" src="_images/README_ex_img2.png" />
 </div></blockquote>
-<p>After learning from the data, we can see that the density of the posterior distribution is concentrated around the true parameter $theta$=0.7.</p>
+<p>After learning from the data, we can see that the density of the posterior distribution is concentrated around the true parameter <cite>theta=0.7</cite>.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">learn_model</span><span class="o">.</span><span class="n">update_posterior</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 <span class="n">learn_model</span><span class="o">.</span><span class="n">visualize_posterior</span><span class="p">()</span>
 </pre></div>
