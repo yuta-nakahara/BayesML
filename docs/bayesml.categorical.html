@@ -278,7 +278,7 @@
 \mathrm{Cov}[x_k, x_{k'} | \boldsymbol{\theta}] &amp;= -\theta_k \theta_{k'}.\end{split}\]</div>
 <p>The prior distribution is as follows:</p>
 <ul class="simple">
-<li><p><span class="math notranslate nohighlight">\(\boldsymbol{\alpha}_0 \in \mathbb{R}_{&gt;0}\)</span>: a hyperparameter</p></li>
+<li><p><span class="math notranslate nohighlight">\(\boldsymbol{\alpha}_0 \in \mathbb{R}_{&gt;0}^d\)</span>: a hyperparameter</p></li>
 <li><p><span class="math notranslate nohighlight">\(\Gamma (\cdot)\)</span>: the gamma function</p></li>
 <li><p><span class="math notranslate nohighlight">\(\tilde{\alpha}_0 = \sum_{k=1}^d \alpha_{0,k}\)</span></p></li>
 <li><p><span class="math notranslate nohighlight">\(C(\boldsymbol{\alpha}_0)=\frac{\Gamma(\tilde{\alpha}_0)}{\Gamma(\alpha_{0,1})\cdots\Gamma(\alpha_{0,d})}\)</span></p></li>
@@ -307,7 +307,7 @@
 \[\alpha_{n,k} = \alpha_{0,k} + \sum_{i=1}^n x_{i,k}, \quad (k \in \{ 1, 2, \dots , d \}).\]</div>
 <p>The predictive distribution is as follows:</p>
 <ul class="simple">
-<li><p><span class="math notranslate nohighlight">\(x_{n+1} \in \{ 0, 1\}^d\)</span>: a new data point</p></li>
+<li><p><span class="math notranslate nohighlight">\(\boldsymbol{x}_{n+1} \in \{ 0, 1\}^d\)</span>: a new data point</p></li>
 <li><p><span class="math notranslate nohighlight">\(\boldsymbol{\theta}_\mathrm{p} \in [0, 1]^d\)</span>: the hyperparameter of the posterior (<span class="math notranslate nohighlight">\(\sum_{k=1}^d \theta_{\mathrm{p},k} = 1\)</span>)</p></li>
 </ul>
 <div class="math notranslate nohighlight">
@@ -318,7 +318,7 @@
 \mathrm{Cov}[x_{n+1,k}, x_{n+1,k'} | \boldsymbol{x}^n] &amp;= -\theta_{\mathrm{p},k} \theta_{\mathrm{p},k'},\end{split}\]</div>
 <p>where the parameters are obtained from the hyperparameters of the posterior distribution as follows:</p>
 <div class="math notranslate nohighlight">
-\[\boldsymbol{\theta}_{\mathrm{p},k} = \frac{\alpha_{n,k}}{\sum_{k=1}^d \alpha_{n,k}}, \quad (k \in \{ 1, 2, \dots , d \}).\]</div>
+\[\theta_{\mathrm{p},k} = \frac{\alpha_{n,k}}{\sum_{k=1}^d \alpha_{n,k}}, \quad (k \in \{ 1, 2, \dots , d \}).\]</div>
 <dl class="py class">
 <dt class="sig sig-object py" id="bayesml.categorical.GenModel">
 <em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">bayesml.categorical.</span></span><span class="sig-name descname"><span class="pre">GenModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">degree</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">theta_vec</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h_alpha_vec</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.categorical.GenModel" title="Permalink to this definition">¶</a></dt>

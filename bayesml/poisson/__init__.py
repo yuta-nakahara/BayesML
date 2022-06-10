@@ -12,7 +12,7 @@ The stochastic data generative model is as follows:
 * :math:`\lambda \in \mathbb{R}_{>0}`: a parameter
 
 .. math::
-    p(x | \lambda) = \mathrm{Po}(x|\lambda) = \frac{ \lambda^{x} }{x!}\exp \{ -\lambda \}
+    p(x | \lambda) = \mathrm{Po}(x|\lambda) = \frac{ \lambda^{x} }{x!}\exp \{ -\lambda \}.
 
 The prior distribution is as follows:
 
@@ -38,13 +38,13 @@ The posterior distribution is as follows:
 
 .. math::
     \mathbb{E}[\lambda | x^n] &= \frac{\alpha_n}{\beta_n}, \\
-    \mathbb{V}[\lambda | x^n] &= \frac{\alpha_n}{\beta_n^2}.
+    \mathbb{V}[\lambda | x^n] &= \frac{\alpha_n}{\beta_n^2},
 
 where the updating rule of the hyperparameters is
 
 .. math::
-    \alpha_n &= \alpha_0 + \sum_{i=1}^n x_i\\
-    \beta_n &= \beta_0 + n
+    \alpha_n &= \alpha_0 + \sum_{i=1}^n x_i,\\
+    \beta_n &= \beta_0 + n.
 
 The predictive distribution is as follows:
 
