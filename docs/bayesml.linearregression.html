@@ -269,7 +269,7 @@
 <li><p><span class="math notranslate nohighlight">\(d \in \mathbb N\)</span>: a dimension</p></li>
 <li><p><span class="math notranslate nohighlight">\(\boldsymbol{x} = [x_1, x_2, \dots , x_d] \in \mathbb{R}^d\)</span>: an explanatory variable. If you consider an intercept term, it should be included as one of the elements of <span class="math notranslate nohighlight">\(\boldsymbol{x}\)</span>.</p></li>
 <li><p><span class="math notranslate nohighlight">\(y\in\mathbb{R}\)</span>: an objective variable</p></li>
-<li><p><span class="math notranslate nohighlight">\(\tau \in\mathbb{R}\)</span>: a parameter</p></li>
+<li><p><span class="math notranslate nohighlight">\(\tau \in\mathbb{R}_{&gt;0}\)</span>: a parameter</p></li>
 <li><p><span class="math notranslate nohighlight">\(\boldsymbol{\theta}\in\mathbb{R}^{d}\)</span>: a parameter</p></li>
 </ul>
 <div class="math notranslate nohighlight">
@@ -281,7 +281,7 @@
 <p>The prior distribution is as follows:</p>
 <ul class="simple">
 <li><p><span class="math notranslate nohighlight">\(\boldsymbol{\mu_0} \in \mathbb{R}^d\)</span>: a hyperparameter</p></li>
-<li><p><span class="math notranslate nohighlight">\(\boldsymbol{\Lambda_0} \in \mathbb{R}^{d\times d}\)</span>: a hyperparameter</p></li>
+<li><p><span class="math notranslate nohighlight">\(\boldsymbol{\Lambda_0} \in \mathbb{R}^{d\times d}\)</span>: a hyperparameter (a positive definite matrix)</p></li>
 <li><p><span class="math notranslate nohighlight">\(\alpha_0\in \mathbb{R}_{&gt;0}\)</span>: a hyperparameter</p></li>
 <li><p><span class="math notranslate nohighlight">\(\beta_0\in \mathbb{R}_{&gt;0}\)</span>: a hyperparameter</p></li>
 </ul>
@@ -327,7 +327,7 @@
 </ul>
 <div class="math notranslate nohighlight">
 \[\begin{split}p(y_{n+1} | \boldsymbol{X}, \boldsymbol{y}, \boldsymbol{x}_{n+1} ) &amp;= \mathrm{St}\left(y_{n+1} \mid m_\mathrm{p}, \lambda_\mathrm{p}, \nu_\mathrm{p}\right) \\
-&amp;= \frac{\Gamma (\nu_\mathrm{p} / 2) + 1/2}{\Gamma (\nu_\mathrm{p} / 2)} \left( \frac{\lambda_\mathrm{p}}{\pi \nu_\mathrm{p}} \right)^{1/2} \left( 1 + \frac{\lambda_\mathrm{p} (y_{n+1} - m_\mathrm{p})^2}{\nu_\mathrm{p}} \right)^{-\nu_\mathrm{p}/2 - 1/2},\end{split}\]</div>
+&amp;= \frac{\Gamma (\nu_\mathrm{p} / 2 + 1/2 )}{\Gamma (\nu_\mathrm{p} / 2)} \left( \frac{\lambda_\mathrm{p}}{\pi \nu_\mathrm{p}} \right)^{1/2} \left( 1 + \frac{\lambda_\mathrm{p} (y_{n+1} - m_\mathrm{p})^2}{\nu_\mathrm{p}} \right)^{-\nu_\mathrm{p}/2 - 1/2},\end{split}\]</div>
 <div class="math notranslate nohighlight">
 \[\begin{split}\mathbb{E}[y_{n+1} | \boldsymbol{X}, \boldsymbol{y}, \boldsymbol{x}_{n+1}] &amp;= m_\mathrm{p} &amp; (\nu_\mathrm{p} &gt; 1), \\
 \mathbb{V}[y_{n+1} | \boldsymbol{X}, \boldsymbol{y}, \boldsymbol{x}_{n+1}] &amp;= \frac{1}{\lambda_\mathrm{p}} \frac{\nu_\mathrm{p}}{\nu_\mathrm{p}-2} &amp; (\nu_\mathrm{p} &gt; 2),\end{split}\]</div>

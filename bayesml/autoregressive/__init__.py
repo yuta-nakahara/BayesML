@@ -85,7 +85,7 @@ The predictive distribution is as follows:
 .. math::
     \mathrm{St}(x_{n+1}|m_\mathrm{p}, \lambda_\mathrm{p}, \nu_\mathrm{p})
     = \frac{\Gamma (\nu_\mathrm{p}/2 + 1/2)}{\Gamma (\nu_\mathrm{p}/2)}
-    \left( \frac{m_\mathrm{p}}{\pi \nu_\mathrm{p}} \right)^{1/2}
+    \left( \frac{\lambda_\mathrm{p}}{\pi \nu_\mathrm{p}} \right)^{1/2}
     \left[ 1 + \frac{\lambda_\mathrm{p}(x_{n+1}-m_\mathrm{p})^2}{\nu_\mathrm{p}} \right]^{-\nu_\mathrm{p}/2 - 1/2}.
 
 .. math::
@@ -95,7 +95,7 @@ The predictive distribution is as follows:
 where the parameters are obtained from the hyperparameters of the posterior distribution as follows.
 
 .. math::
-    m_\mathrm{p} &= \mu_n^\top \boldsymbol{x}'_n,\\
+    m_\mathrm{p} &= \boldsymbol{\mu}_n^\top \boldsymbol{x}'_n,\\
     \lambda_\mathrm{p} &= \frac{\alpha_n}{\beta_n} (1 + (\boldsymbol{x}'_n)^\top \boldsymbol{\Lambda}_n^{-1} \boldsymbol{x}'_n)^{-1},\\
     \nu_\mathrm{p} &= 2 \alpha_n.
 """
