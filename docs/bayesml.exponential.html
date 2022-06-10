@@ -295,11 +295,11 @@
 \[p(\lambda | x^n) = \mathrm{Gam}(\lambda|\alpha_n,\beta_n) = \frac{\beta_n^{\alpha_n}}{\Gamma (\alpha_n)} \lambda^{\alpha_n - 1} \exp \{ -\beta_n \lambda \},\]</div>
 <div class="math notranslate nohighlight">
 \[\begin{split}\mathbb{E}[\lambda | x^n] &amp;= \frac{\alpha_n}{\beta_n}, \\
-\mathbb{V}[\lambda | x^n] &amp;= \frac{\alpha_n}{\beta_n^2}.\end{split}\]</div>
+\mathbb{V}[\lambda | x^n] &amp;= \frac{\alpha_n}{\beta_n^2},\end{split}\]</div>
 <p>where the updating rule of the hyperparameters is</p>
 <div class="math notranslate nohighlight">
-\[\begin{split}\alpha_n &amp;= \alpha_0 + n\\
-\beta_n &amp;= \beta_0 + \sum_{i=1}^n x_i\end{split}\]</div>
+\[\begin{split}\alpha_n &amp;= \alpha_0 + n,\\
+\beta_n &amp;= \beta_0 + \sum_{i=1}^n x_i.\end{split}\]</div>
 <p>The predictive distribution is as follows:</p>
 <ul class="simple">
 <li><p><span class="math notranslate nohighlight">\(x_{n+1} \in \mathbb{R}_{\geq 0}\)</span>: a new data point</p></li>
@@ -307,7 +307,7 @@
 <li><p><span class="math notranslate nohighlight">\(\eta_\mathrm{p} \in \mathbb{R}_{&gt;0}\)</span>: the hyperparameter of the posterior</p></li>
 </ul>
 <div class="math notranslate nohighlight">
-\[p(x_{n+1}|x^n)=\mathrm{Lomax}(x_{n+1}|\alpha_\mathrm{p},\eta_\mathrm{p}) = \frac{\alpha_\mathrm{p}}{\eta_\mathrm{p}}\left(1+\frac{x}{\eta_\mathrm{p}}\right)^{-(\alpha_\mathrm{p}+1)},\]</div>
+\[p(x_{n+1}|x^n)=\mathrm{Lomax}(x_{n+1}|\alpha_\mathrm{p},\eta_\mathrm{p}) = \frac{\alpha_\mathrm{p}}{\eta_\mathrm{p}}\left(1+\frac{x_{n+1}}{\eta_\mathrm{p}}\right)^{-(\alpha_\mathrm{p}+1)},\]</div>
 <div class="math notranslate nohighlight">
 \[\begin{split}\mathbb{E}[x_{n+1} | x^n] &amp;=
 \begin{cases}

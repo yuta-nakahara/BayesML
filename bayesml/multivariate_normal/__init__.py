@@ -12,7 +12,7 @@ The stochastic data generative model is as follows:
 * :math:`\boldsymbol{x} \in \mathbb{R}^D`: a data point
 * :math:`\boldsymbol{\mu} \in \mathbb{R}^D`: a parameter
 * :math:`\boldsymbol{\Lambda} \in \mathbb{R}^{D\times D}` : a parameter (a positive definite matrix)
-* :math:`| \boldsymbol{\Lambda} | \in \mathbb{R}`: the determinant of :math:`\boldsymbol{\Lambda}_0`
+* :math:`| \boldsymbol{\Lambda} | \in \mathbb{R}`: the determinant of :math:`\boldsymbol{\Lambda}`
 
 .. math::
     p(\boldsymbol{x} | \boldsymbol{\mu}, \boldsymbol{\Lambda}) &= \mathcal{N}(\boldsymbol{x}|\boldsymbol{\mu},\boldsymbol{\Lambda}^{-1}) \\
@@ -51,7 +51,7 @@ The posterior distribution is as follows:
 * :math:`\boldsymbol{x}^n = (\boldsymbol{x}_1, \boldsymbol{x}_2, \dots , \boldsymbol{x}_n) \in \mathbb{R}^{D\times n}`: given data
 * :math:`\boldsymbol{m}_n \in \mathbb{R}^{D}`: a hyperparameter
 * :math:`\kappa_n \in \mathbb{R}_{>0}`: a hyperparameter
-* :math:`\nu_n \in \mathbb{R}`: a hyperparameter :math:`(\nu_0 > D-1)`
+* :math:`\nu_n \in \mathbb{R}`: a hyperparameter :math:`(\nu_n > D-1)`
 * :math:`\boldsymbol{W}_n \in \mathbb{R}^{D\times D}`: a hyperparameter (a positive definite matrix)
 
 .. math::

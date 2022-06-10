@@ -23,7 +23,7 @@ The prior distribution is as follows:
 * :math:`B(\cdot,\cdot): \mathbb{R}_{>0} \times \mathbb{R}_{>0} \to \mathbb{R}_{>0}`: the Beta function
 
 .. math::
-    p(\theta) = \mathrm{Beta}(\theta|\alpha_0,\beta_0) = \frac{1}{B(\alpha_0, \beta_0)} \theta^{\alpha_0} (1-\theta)^{\beta_0}.
+    p(\theta) = \mathrm{Beta}(\theta|\alpha_0,\beta_0) = \frac{1}{B(\alpha_0, \beta_0)} \theta^{\alpha_0 - 1} (1-\theta)^{\beta_0 - 1}.
 
 .. math::
     \mathbb{E}[\theta] &= \frac{\alpha_0}{\alpha_0 + \beta_0}, \\
@@ -36,11 +36,11 @@ The posterior distribution is as follows:
 * :math:`\beta_n \in \mathbb{R}_{>0}`: a hyperparameter
 
 .. math::
-    p(\theta | x^n) = \mathrm{Beta}(\theta|\alpha_n,\beta_n) = \frac{1}{B(\alpha_n, \beta_n)} \theta^{\alpha_n} (1-\theta)^{\beta_n},
+    p(\theta | x^n) = \mathrm{Beta}(\theta|\alpha_n,\beta_n) = \frac{1}{B(\alpha_n, \beta_n)} \theta^{\alpha_n - 1} (1-\theta)^{\beta_n - 1},
 
 .. math::
     \mathbb{E}[\theta | x^n] &= \frac{\alpha_n}{\alpha_n + \beta_n}, \\
-    \mathbb{V}[\theta | x^n] &= \frac{\alpha_n \beta_n}{(\alpha_n + \beta_n)^2 (\alpha_n + \beta_n + 1)}.
+    \mathbb{V}[\theta | x^n] &= \frac{\alpha_n \beta_n}{(\alpha_n + \beta_n)^2 (\alpha_n + \beta_n + 1)},
 
 where the updating rule of the hyperparameters is
 
@@ -56,16 +56,16 @@ The predictive distribution is as follows:
 * :math:`\theta_\mathrm{p} \in [0,1]`: a parameter
 
 .. math::
-    p(x_{n+1} | x^n) = \mathrm{Bern}(x_{n+1}|\theta_\mathrm{p}) =\theta_\mathrm{p}^{x_{n+1}}(1-\theta_\mathrm{p})^{1-x_{n+1}}
+    p(x_{n+1} | x^n) = \mathrm{Bern}(x_{n+1}|\theta_\mathrm{p}) =\theta_\mathrm{p}^{x_{n+1}}(1-\theta_\mathrm{p})^{1-x_{n+1}},
 
 .. math::
     \mathbb{E}[x_{n+1} | x^n] &= \theta_\mathrm{p}, \\
-    \mathbb{V}[x_{n+1} | x^n] &= \theta_\mathrm{p} (1 - \theta_\mathrm{p}).
+    \mathbb{V}[x_{n+1} | x^n] &= \theta_\mathrm{p} (1 - \theta_\mathrm{p}),
 
 where the parameters are obtained from the hyperparameters of the posterior distribution as follows.
 
 .. math::
-    \theta_\mathrm{p} = \frac{\alpha_n}{\alpha_n + \beta_n}
+    \theta_\mathrm{p} = \frac{\alpha_n}{\alpha_n + \beta_n}.
 """
 
 from ._bernoulli import GenModel
