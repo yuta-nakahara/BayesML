@@ -281,7 +281,7 @@
 <li><p><span class="math notranslate nohighlight">\(B(\cdot,\cdot): \mathbb{R}_{&gt;0} \times \mathbb{R}_{&gt;0} \to \mathbb{R}_{&gt;0}\)</span>: the Beta function</p></li>
 </ul>
 <div class="math notranslate nohighlight">
-\[p(\theta) = \mathrm{Beta}(\theta|\alpha_0,\beta_0) = \frac{1}{B(\alpha_0, \beta_0)} \theta^{\alpha_0} (1-\theta)^{\beta_0}.\]</div>
+\[p(\theta) = \mathrm{Beta}(\theta|\alpha_0,\beta_0) = \frac{1}{B(\alpha_0, \beta_0)} \theta^{\alpha_0 - 1} (1-\theta)^{\beta_0 - 1}.\]</div>
 <div class="math notranslate nohighlight">
 \[\begin{split}\mathbb{E}[\theta] &amp;= \frac{\alpha_0}{\alpha_0 + \beta_0}, \\
 \mathbb{V}[\theta] &amp;= \frac{\alpha_0 \beta_0}{(\alpha_0 + \beta_0)^2 (\alpha_0 + \beta_0 + 1)}.\end{split}\]</div>
@@ -292,10 +292,10 @@
 <li><p><span class="math notranslate nohighlight">\(\beta_n \in \mathbb{R}_{&gt;0}\)</span>: a hyperparameter</p></li>
 </ul>
 <div class="math notranslate nohighlight">
-\[p(\theta | x^n) = \mathrm{Beta}(\theta|\alpha_n,\beta_n) = \frac{1}{B(\alpha_n, \beta_n)} \theta^{\alpha_n} (1-\theta)^{\beta_n},\]</div>
+\[p(\theta | x^n) = \mathrm{Beta}(\theta|\alpha_n,\beta_n) = \frac{1}{B(\alpha_n, \beta_n)} \theta^{\alpha_n - 1} (1-\theta)^{\beta_n - 1},\]</div>
 <div class="math notranslate nohighlight">
 \[\begin{split}\mathbb{E}[\theta | x^n] &amp;= \frac{\alpha_n}{\alpha_n + \beta_n}, \\
-\mathbb{V}[\theta | x^n] &amp;= \frac{\alpha_n \beta_n}{(\alpha_n + \beta_n)^2 (\alpha_n + \beta_n + 1)}.\end{split}\]</div>
+\mathbb{V}[\theta | x^n] &amp;= \frac{\alpha_n \beta_n}{(\alpha_n + \beta_n)^2 (\alpha_n + \beta_n + 1)},\end{split}\]</div>
 <p>where the updating rule of the hyperparameters is</p>
 <div class="math notranslate nohighlight">
 \[\begin{split}\alpha_n = \alpha_0 + \sum_{i=1}^n I \{ x_i = 1 \},\\
@@ -308,13 +308,13 @@
 <li><p><span class="math notranslate nohighlight">\(\theta_\mathrm{p} \in [0,1]\)</span>: a parameter</p></li>
 </ul>
 <div class="math notranslate nohighlight">
-\[p(x_{n+1} | x^n) = \mathrm{Bern}(x_{n+1}|\theta_\mathrm{p}) =\theta_\mathrm{p}^{x_{n+1}}(1-\theta_\mathrm{p})^{1-x_{n+1}}\]</div>
+\[p(x_{n+1} | x^n) = \mathrm{Bern}(x_{n+1}|\theta_\mathrm{p}) =\theta_\mathrm{p}^{x_{n+1}}(1-\theta_\mathrm{p})^{1-x_{n+1}},\]</div>
 <div class="math notranslate nohighlight">
 \[\begin{split}\mathbb{E}[x_{n+1} | x^n] &amp;= \theta_\mathrm{p}, \\
-\mathbb{V}[x_{n+1} | x^n] &amp;= \theta_\mathrm{p} (1 - \theta_\mathrm{p}).\end{split}\]</div>
+\mathbb{V}[x_{n+1} | x^n] &amp;= \theta_\mathrm{p} (1 - \theta_\mathrm{p}),\end{split}\]</div>
 <p>where the parameters are obtained from the hyperparameters of the posterior distribution as follows.</p>
 <div class="math notranslate nohighlight">
-\[\theta_\mathrm{p} = \frac{\alpha_n}{\alpha_n + \beta_n}\]</div>
+\[\theta_\mathrm{p} = \frac{\alpha_n}{\alpha_n + \beta_n}.\]</div>
 <dl class="py class">
 <dt class="sig sig-object py" id="bayesml.bernoulli.GenModel">
 <em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">bayesml.bernoulli.</span></span><span class="sig-name descname"><span class="pre">GenModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">theta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h_alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h_beta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.bernoulli.GenModel" title="Permalink to this definition">¶</a></dt>
