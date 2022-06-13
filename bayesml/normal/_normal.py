@@ -105,7 +105,7 @@ class GenModel(base.Generative):
         The generated vaule is set at ``self.mu`` and ``self.tau``.
         """
         self.tau = self.rng.gamma(shape=self.h_alpha,scale=1.0/self.h_beta)
-        self.mu = self.rng.normal(loc=self.h_mu,scale=1.0/np.sqrt(self.tau * self.h_kappa))
+        self.mu = self.rng.normal(loc=self.h_m,scale=1.0/np.sqrt(self.tau * self.h_kappa))
         
     def set_params(self,mu,tau):
         """Set the parameter of the sthocastic data generative model.
