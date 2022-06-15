@@ -147,7 +147,7 @@ BibTeX
             Tajima Keito and Horinouchi Kohei and Ruan Luyu and
             Namegaya Noboru and Maniwa Ryota and Ishiwatari Taisuke and
             Yu Wenbin and Iikubo Yuji and Saito Shota and Kazama Koki and
-            Matsushima Toshiyasu}
+            Matsushima Toshiyasu},
   title = {BayesML},
   howpublished = {\url{https://github.com/yuta-nakahara/BayesML}},
   year = {2022}
