@@ -105,7 +105,7 @@ class GenModel(base.Generative):
         The generated vaule is set at ``self.mu`` and ``self.tau``.
         """
         self.tau = self.rng.gamma(shape=self.h_alpha,scale=1.0/self.h_beta)
-        self.mu = self.rng.normal(loc=self.h_mu,scale=1.0/np.sqrt(self.tau * self.h_kappa))
+        self.mu = self.rng.normal(loc=self.h_m,scale=1.0/np.sqrt(self.tau * self.h_kappa))
         
     def set_params(self,mu,tau):
         """Set the parameter of the sthocastic data generative model.
@@ -397,7 +397,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self.hn_kappa += n
         self.hn_alpha += n*0.5
 
-    def estimate_params(self,loss="squared"):
+    def estimate_params(self,loss="squared",output=None):
         """Estimate the parameter of the stochastic data generative model under the given criterion.
 
         Note that the criterion is applied to estimating ``mu`` and ``tau`` independently.
@@ -424,14 +424,26 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         scipy.stats.rv_discrete
         """
         if loss == "squared":
-            return self.hn_m, self.hn_alpha/self.hn_beta
+            if output == 'dict':
+                return {'mu':self.hn_m,'tau':self.hn_alpha/self.hn_beta}
+            else:
+                return self.hn_m, self.hn_alpha/self.hn_beta
         elif loss == "0-1":
             if self.hn_alpha > 1.0:
-                return self.hn_m, (self.hn_alpha - 1.0)  / self.hn_beta
+                if output == 'dict':
+                    return {'mu':self.hn_m,'tau':(self.hn_alpha - 1.0)  / self.hn_beta}
+                else:
+                    return self.hn_m, (self.hn_alpha - 1.0)  / self.hn_beta
             else:
-                return self.hn_m, 0.0
+                if output == 'dict':
+                    return {'mu':self.hn_m,'tau':0.0}
+                else:
+                    return self.hn_m, 0.0
         elif loss == "abs":
-            return self.hn_m, ss_gamma.median(a=self.hn_alpha,scale=1/self.hn_beta)
+            if output == 'dict':
+                return {'mu':self.hn_m,'tau':ss_gamma.median(a=self.hn_alpha,scale=1/self.hn_beta)}
+            else:
+                return self.hn_m, ss_gamma.median(a=self.hn_alpha,scale=1/self.hn_beta)
         elif loss == "KL":
             return ss_t(loc=self.hn_m,scale=np.sqrt(self.hn_beta / self.hn_alpha / self.hn_kappa),df=2*self.hn_alpha),ss_gamma(a=self.hn_alpha,scale=1.0/self.hn_beta)
         else:

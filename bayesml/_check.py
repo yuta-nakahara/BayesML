@@ -189,3 +189,9 @@ def onehot_vecs(val,val_name,exception_class):
         if np.issubdtype(val.dtype,np.integer) and val.ndim >= 1 and np.all(val >= 0) and np.all(val.sum(axis=-1)==1):
             return val
     raise(exception_class(val_name + " must be a numpy.ndarray whose dtype is int and whose last axis constitutes one-hot vectors."))
+
+def int_vecs(val,val_name,exception_class):
+    if type(val) is np.ndarray:
+        if np.issubdtype(val.dtype,np.integer) and val.ndim >= 1:
+            return val
+    raise(exception_class(val_name + " must be a numpy.ndarray whose dtype is int and ndim >= 1."))

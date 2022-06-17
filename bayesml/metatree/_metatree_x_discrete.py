@@ -2,23 +2,20 @@
 # Yuta Nakahara <yuta.nakahara@aoni.waseda.jp>
 # Document Author
 # Wenbin Yu <ywb827748728@163.com>
-import os
-import sys
-os.chdir(os.path.dirname(os.path.abspath(__file__)))
-sys.path.append("../bernoulli")
-sys.path.append("..")
-
+import warnings
 import copy
 import pickle
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.colors import rgb2hex
+from sklearn import tree as sklearn_tree
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestRegressor
 
-import base
-from _exceptions import ParameterFormatError, DataFormatError, CriteriaError, ResultWarning
-import _bernoulli
-
-# print(os.getcwd())
+from .. import base
+from .._exceptions import ParameterFormatError, DataFormatError, CriteriaError, ResultWarning, ParameterFormatWarning
+from .. import _check
+from .. import bernoulli, categorical, normal, multivariate_normal, linearregression, poisson, exponential
 
 _CMAP = plt.get_cmap("Blues")
 
@@ -69,8 +66,6 @@ class GenModel(base.Generative):
             a list of positive real number witch in \[0 , 1 \], by default None
     h_g : float 
             a positive real number  in \[0 , 1 \], by default 0.5
-    k : int
-            a positive integer, by default None
     sub_model : class
             a class of generative model used by MT-Model 
     sub_h_params : dictionary
@@ -84,7 +79,7 @@ class GenModel(base.Generative):
         NUM_CHILDREN=2,
         h_k_prob = None,
         h_g=0.5,
-        SubModel=_bernoulli.GenModel,
+        SubModel=bernoulli.GenModel,
         sub_h_params={},
         seed=None
         ):
@@ -393,7 +388,10 @@ class GenModel(base.Generative):
 
         if X is None:
             X = self.rng.choice(self.NUM_CHILDREN,(sample_size,self.K))
-        Y = np.empty(sample_size)
+        if self.SubModel == bernoulli.GenModel:
+            Y = np.empty(sample_size,dtype=int)
+        if self.SubModel == normal.GenModel:
+            Y = np.empty(sample_size,dtype=float)
         for i in range(sample_size):
             Y[i] = self._gen_sample_recursion(self.root,X[i])
         return X,Y
@@ -465,121 +463,676 @@ class GenModel(base.Generative):
         print(X)
         print(Y)
 
-if __name__ == '__main__':
-    model = GenModel(h_g=0.75)
-    model.gen_params()
-    model.visualize_model()
+class _LearnNode():
+    """ The node class used by the posterior distribution
 
-# class LearnModel(base.Posterior,base.PredictiveMixin):
-#     def __init__(self,h0_alpha=0.5,h0_beta=0.5):
-#         # 例外処理は後日追記
-#         self.h0_alpha = h0_alpha
-#         self.h0_beta = h0_beta
-#         self.hn_alpha = self.h0_alpha
-#         self.hn_beta = self.h0_beta
-#         self.p_alpha = self.hn_alpha
-#         self.p_beta = self.hn_beta
+    Parameters
+    ----------
+    depth : int
+            a non-negetive integer :math:' >= 0'
+    hn_g : float
+            a positive real number  in \[0 , 1 \], by default 0.5
+    k : int
+            a positive integer, by default None
+    sub_model : class
+            a class of generative model used by MT-Model 
+    """
+    def __init__(self,
+                 depth,
+                 NUM_CHILDREN = 2,
+                 hn_g = 0.5,
+                 k = None,
+                 sub_model = None
+                 ):
+        self.depth = depth
+        self.children = [None for i in range(NUM_CHILDREN)]  # child nodes
+        self.hn_g = hn_g
+        self.k = k
+        self.sub_model = sub_model
+        self.leaf = False
+        self.map_leaf = False
+
+class LearnModel(base.Posterior,base.PredictiveMixin):
+    """The posterior distribution and the predictive distribution.
+    """
+    def __init__(
+        self,
+        *,
+        D_MAX=3,
+        K=None,
+        NUM_CHILDREN=2,
+        h0_k_prob_vec = None,
+        h0_g=0.5,
+        SubModel=bernoulli.LearnModel,
+        sub_h0_params={},
+        h0_metatree_list=[],
+        h0_metatree_prob_vec=None
+        ):
+
+        self.D_MAX = _check.pos_int(D_MAX,'D_MAX',ParameterFormatError)
+        self.NUM_CHILDREN = _check.pos_int(NUM_CHILDREN,'NUM_CHILDREN',ParameterFormatError)
+        if K is not None:
+            self.K = _check.pos_int(K,'K',ParameterFormatError)
+            if h0_k_prob_vec is not None:
+                self.h0_k_prob_vec = _check.float_vec_sum_1(h0_k_prob_vec,'h0_k_prob_vec',ParameterFormatError)
+            else:
+                self.h0_k_prob_vec = np.ones(self.K) / self.K
+        elif h0_k_prob_vec is not None:
+            self.h0_k_prob_vec = _check.float_vec_sum_1(h0_k_prob_vec,'h0_k_prob_vec',ParameterFormatError)
+            self.K = self.h0_k_prob_vec.shape[0]
+        else:
+            self.K = 3
+            self.h0_k_prob_vec = np.ones(self.K) / self.K
+        if self.h0_k_prob_vec.shape[0] != self.K:
+            raise(ParameterFormatError(
+                "K and dimension of h0_k_prob_vec must be the same."
+            ))
+
+        self.h0_g = _check.float_in_closed01(h0_g,'h0_g',ParameterFormatError)
+        self.SubModel = SubModel
+        self.sub_h0_params = sub_h0_params
+        self.h0_metatree_list = h0_metatree_list
+        if h0_metatree_prob_vec is not None:
+            self.h0_metatree_prob_vec = _check.float_vec_sum_1(h0_metatree_prob_vec,'h0_metatree_prob_vec',ParameterFormatError)
+            if self.h0_metatree_prob_vec.shape[0] != len(self.h0_metatree_list):
+                raise(ParameterFormatError(
+                    "Length of h0_metatree_list and dimension of h0_metatree_prob_vec must be the same."
+                ))
+        else:
+            metatree_num = len(self.h0_metatree_list)
+            self.h0_metatree_prob_vec = np.ones(metatree_num) / metatree_num
+
+        self._tmp_x = np.zeros(self.K,dtype=int)
+        self.reset_hn_params()
+
+    def set_h0_params(self,
+        h0_k_prob_vec = None,
+        h0_g=None,
+        sub_h0_params=None,
+        h0_metatree_list=None,
+        h0_metatree_prob_vec=None
+        ):
+        """Set initial values of the hyperparameter of the posterior distribution.
+
+        Parameters
+        ----------
+        h0_k_prob_vec : _type_
+            _description_
+        h0_g : _type_
+            _description_
+        sub_h0_params : _type_
+            _description_
+        h0_metatree_list : _type_
+            _description_
+        h0_metatree_prob_vec : _type_
+            _description_
+        """
+        if h0_k_prob_vec is not None:
+            self.h0_k_prob_vec = _check.float_vec_sum_1(h0_k_prob_vec,'h0_k_prob_vec',ParameterFormatError)
+            if self.h0_k_prob_vec.shape[0] != self.K:
+                raise(ParameterFormatError(
+                    "K and dimension of h0_k_prob_vec must be the same. "
+                    +"If you want to change K, you should re-construct a new instance of GenModel."
+                ))
+
+        if h0_g is not None:
+            self.h0_g = _check.float_in_closed01(h0_g,'h0_g',ParameterFormatError)
+
+        if sub_h0_params is not None:
+            self.sub_h0_params = sub_h0_params
+
+        if h0_metatree_list is not None:
+            self.h0_metatree_list = h0_metatree_list
+            if h0_metatree_prob_vec is not None:
+                self.h0_metatree_prob_vec = _check.float_vec_sum_1(h0_metatree_prob_vec,'h0_metatree_prob_vec',ParameterFormatError)
+            else:
+                metatree_num = len(self.h0_metatree_list)
+                self.h0_metatree_prob_vec = np.ones(metatree_num) / metatree_num
+        elif h0_metatree_prob_vec is not None:
+            self.h0_metatree_prob_vec = _check.float_vec_sum_1(h0_metatree_prob_vec,'h0_metatree_prob_vec',ParameterFormatError)
+
+        if type(self.h0_metatree_prob_vec) is np.ndarray:             
+            if self.h0_metatree_prob_vec.shape[0] != len(self.h0_metatree_list):
+                raise(ParameterFormatError(
+                    "Length of h0_metatree_list and dimension of h0_metatree_prob_vec must be the same."
+                ))
+        else:
+            if len(self.h0_metatree_list) > 0:
+                raise(ParameterFormatError(
+                    "Length of h0_metatree_list must be zero when self.h0_metatree_prob_vec is None."
+                ))
+
+        self.reset_hn_params()
+
+    def get_h0_params(self):
+        """Get the initial values of the hyperparameters of the posterior distribution.
+
+        Returns
+        -------
+        h0_params : dict of {str: float, numpy.ndarray}
+            * ``"h0_k_prob_vec"`` : the value of ``self.h0_k_prob_vec``
+            * ``"h0_g"`` : the value of ``self.h0_g``
+            * ``"sub_h0_params"`` : the value of ``self.sub_h0_params``
+            * ``"h0_metatree_list"`` : the value of ``self.h0_metatree_list``
+            * ``"h0_metatree_prob_vec"`` : the value of ``self.h0_metatree_prob_vec``
+        """
+        return {"h0_k_prob_vec":self.h0_k_prob_vec,
+                "h0_g":self.h0_g, 
+                "sub_h0_params":self.sub_h0_params, 
+                "h0_metatree_list":self.h0_metatree_list,
+                "h0_metatree_prob_vec":self.h0_metatree_prob_vec}
     
-#     def set_h0_params(self,h0_alpha,h0_beta):
-#         # 例外処理は後日追記
-#         self.h0_alpha = h0_alpha
-#         self.h0_beta = h0_beta
-#         self.hn_alpha = self.h0_alpha
-#         self.hn_beta = self.h0_beta
-#         self.p_alpha = self.hn_alpha
-#         self.p_beta = self.hn_beta
+    def set_hn_params(self,
+        hn_k_prob_vec = None,
+        hn_g=None,
+        sub_hn_params=None,
+        hn_metatree_list=None,
+        hn_metatree_prob_vec=None
+        ):
+        """Set updated values of the hyperparameter of the posterior distribution.
 
-#     def get_h0_params(self):
-#         return {"h0_alpha":self.h0_alpha, "h0_beta":self.h0_beta}
+        Parameters
+        ----------
+        hn_k_prob_vec : _type_
+            _description_
+        hn_g : _type_
+            _description_
+        sub_hn_params : _type_
+            _description_
+        hn_metatree_list : _type_
+            _description_
+        hn_metatree_prob_vec : _type_
+            _description_
+        """
+        if hn_k_prob_vec is not None:
+            self.hn_k_prob_vec = _check.float_vec_sum_1(hn_k_prob_vec,'hn_k_prob_vec',ParameterFormatError)
+            if self.hn_k_prob_vec.shape[0] != self.K:
+                raise(ParameterFormatError(
+                    "K and dimension of hn_k_prob_vec must be the same."
+                    +"If you want to change K, you should re-construct a new instance of GenModel."
+                ))
+
+        if hn_g is not None:
+            self.hn_g = _check.float_in_closed01(hn_g,'hn_g',ParameterFormatError)
+
+        if sub_hn_params is not None:
+            self.sub_hn_params = sub_hn_params
+
+        if hn_metatree_list is not None:
+            self.hn_metatree_list = hn_metatree_list
+            if hn_metatree_prob_vec is not None:
+                self.hn_metatree_prob_vec = _check.float_vec_sum_1(hn_metatree_prob_vec,'hn_metatree_prob_vec',ParameterFormatError)
+            else:
+                metatree_num = len(self.hn_metatree_list)
+                self.hn_metatree_prob_vec = np.ones(metatree_num) / metatree_num
+        elif hn_metatree_prob_vec is not None:
+            self.hn_metatree_prob_vec = _check.float_vec_sum_1(hn_metatree_prob_vec,'hn_metatree_prob_vec',ParameterFormatError)
+
+        if type(self.hn_metatree_prob_vec) is np.ndarray:             
+            if self.hn_metatree_prob_vec.shape[0] != len(self.hn_metatree_list):
+                raise(ParameterFormatError(
+                    "Length of hn_metatree_list and dimension of hn_metatree_prob_vec must be the same."
+                ))
+        else:
+            if len(self.hn_metatree_list) > 0:
+                raise(ParameterFormatError(
+                    "Length of hn_metatree_list must be zero when self.hn_metatree_prob_vec is None."
+                ))
+
+        self.calc_pred_dist(np.zeros(self.K))
+
+    def get_hn_params(self):
+        """Get the hyperparameters of the posterior distribution.
+
+        Returns
+        -------
+        hn_params : dict of {str: float, numpy.ndarray}
+            * ``"hn_k_prob_vec"`` : the value of ``self.hn_k_prob_vec``
+            * ``"hn_g"`` : the value of ``self.hn_g``
+            * ``"sub_hn_params"`` : the value of ``self.sub_hn_params``
+            * ``"hn_metatree_list"`` : the value of ``self.hn_metatree_list``
+            * ``"hn_metatree_prob_vec"`` : the value of ``self.hn_metatree_prob_vec``
+        """
+        return {"hn_k_prob_vec":self.hn_k_prob_vec,
+                "hn_g":self.hn_g, 
+                "sub_hn_params":self.sub_hn_params, 
+                "hn_metatree_list":self.hn_metatree_list,
+                "hn_metatree_prob_vec":self.hn_metatree_prob_vec}
     
-#     def save_h0_params(self,filename):
-#         # 例外処理は後日追記
-#         np.savez_compressed(filename,h0_alpha=self.h0_alpha,h0_beta=self.h0_beta)
+    def reset_hn_params(self):
+        """Reset the hyperparameters of the posterior distribution to their initial values.
+        
+        They are reset to `self.h0_k_prob_vec`, `self.h0_g`, `self.sub_h0_params`, 
+        `self.h0_metatree_list` and `self.h0_metatree_prob_vec`.
+        Note that the parameters of the predictive distribution are also calculated from them.
+        """
+        self.hn_k_prob_vec = np.copy(self.h0_k_prob_vec)
+        self.hn_g = np.copy(self.h0_g)
+        self.sub_hn_params = copy.copy(self.sub_h0_params)
+        self.hn_metatree_list = copy.copy(self.h0_metatree_list)
+        self.hn_metatree_prob_vec = copy.copy(self.h0_metatree_prob_vec)
 
-#     def load_h0_params(self,filename):
-#         # 例外処理は後日追記
-#         h0_params = np.load(filename)
-#         self.set_h0_params(h0_params["h0_alpha"], h0_params["h0_beta"])
-
-#     def get_hn_params(self):
-#         return {"hn_alpha":self.hn_alpha, "hn_beta":self.hn_beta}
+        self.calc_pred_dist(np.zeros(self.K))
     
-#     def save_hn_params(self,filename):
-#         # 例外処理は後日追記
-#         np.savez_compressed(filename,hn_alpha=self.hn_alpha,hn_beta=self.hn_beta)
+    def overwrite_h0_params(self):
+        """Overwrite the initial values of the hyperparameters of the posterior distribution by the learned values.
+        
+        They are overwitten by `self.hn_k_prob_vec`, `self.hn_g`, `self.sub_hn_params`, 
+        `self.hn_metatree_list` and `self.hn_metatree_prob_vec`.
+        Note that the parameters of the predictive distribution are also calculated from them.
+        """
+        self.h0_k_prob_vec = np.copy(self.hn_k_prob_vec)
+        self.h0_g = np.copy(self.hn_g)
+        self.sub_h0_params = copy.copy(self.sub_hn_params)
+        self.h0_metatree_list = copy.copy(self.hn_metatree_list)
+        self.h0_metatree_prob_vec = np.copy(self.hn_metatree_prob_vec)
 
-#     def update_posterior(self,X):
-#         # 例外処理は後日追記
-#         self.hn_alpha += np.sum(X==1)
-#         self.hn_beta += np.sum(X==0)
+        self.calc_pred_dist(np.zeros(self.K))
 
-#     def estimate_params(self,loss="squared"):
-#         # 例外処理は後日追記
-#         if loss == "squared":
-#             return self.hn_alpha / (self.hn_alpha + self.hn_beta)
-#         elif loss == "0-1":
-#             if self.hn_alpha > 1.0 and self.hn_beta > 1.0:
-#                 return (self.hn_alpha - 1.0) / (self.hn_alpha + self.hn_beta - 2.0)
-#             elif self.hn_alpha > 1.0:
-#                 return 1.0
-#             elif self.hn_beta > 1.0:
-#                 return 0.0
-#             else:
-#                 print("MAP estimate doesn't exist.")
-#                 return None
-#         elif loss == "abs":
-#             return ss_beta.median(self.hn_alpha,self.hn_beta)
-#         elif loss == "KL":
-#             return ss_beta(self.hn_alpha,self.hn_beta)
-#         else:
-#             print("Unsupported loss function!")
-#             print("This function supports \"squared\", \"0-1\", \"abs\", and \"KL\".")
-#             return None
-    
-#     def estimate_interval(self,confidence=0.95):
-#         # 例外処理は後日追記
-#         return ss_beta.interval(confidence,self.hn_alpha,self.hn_beta)
-    
-#     def visualize_posterior(self):
-#         p_range = np.linspace(0,1,100,endpoint=False)
-#         fig, ax = plt.subplots()
-#         ax.plot(p_range,self.estimate_params(loss="KL").pdf(p_range))
-#         ax.set_xlabel("p")
-#         plt.show()
-    
-#     def get_p_params(self):
-#         return {"p_alpha":self.p_alpha, "p_beta":self.p_beta}
-    
-#     def save_p_params(self,filename):
-#         # 例外処理は後日追記
-#         np.savez_compressed(filename,p_alpha=self.p_alpha,p_beta=self.p_beta)
-    
-#     def calc_pred_dist(self):
-#         self.p_alpha = self.hn_alpha
-#         self.p_beta = self.hn_beta
+    def _copy_tree_from_sklearn_tree(self,new_node, original_tree,node_id):
+        if original_tree.children_left[node_id] != sklearn_tree._tree.TREE_LEAF:  # 内部ノード
+            new_node.k = original_tree.feature[node_id]
+            new_node.children[0] = _LearnNode(depth=new_node.depth+1,
+                                              NUM_CHILDREN=2,
+                                              hn_g=self.h0_g,
+                                              k=None,
+                                              sub_model=self.SubModel(**self.sub_h0_params))
+            self._copy_tree_from_sklearn_tree(new_node.children[0],original_tree,original_tree.children_left[node_id])
+            new_node.children[1] = _LearnNode(depth=new_node.depth+1,
+                                              NUM_CHILDREN=2,
+                                              hn_g=self.h0_g,
+                                              k=None,
+                                              sub_model=self.SubModel(**self.sub_h0_params))
+            self._copy_tree_from_sklearn_tree(new_node.children[1],original_tree,original_tree.children_right[node_id])
+        else:
+            new_node.hn_g = 0.0
+            new_node.leaf = True
 
-#     def make_prediction(self,loss="squared"):
-#         # 例外処理は後日追記
-#         if loss == "squared":
-#             return self.p_alpha / (self.p_alpha + self.p_beta)
-#         elif loss == "0-1" or loss == "abs":
-#             if self.p_alpha > self.p_beta:
-#                 return 1
-#             else:
-#                 return 0
-#         elif loss == "KL":
-#             return np.array((self.p_beta / (self.p_alpha + self.p_beta),
-#                              self.p_alpha / (self.p_alpha + self.p_beta)))
-#             # return ss_betabinom(1,self.p_alpha,self.p_beta)
-#         else:
-#             print("Unsupported loss function!")
-#             print("This function supports \"squared\", \"0-1\", \"abs\", and \"KL\".")
-#             return None    
+    def _update_posterior_leaf(self,node,x,y):
+            try:
+                node.sub_model.calc_pred_dist(x)
+            except:
+                node.sub_model.calc_pred_dist()
+            pred_dist = node.sub_model.make_prediction(loss='KL')
 
-#     def pred_and_update(self,x,loss="squared"):
-#         # 例外処理は後日追記
-#         self.calc_pred_dist()
-#         prediction = self.make_prediction(loss=loss)
-#         self.update_posterior(x)
-#         return prediction
+            try:
+                node.sub_model.update_posterior(x,y)
+            except:
+                node.sub_model.update_posterior(y)
 
+            if type(pred_dist) is np.ndarray:
+                return pred_dist[y]
+            elif hasattr(pred_dist,'pdf'):
+                return pred_dist.pdf(y)
+            elif hasattr(pred_dist,'pmf'):
+                return pred_dist.pmf(y)
+            else:
+                warnings.warn("Marginal likelyhood could not be calculated.", ResultWarning)
+                return 0.0
+
+    def _update_posterior_recursion(self,node,x,y):
+        if node.leaf == False:  # 内部ノード
+            tmp1 = self._update_posterior_recursion(node.children[x[node.k]],x,y)
+            tmp2 = (1 - node.hn_g) * self._update_posterior_leaf(node,x,y) + node.hn_g * tmp1
+            node.hn_g = node.hn_g * tmp1 / tmp2
+            return tmp2
+        else:  # 葉ノード
+            return self._update_posterior_leaf(node,x,y)
+
+    def _compare_metatree_recursion(self,node1,node2):
+        if node1.leaf == True and node2.leaf == True:
+            return True
+        elif node1.k == node2.k:
+            for i in range(self.NUM_CHILDREN):
+                if self._compare_metatree_recursion(node1.children[i],node2.children[i]) == False:
+                    return False
+            return True
+        else:
+            return False
+    
+    def _marge_metatrees(self,metatree_list,metatree_prob_vec):
+        num_metatrees = len(metatree_list)
+        for i in range(num_metatrees):
+            for j in range(i+1,num_metatrees):
+                if self._compare_metatree_recursion(metatree_list[i],metatree_list[j]):
+                    metatree_list[i] = None
+                    metatree_prob_vec[j] += metatree_prob_vec[i]
+                    metatree_prob_vec[i] = -1
+                    break
+        metatree_list = [tmp for tmp in metatree_list if tmp != None]
+        metatree_prob_vec = metatree_prob_vec[metatree_prob_vec > -0.5]
+        return metatree_list,metatree_prob_vec
+
+    def _MTRF(self,x,y,n_estimators=100,**kwargs):
+        """make metatrees
+
+        Parameters
+        ----------
+        x : numpy ndarray
+            values of explanatory variables whose dtype must be int
+        y : numpy ndarray
+            values of objective variable whose dtype may be int or float
+        n_estimators : int, optional
+            number of trees in sklearn.RandomForestClassifier, by default 100
+
+        Returns
+        -------
+        metatree_list : list of metatree._LearnNode
+            Each element is a root node of metatree.
+        metatree_prob_vec : numpy ndarray
+        """
+        if self.NUM_CHILDREN != 2:
+            raise(ParameterFormatError("MTRF is supported only when NUM_CHILDREN == 2."))
+        if self.SubModel == bernoulli.LearnModel:
+            randomforest = RandomForestClassifier(n_estimators=n_estimators,max_depth=self.D_MAX)
+        if self.SubModel == normal.LearnModel:
+            randomforest = RandomForestRegressor(n_estimators=n_estimators,max_depth=self.D_MAX)
+        randomforest.fit(x,y)
+        tmp_metatree_list = [_LearnNode(0,2,self.h0_g,None,self.SubModel(**self.sub_h0_params)) for i in range(n_estimators)]
+        tmp_metatree_prob_vec = np.ones(n_estimators) / n_estimators
+        for i in range(n_estimators):
+            self._copy_tree_from_sklearn_tree(tmp_metatree_list[i],randomforest.estimators_[i].tree_, 0)
+
+        tmp_metatree_list,tmp_metatree_prob_vec = self._marge_metatrees(tmp_metatree_list,tmp_metatree_prob_vec)
+
+        log_metatree_posteriors = np.log(tmp_metatree_prob_vec)
+        for i,metatree in enumerate(tmp_metatree_list):
+            for j in range(x.shape[0]):
+                log_metatree_posteriors[i] += np.log(self._update_posterior_recursion(metatree,x[j],y[j]))
+        tmp_metatree_prob_vec[:] = np.exp(log_metatree_posteriors - log_metatree_posteriors.max())
+        tmp_metatree_prob_vec[:] /= tmp_metatree_prob_vec.sum()
+        return tmp_metatree_list,tmp_metatree_prob_vec
+
+    def _given_MT(self,x,y):
+        """make metatrees
+
+        Parameters
+        ----------
+        x : numpy ndarray
+            values of explanatory variables whose dtype must be int
+        y : numpy ndarray
+            values of objective variable whose dtype may be int or float
+
+        Returns
+        -------
+        metatree_list : list of metatree._LearnNode
+            Each element is a root node of metatree.
+        metatree_prob_vec : numpy ndarray
+        """
+        log_metatree_posteriors = np.log(self.hn_metatree_prob_vec)
+        for i,metatree in enumerate(self.hn_metatree_list):
+            for j in range(x.shape[0]):
+                log_metatree_posteriors[i] += np.log(self._update_posterior_recursion(metatree,x[j],y[j]))
+        self.hn_metatree_prob_vec[:] = np.exp(log_metatree_posteriors - log_metatree_posteriors.max())
+        self.hn_metatree_prob_vec[:] /= self.hn_metatree_prob_vec.sum()
+        return self.hn_metatree_list,self.hn_metatree_prob_vec
+
+    def update_posterior(self,x,y,alg_type='MTRF',**kwargs):
+        """Update the hyperparameters of the posterior distribution using traning data.
+
+        Parameters
+        ----------
+        x : numpy ndarray
+            values of explanatory variables whose dtype must be int
+        y : numpy ndarray
+            values of objective variable whose dtype may be int or float
+        alg_type : {'MTRF'}, optional
+            type of algorithm, by default 'MTRF'
+        **kwargs : dict, optional
+            optional parameters of algorithms, by default {}
+        """
+        _check.int_vecs(x,'x',DataFormatError)
+        if x.shape[-1] != self.K:
+            raise(DataFormatError(f"x.shape[-1] must equal to K:{self.K}"))
+        if x.max() >= self.NUM_CHILDREN:
+            raise(DataFormatError(f"x.max() must smaller than NUM_CHILDREN:{self.NUM_CHILDREN}"))
+
+        if self.SubModel == bernoulli.LearnModel: # acceptable data type of y depends on SubModel
+            _check.ints_of_01(y,'y',DataFormatError)
+                
+        if type(y) is np.ndarray:
+            if x.shape[:-1] != y.shape: 
+                raise(DataFormatError(f"x.shape[:-1] and y.shape must be same."))
+        elif x.shape[:-1] != ():
+            raise(DataFormatError(f"If y is a scaler, x.shape[:-1] must be the empty tuple ()."))
+
+        x = x.reshape(-1,self.K)
+        y = np.ravel(y)
+
+        if alg_type == 'MTRF':
+            self.hn_metatree_list, self.hn_metatree_prob_vec = self._MTRF(x,y,**kwargs)
+        elif alg_type == 'given_MT':
+            self.hn_metatree_list, self.hn_metatree_prob_vec = self._given_MT(x,y)
+
+    def _map_recursion(self,node):
+        if node.leaf:
+            node.map_leaf = True
+            return 1.0
+        else:
+            tmp1 = 1.0-node.hn_g
+            tmp_vec = np.empty(self.NUM_CHILDREN)
+            for i in range(self.NUM_CHILDREN):
+                tmp_vec[i] = self._map_recursion(node.children[i])
+            if tmp1 > node.hn_g*tmp_vec.prod():
+                node.map_leaf = True
+                return tmp1
+            else:
+                node.map_leaf = False
+                return node.hn_g*tmp_vec.prod()
+
+    def _copy_map_tree_recursion(self,copyed_node,original_node):
+        copyed_node.hn_g = original_node.hn_g
+        if original_node.map_leaf == False:
+            copyed_node.k = original_node.k
+            for i in range(self.NUM_CHILDREN):
+                copyed_node.children[i] = _LearnNode(copyed_node.depth+1,self.NUM_CHILDREN)
+                self._copy_map_tree_recursion(copyed_node.children[i],original_node.children[i])
+        else:
+            copyed_node.sub_model = copy.deepcopy(original_node.sub_model)
+            copyed_node.leaf = True
+
+    def estimate_params(self,loss="0-1",visualize=True,filename=None,format=None):
+        """Estimate the parameter of the stochastic data generative model under the given criterion.
+        """
+
+        if loss == "0-1":
+            map_index = 0
+            map_prob = 0.0
+            for i,metatree in enumerate(self.hn_metatree_list):
+                prob = self.hn_metatree_prob_vec[i] * self._map_recursion(metatree)
+                if prob > map_prob:
+                    map_index = i
+                    map_prob = prob
+            map_root = _LearnNode(0,self.NUM_CHILDREN)
+            self._copy_map_tree_recursion(map_root,self.hn_metatree_list[map_index])
+            if visualize:
+                import graphviz
+                tree_graph = graphviz.Digraph(filename=filename,format=format)
+                tree_graph.attr("node",shape="box",fontname="helvetica",style="rounded,filled")
+                self._visualize_model_recursion(tree_graph, map_root, 0, None, None, 1.0)
+                tree_graph.view()
+            return map_root
+        else:
+            raise(CriteriaError("Unsupported loss function! "
+                                +"This function supports only \"0-1\"."))
+    
+    def _visualize_model_recursion(self,tree_graph,node,node_id,parent_id,sibling_num,p_v):
+        """Visualize the stochastic data generative model and generated samples.
+        """
+        tmp_id = node_id
+        tmp_p_v = p_v
+        
+        # add node information
+        label_string = f'k={node.k}\\lhn_g={node.hn_g:.2f}\\lp_v={tmp_p_v:.2f}\\lsub_params={{'
+        if node.sub_model is not None:
+            try:
+                sub_params = node.sub_model.estimate_params(loss='0-1',output='dict')
+            except:
+                sub_params = node.sub_model.estimate_params(output='dict')
+            
+            for key,value in sub_params.items():
+                try:
+                    label_string += f'\\l{key}:{value:.2f}'
+                except:
+                    label_string += f'\\l{key}:{value}'
+                label_string += '}'
+        else:
+            label_string += '\\lNone}'
+
+        tree_graph.node(name=f'{tmp_id}',label=label_string,fillcolor=f'{rgb2hex(_CMAP(tmp_p_v))}')
+        if tmp_p_v > 0.65:
+            tree_graph.node(name=f'{tmp_id}',fontcolor='white')
+        
+        # add edge information
+        if parent_id is not None:
+            tree_graph.edge(f'{parent_id}', f'{tmp_id}', label=f'{sibling_num}')
+        
+        if node.leaf != True:
+            for i in range(self.NUM_CHILDREN):
+                node_id = self._visualize_model_recursion(tree_graph,node.children[i],node_id+1,tmp_id,i,tmp_p_v*node.hn_g)
+        
+        return node_id
+
+    def visualize_posterior(self,filename=None,format=None):
+        """Visualize the posterior distribution for the parameter.
+        
+        Examples
+        --------
+        >>> from bayesml import metatree
+        >>> gen_model = metatree.GenModel()
+        >>> x,y = gen_model.gen_sample(100)
+        >>> learn_model = metatree.LearnModel()
+        >>> learn_model.update_posterior(x,y)
+        >>> learn_model.visualize_posterior()
+
+        .. image:: ./images/metatree_posterior.png
+        """
+        MAP_index = np.argmax(self.hn_metatree_prob_vec)
+        print(f'MAP probability of metatree:{self.hn_metatree_prob_vec[MAP_index]}')
+        try:
+            import graphviz
+            tree_graph = graphviz.Digraph(filename=filename,format=format)
+            tree_graph.attr("node",shape="box",fontname="helvetica",style="rounded,filled")
+            self._visualize_model_recursion(tree_graph, self.hn_metatree_list[MAP_index], 0, None, None, 1.0)        
+            # コンソール上で表示できるようにした方がいいかもしれない．
+            tree_graph.view()
+        except ImportError as e:
+            print(e)
+        except graphviz.CalledProcessError as e:
+            print(e)
+    
+    def get_p_params(self):
+        """Get the parameters of the predictive distribution.
+
+        This model does not have a simple parametric expression of the predictive distribution.
+        Therefore, this function returns ``None``.
+
+        Returns
+        -------
+        ``None``
+        """
+        return None
+    
+    def _calc_pred_dist_leaf(self,node,x):
+            try:
+                node.sub_model.calc_pred_dist(x)
+            except:
+                node.sub_model.calc_pred_dist()
+
+    def _calc_pred_dist_recursion(self,node,x):
+        if node.leaf == False:  # 内部ノード
+            self._calc_pred_dist_recursion(node.children[x[node.k]],x)
+        else:  # 葉ノード
+            return self._calc_pred_dist_leaf(node,x)
+
+    def calc_pred_dist(self,x):
+        """Calculate the parameters of the predictive distribution."""
+        self._tmp_x = np.copy(x)
+        for root in self.hn_metatree_list:
+            self._calc_pred_dist_recursion(root,self._tmp_x)
+
+    def _make_prediction_recursion_squared(self,node):
+            if node.leaf == False:  # 内部ノード
+                return ((1 - node.hn_g) * node.sub_model.make_prediction(loss='squared')
+                        + node.hn_g * self._make_prediction_recursion_squared(node.children[self._tmp_x[node.k]]))
+            else:  # 葉ノード
+                return node.sub_model.make_prediction(loss='squared')
+
+    def _make_prediction_leaf_01(self,node):
+        mode = node.sub_model.make_prediction(loss='0-1')
+        pred_dist = node.sub_model.make_prediction(loss='KL')
+        if type(pred_dist) is np.ndarray:
+            mode_prob = pred_dist[mode]
+        elif hasattr(pred_dist,'pdf'):
+            mode_prob = pred_dist.pdf(mode)
+        elif hasattr(pred_dist,'pmf'):
+            mode_prob = pred_dist.pmf(mode)
+        else:
+            mode_prob = None
+        return mode, mode_prob
+
+    def _make_prediction_recursion_01(self,node):
+        if node.leaf == False:  # 内部ノード
+            mode1,mode_prob1 = self._make_prediction_leaf_01(node)
+            mode2,mode_prob2 = self._make_prediction_recursion_01(node.children[self._tmp_x[node.k]])
+            if (1 - node.hn_g) * mode_prob1 > node.hn_g * mode_prob2:
+                return mode1,mode_prob1
+            else:
+                return mode2,mode_prob2
+        else:  # 葉ノード
+            return self._make_prediction_leaf_01(node)
+
+    def make_prediction(self,loss="0-1"):
+        """Predict a new data point under the given criterion.
+
+        Parameters
+        ----------
+        loss : str, optional
+            Loss function underlying the Bayes risk function, by default \"0-1\".
+            This function supports \"squared\", \"0-1\".
+
+        Returns
+        -------
+        Predicted_value : {float, numpy.ndarray}
+            The predicted value under the given loss function. 
+        """
+        if loss == "squared":
+            tmp_pred_vec = np.empty(len(self.hn_metatree_list))
+            for i,metatree in enumerate(self.hn_metatree_list):
+                tmp_pred_vec[i] = self._make_prediction_recursion_squared(metatree)
+            return self.hn_metatree_prob_vec @ tmp_pred_vec
+        elif loss == "0-1":
+            tmp_mode = np.empty(len(self.hn_metatree_list))
+            tmp_mode_prob_vec = np.empty(len(self.hn_metatree_list))
+            for i,metatree in enumerate(self.hn_metatree_list):
+                tmp_mode[i],tmp_mode_prob_vec[i] = self._make_prediction_recursion_01(metatree)
+            return tmp_mode[np.argmax(self.hn_metatree_prob_vec * tmp_mode_prob_vec)]
+        else:
+            raise(CriteriaError("Unsupported loss function! "
+                                +"This function supports \"squared\" and \"0-1\"."))
+
+    def pred_and_update(self,x,y,loss="0-1"):
+        """Predict a new data point and update the posterior sequentially.
+
+        Parameters
+        ----------
+        x : numpy.ndarray
+            It must be a degree-dimensional vector
+        loss : str, optional
+            Loss function underlying the Bayes risk function, by default \"0-1\".
+            This function supports \"squared\", \"0-1\", and \"KL\".
+
+        Returns
+        -------
+        Predicted_value : {float, numpy.ndarray}
+            The predicted value under the given loss function. 
+        """
+        _check.nonneg_int_vec(x,'x',DataFormatError)
+        if x.shape[-1] != self.K:
+            raise(DataFormatError(f"x.shape[-1] must equal to K:{self.K}"))
+        if x.max() >= self.NUM_CHILDREN:
+            raise(DataFormatError(f"x.max() must smaller than NUM_CHILDREN:{self.NUM_CHILDREN}"))
+        self.calc_pred_dist(x)
+        prediction = self.make_prediction(loss=loss)
+        self.update_posterior(x,y,alg_type='given_MT')
+        return prediction

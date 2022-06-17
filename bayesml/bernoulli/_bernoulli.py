@@ -323,7 +323,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self.hn_alpha += np.sum(x==1)
         self.hn_beta += np.sum(x==0)
 
-    def estimate_params(self,loss="squared"):
+    def estimate_params(self,loss="squared",output=None):
         """Estimate the parameter of the stochastic data generative model under the given criterion.
 
         Parameters
@@ -345,19 +345,37 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         scipy.stats.rv_discrete
         """
         if loss == "squared":
-            return self.hn_alpha / (self.hn_alpha + self.hn_beta)
+            if output == 'dict':
+                return {'theta':self.hn_alpha / (self.hn_alpha + self.hn_beta)}
+            else:
+                return self.hn_alpha / (self.hn_alpha + self.hn_beta)
         elif loss == "0-1":
             if self.hn_alpha > 1.0 and self.hn_beta > 1.0:
-                return (self.hn_alpha - 1.0) / (self.hn_alpha + self.hn_beta - 2.0)
+                if output == 'dict':
+                    return {'theta':(self.hn_alpha - 1.0) / (self.hn_alpha + self.hn_beta - 2.0)}
+                else:
+                    return (self.hn_alpha - 1.0) / (self.hn_alpha + self.hn_beta - 2.0)
             elif self.hn_alpha > 1.0:
-                return 1.0
+                if output == 'dict':
+                    return {'theta':1.0}
+                else:
+                    return 1.0
             elif self.hn_beta > 1.0:
-                return 0.0
+                if output == 'dict':
+                    return {'theta':0.0}
+                else:
+                    return 0.0
             else:
                 warnings.warn("MAP estimate doesn't exist for the current hn_alpha and hn_beta.",ResultWarning)
-                return None
+                if output == 'dict':
+                    return {'theta':None}
+                else:
+                    return None
         elif loss == "abs":
-            return ss_beta.median(self.hn_alpha,self.hn_beta)
+            if output == 'dict':
+                return {'theta':ss_beta.median(self.hn_alpha,self.hn_beta)}
+            else:
+                return ss_beta.median(self.hn_alpha,self.hn_beta)
         elif loss == "KL":
             return ss_beta(self.hn_alpha,self.hn_beta)
         else:
