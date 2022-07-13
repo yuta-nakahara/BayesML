@@ -57,7 +57,7 @@ q_s(y_{i} | \boldsymbol{x}_{i}, \boldsymbol{x}^{i-1}, y^{i-1}, \boldsymbol{k}),&
 
 $$q_s(y_{i} | \boldsymbol{x}_{i}, \boldsymbol{x}^{i-1}, y^{i-1}, \boldsymbol{k})=\int p(y_i | \boldsymbol{x}_i, \boldsymbol{\theta}, T, \boldsymbol{k}) p(\boldsymbol{\theta} | \boldsymbol{x}^{i-1}, y^{i-1}, T, \boldsymbol{k}) \mathrm{d} \boldsymbol{\theta}, \quad s \in \mathcal{L}(T)$$
 
-For $B$ meta-trees $M_{T_1, \boldsymbol{k}_1}, M_{T_2, \boldsymbol{k}_2}, \dots, M_{T_B, \boldsymbol{k}_B}$, we define $\mathcal{M}=\{(T_1, \boldsymbol{k}_1), (T_2, \boldsymbol{k}_2), \ldots, (T_B, \boldsymbol{k}_B) \}$. Then, an approximate predictive distribution is given as
+For $B$ meta-trees $M_{T_1, \boldsymbol{k}_1}, M_{T_2, \boldsymbol{k}_2}, \dots, M_{T_B, \boldsymbol{k}_B}$, we define $\mathcal{M}=\{(T_1, \boldsymbol{k}_1), (T_2, \boldsymbol{k}_2), \ldots, (T_B, \boldsymbol{k}_B) \}$. We assume uniform distribution on $\{\boldsymbol{k}_1, \boldsymbol{k}_2, \ldots, \boldsymbol{k}_B \}$ as a prior distribution $p(\boldsymbol{k})$. Then, an approximate predictive distribution is given as
 
 $$p(y_{n+1}| \boldsymbol{x}_{n+1}, \boldsymbol{x}^n, y^n) \approx \sum_{(T,\boldsymbol{k} )\in \mathcal{M}} p(\boldsymbol{k}| \boldsymbol{x}^n, y^n) p(T| \boldsymbol{x}^n, y^n, \boldsymbol{k}) \int p(y_{n+1} | \boldsymbol{x}_{n+1}, \boldsymbol{\theta}, T, \boldsymbol{k}) p(\boldsymbol{\theta} | \boldsymbol{x}^{n}, y^{n}, T, \boldsymbol{k}) \mathrm{d} \boldsymbol{\theta},$$
 where 
