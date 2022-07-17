@@ -57,7 +57,7 @@ The posterior distribution is as follows:
     \mathbb{E}[\mu | x^n] &= m_n & \left( \alpha_n > \frac{1}{2} \right), \\
     \mathbb{V}[\mu | x^n] &= \frac{\beta_n \alpha_n}{\alpha_n (\alpha_n - 1)} & (\alpha_n > 1), \\
     \mathbb{E}[\tau | x^n] &= \frac{\alpha_n}{\beta_n}, \\
-    \mathbb{V}[\tau | x^n] &= \frac{\alpha_n}{\beta_n^2}.
+    \mathbb{V}[\tau | x^n] &= \frac{\alpha_n}{\beta_n^2},
 
 where the updating rule of the hyperparameters is
 
@@ -66,7 +66,7 @@ where the updating rule of the hyperparameters is
     m_n &= \frac{\kappa_0 m_0 + n \bar{x}}{\kappa_0 + n}, \\
     \kappa_n &= \kappa_0 + n, \\
     \alpha_n &= \alpha_0 + \frac{n}{2}, \\
-    \beta_n &=  \beta_0 + \frac{1}{2} \left( \sum_{i=0}^n (x_i - \bar{x})^2 + \frac{\kappa_0 n}{\kappa_n + n} (\bar{x} - m_0)^2 \right).
+    \beta_n &=  \beta_0 + \frac{1}{2} \left( \sum_{i=1}^n (x_i - \bar{x})^2 + \frac{\kappa_0 n}{\kappa_n + n} (\bar{x} - m_0)^2 \right).
 
 The predictive distribution is as follows:
 
@@ -77,7 +77,7 @@ The predictive distribution is as follows:
 
 .. math::
     p(x_{n+1} | x^{n} ) &= \mathrm{St}(x_{n+1} | \mu_\mathrm{p}, \lambda_\mathrm{p}, \nu_\mathrm{p}) \\
-    &= \frac{\Gamma (\nu_\mathrm{p} / 2) + 1/2}{\Gamma (\nu_\mathrm{p} / 2)} \left( \frac{\lambda_\mathrm{p}}{\pi \nu_\mathrm{p}} \right)^{1/2} \left( 1 + \frac{\lambda_\mathrm{p} (x_{n+1} - \mu_\mathrm{p})^2}{\nu_\mathrm{p}} \right)^{-\nu_\mathrm{p}/2 - 1/2},
+    &= \frac{\Gamma (\nu_\mathrm{p} / 2 + 1/2 )}{\Gamma (\nu_\mathrm{p} / 2)} \left( \frac{\lambda_\mathrm{p}}{\pi \nu_\mathrm{p}} \right)^{1/2} \left( 1 + \frac{\lambda_\mathrm{p} (x_{n+1} - \mu_\mathrm{p})^2}{\nu_\mathrm{p}} \right)^{-\nu_\mathrm{p}/2 - 1/2},
 
 .. math::
     \mathbb{E}[x_{n+1} | x^n] &= \mu_\mathrm{p} & (\nu_\mathrm{p} > 1), \\
