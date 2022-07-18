@@ -712,7 +712,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self.hn_metatree_list = copy.copy(self.h0_metatree_list)
         self.hn_metatree_prob_vec = copy.copy(self.h0_metatree_prob_vec)
 
-        self.calc_pred_dist(np.zeros(self.K))
+        self.calc_pred_dist(np.zeros(self.K,dtype=int))
     
     def overwrite_h0_params(self):
         """Overwrite the initial values of the hyperparameters of the posterior distribution by the learned values.
@@ -904,10 +904,31 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         elif alg_type == 'given_MT':
             self.hn_metatree_list, self.hn_metatree_prob_vec = self._given_MT(x,y)
 
+    def _map_recursion_add_nodes(self,node):
+        if node.depth == self.D_MAX:  # 葉ノード
+            node.hn_g = 0.0
+            node.leaf = True
+            node.map_leaf = True
+        else:  # 内部ノード
+            for i in range(self.NUM_CHILDREN):
+                node.children[i] = _LearnNode(depth=node.depth+1,
+                                              NUM_CHILDREN=self.NUM_CHILDREN,
+                                              hn_g=self.h0_g,
+                                              k=None,
+                                              sub_model=self.SubModel(**self.sub_h0_params))
+                self._map_recursion_add_nodes(node.children[i])
+
     def _map_recursion(self,node):
         if node.leaf:
-            node.map_leaf = True
-            return 1.0
+            if node.depth == self.D_MAX:
+                node.map_leaf = True
+                return 1.0
+            elif 1.0 - node.hn_g > node.hn_g * self.h0_g ** (self.K ** (self.D_MAX - node.depth)-2):
+                node.map_leaf = True
+                return 1.0 - node.hn_g
+            else:
+                self._map_recursion_add_nodes(node)
+                return node.hn_g * self.h0_g ** (self.K ** (self.D_MAX - node.depth)-2)
         else:
             tmp1 = 1.0-node.hn_g
             tmp_vec = np.empty(self.NUM_CHILDREN)
