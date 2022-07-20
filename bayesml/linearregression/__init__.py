@@ -10,7 +10,7 @@ The stochastic data generative model is as follows:
 * :math:`d \in \mathbb N`: a dimension
 * :math:`\boldsymbol{x} = [x_1, x_2, \dots , x_d] \in \mathbb{R}^d`: an explanatory variable. If you consider an intercept term, it should be included as one of the elements of :math:`\boldsymbol{x}`.
 * :math:`y\in\mathbb{R}`: an objective variable
-* :math:`\tau \in\mathbb{R}`: a parameter
+* :math:`\tau \in\mathbb{R}_{>0}`: a parameter
 * :math:`\boldsymbol{\theta}\in\mathbb{R}^{d}`: a parameter
 
 .. math::
@@ -25,7 +25,7 @@ The stochastic data generative model is as follows:
 The prior distribution is as follows:
 
 * :math:`\boldsymbol{\mu_0} \in \mathbb{R}^d`: a hyperparameter
-* :math:`\boldsymbol{\Lambda_0} \in \mathbb{R}^{d\times d}`: a hyperparameter
+* :math:`\boldsymbol{\Lambda_0} \in \mathbb{R}^{d\times d}`: a hyperparameter (a positive definite matrix)
 * :math:`\alpha_0\in \mathbb{R}_{>0}`: a hyperparameter
 * :math:`\beta_0\in \mathbb{R}_{>0}`: a hyperparameter
 
@@ -78,7 +78,7 @@ The predictive distribution is as follows:
 
 .. math::
     p(y_{n+1} | \boldsymbol{X}, \boldsymbol{y}, \boldsymbol{x}_{n+1} ) &= \mathrm{St}\left(y_{n+1} \mid m_\mathrm{p}, \lambda_\mathrm{p}, \nu_\mathrm{p}\right) \\
-    &= \frac{\Gamma (\nu_\mathrm{p} / 2) + 1/2}{\Gamma (\nu_\mathrm{p} / 2)} \left( \frac{\lambda_\mathrm{p}}{\pi \nu_\mathrm{p}} \right)^{1/2} \left( 1 + \frac{\lambda_\mathrm{p} (y_{n+1} - m_\mathrm{p})^2}{\nu_\mathrm{p}} \right)^{-\nu_\mathrm{p}/2 - 1/2},
+    &= \frac{\Gamma (\nu_\mathrm{p} / 2 + 1/2 )}{\Gamma (\nu_\mathrm{p} / 2)} \left( \frac{\lambda_\mathrm{p}}{\pi \nu_\mathrm{p}} \right)^{1/2} \left( 1 + \frac{\lambda_\mathrm{p} (y_{n+1} - m_\mathrm{p})^2}{\nu_\mathrm{p}} \right)^{-\nu_\mathrm{p}/2 - 1/2},
 
 .. math::
     \mathbb{E}[y_{n+1} | \boldsymbol{X}, \boldsymbol{y}, \boldsymbol{x}_{n+1}] &= m_\mathrm{p} & (\nu_\mathrm{p} > 1), \\

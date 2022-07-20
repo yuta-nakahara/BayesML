@@ -23,7 +23,7 @@ The stochastic data generative model is as follows:
 
 The prior distribution is as follows:
 
-* :math:`\boldsymbol{\alpha}_0 \in \mathbb{R}_{>0}`: a hyperparameter
+* :math:`\boldsymbol{\alpha}_0 \in \mathbb{R}_{>0}^d`: a hyperparameter
 * :math:`\Gamma (\cdot)`: the gamma function
 * :math:`\tilde{\alpha}_0 = \sum_{k=1}^d \alpha_{0,k}`
 * :math:`C(\boldsymbol{\alpha}_0)=\frac{\Gamma(\tilde{\alpha}_0)}{\Gamma(\alpha_{0,1})\cdots\Gamma(\alpha_{0,d})}`
@@ -58,7 +58,7 @@ where the updating rule of the hyperparameters is as follows.
 
 The predictive distribution is as follows:
 
-* :math:`x_{n+1} \in \{ 0, 1\}^d`: a new data point
+* :math:`\boldsymbol{x}_{n+1} \in \{ 0, 1\}^d`: a new data point
 * :math:`\boldsymbol{\theta}_\mathrm{p} \in [0, 1]^d`: the hyperparameter of the posterior (:math:`\sum_{k=1}^d \theta_{\mathrm{p},k} = 1`)
 
 .. math::
@@ -72,7 +72,7 @@ The predictive distribution is as follows:
 where the parameters are obtained from the hyperparameters of the posterior distribution as follows:
 
 .. math::
-    \boldsymbol{\theta}_{\mathrm{p},k} = \frac{\alpha_{n,k}}{\sum_{k=1}^d \alpha_{n,k}}, \quad (k \in \{ 1, 2, \dots , d \}).
+    \theta_{\mathrm{p},k} = \frac{\alpha_{n,k}}{\sum_{k=1}^d \alpha_{n,k}}, \quad (k \in \{ 1, 2, \dots , d \}).
 """
 
 from ._categorical import GenModel

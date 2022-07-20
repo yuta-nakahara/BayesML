@@ -42,13 +42,13 @@ The posterior distribution is as follows:
 
 .. math::
     \mathbb{E}[\lambda | x^n] &= \frac{\alpha_n}{\beta_n}, \\
-    \mathbb{V}[\lambda | x^n] &= \frac{\alpha_n}{\beta_n^2}.
+    \mathbb{V}[\lambda | x^n] &= \frac{\alpha_n}{\beta_n^2},
 
 where the updating rule of the hyperparameters is
 
 .. math::
-    \alpha_n &= \alpha_0 + n\\
-    \beta_n &= \beta_0 + \sum_{i=1}^n x_i
+    \alpha_n &= \alpha_0 + n,\\
+    \beta_n &= \beta_0 + \sum_{i=1}^n x_i.
 
 
 The predictive distribution is as follows:
@@ -58,7 +58,7 @@ The predictive distribution is as follows:
 * :math:`\eta_\mathrm{p} \in \mathbb{R}_{>0}`: the hyperparameter of the posterior
 
 .. math::
-    p(x_{n+1}|x^n)=\mathrm{Lomax}(x_{n+1}|\alpha_\mathrm{p},\eta_\mathrm{p}) = \frac{\alpha_\mathrm{p}}{\eta_\mathrm{p}}\left(1+\frac{x}{\eta_\mathrm{p}}\right)^{-(\alpha_\mathrm{p}+1)},
+    p(x_{n+1}|x^n)=\mathrm{Lomax}(x_{n+1}|\alpha_\mathrm{p},\eta_\mathrm{p}) = \frac{\alpha_\mathrm{p}}{\eta_\mathrm{p}}\left(1+\frac{x_{n+1}}{\eta_\mathrm{p}}\right)^{-(\alpha_\mathrm{p}+1)},
 
 .. math::
     \mathbb{E}[x_{n+1} | x^n] &=

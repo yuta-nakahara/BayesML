@@ -270,7 +270,7 @@
 <li><p><span class="math notranslate nohighlight">\(\lambda \in \mathbb{R}_{&gt;0}\)</span>: a parameter</p></li>
 </ul>
 <div class="math notranslate nohighlight">
-\[p(x | \lambda) = \mathrm{Po}(x|\lambda) = \frac{ \lambda^{x} }{x!}\exp \{ -\lambda \}\]</div>
+\[p(x | \lambda) = \mathrm{Po}(x|\lambda) = \frac{ \lambda^{x} }{x!}\exp \{ -\lambda \}.\]</div>
 <p>The prior distribution is as follows:</p>
 <ul class="simple">
 <li><p><span class="math notranslate nohighlight">\(\alpha_0 \in \mathbb{R}_{&gt;0}\)</span>: a hyperparameter</p></li>
@@ -292,11 +292,11 @@
 \[p(\lambda | x^n) = \mathrm{Gam}(\lambda|\alpha_n,\beta_n) = \frac{\beta_n^{\alpha_n}}{\Gamma (\alpha_n)} \lambda^{\alpha_n - 1} \exp \{ -\beta_n \lambda \},\]</div>
 <div class="math notranslate nohighlight">
 \[\begin{split}\mathbb{E}[\lambda | x^n] &amp;= \frac{\alpha_n}{\beta_n}, \\
-\mathbb{V}[\lambda | x^n] &amp;= \frac{\alpha_n}{\beta_n^2}.\end{split}\]</div>
+\mathbb{V}[\lambda | x^n] &amp;= \frac{\alpha_n}{\beta_n^2},\end{split}\]</div>
 <p>where the updating rule of the hyperparameters is</p>
 <div class="math notranslate nohighlight">
-\[\begin{split}\alpha_n &amp;= \alpha_0 + \sum_{i=1}^n x_i\\
-\beta_n &amp;= \beta_0 + n\end{split}\]</div>
+\[\begin{split}\alpha_n &amp;= \alpha_0 + \sum_{i=1}^n x_i,\\
+\beta_n &amp;= \beta_0 + n.\end{split}\]</div>
 <p>The predictive distribution is as follows:</p>
 <ul class="simple">
 <li><p><span class="math notranslate nohighlight">\(x_{n+1} \in \mathbb{N}\)</span>: a new data point</p></li>
