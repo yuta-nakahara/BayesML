@@ -10,7 +10,7 @@ The Categorical mixture model with the Dirichlet prior distributions. The stocha
 * $\boldsymbol{\pi} \in [0, 1]^K$: a parameter for latent classes, ($\sum_{k=1}^K \pi_k=1$)
 * $d \in \mathbb{Z}$: a dimension ($d \geq 2$)
 * $\boldsymbol{x} \in \{ 0, 1\}^d$: a data point, (a one-hot vector, i.e., $\sum_{l=1}^d x_l=1$)
-* $\boldsymbol{\theta}_k=(\theta_{k,1},\theta_{k,2},\cdots,\theta_{k,d})^\top \in [0, 1]^d$: a parameter, ($\sum_{l=1}^d \theta_{k,l}=1$)
+* $\boldsymbol{\theta}_k=(\theta_{k,1},\theta_{k,2},\dots,\theta_{k,d})^\top \in [0, 1]^d$: a parameter, ($\sum_{l=1}^d \theta_{k,l}=1$)
 * $\boldsymbol{\theta} = \{ \boldsymbol{\theta}_k \}_{k=1}^K$
 
 ​
@@ -25,8 +25,8 @@ $$
 The prior distribution is as follows:
 ​
 
-* $\boldsymbol{\beta}_0=(\beta_{0,1},\beta_{0,2},\cdots,\beta_{0,d})^\top \in \mathbb{R}^{d}_{>0}$: a hyperparameter
-* $\boldsymbol{\alpha}_0=(\alpha_{0,1},\alpha_{0,2},\cdots,\alpha_{0,K})^\top \in \mathbb{R}_{> 0}^K$: a hyperparameter
+* $\boldsymbol{\beta}_0=(\beta_{0,1},\beta_{0,2},\dots,\beta_{0,d})^\top \in \mathbb{R}^{d}_{>0}$: a hyperparameter
+* $\boldsymbol{\alpha}_0=(\alpha_{0,1},\alpha_{0,2},\dots,\alpha_{0,K})^\top \in \mathbb{R}_{> 0}^K$: a hyperparameter
 * $\Gamma (\cdot)$: the gamma function
 ​
 $$
@@ -46,7 +46,7 @@ $$
 
 The apporoximate posterior distribution in the $t$-th iteration of a variational Bayesian method is as follows:
 
-* $\boldsymbol{x}^n = (\boldsymbol{x}_1, \boldsymbol{x}_2, \dots , \boldsymbol{x}_n) \in \mathbb{R}^{d \times n}$: given data
+* $\boldsymbol{x}^n = (\boldsymbol{x}_1, \boldsymbol{x}_2, \dots , \boldsymbol{x}_n) \in \{ 0, 1\}^{d \times n}$: given data
 * $\boldsymbol{z}^n = (\boldsymbol{z}_1, \boldsymbol{z}_2, \dots , \boldsymbol{z}_n) \in \{ 0, 1 \}^{K \times n}$: latent classes of given data
 * $\boldsymbol{r}_i^{(t)} = (r_{i,1}^{(t)}, r_{i,2}^{(t)}, \dots , r_{i,K}^{(t)}) \in [0, 1]^K$: a parameter for the $i$-th latent class, ($\sum_{k=1}^K r_{i, k}^{(t)} = 1$)
 * $\boldsymbol{\beta}_{n,k}^{(t)}=(\beta^{(t)}_{n,k,1},\beta^{(t)}_{n,k,2},\cdots,\beta^{(t)}_{n,k,d})^\top \in \mathbb{R}_{> 0}^d$: a hyperparameter
@@ -75,8 +75,8 @@ $$
 
 The approximate predictive distribution is as follows:
 
-* $\boldsymbol{x}_{n+1} \in \mathbb{R}^d$: a new data point
-* $\boldsymbol{\theta}_{\mathrm{p},k}=(\theta_{\mathrm{p},k,1},\theta_{\mathrm{p},k,2},\cdots,\theta_{\mathrm{p},k,d})^\top \in \mathbb{R}^d$: the parameter of the predictive distribution
+* $\boldsymbol{x}_{n+1} \in \{ 0, 1\}^d$: a new data point
+* $\boldsymbol{\theta}_{\mathrm{p},k}=(\theta_{\mathrm{p},k,1},\theta_{\mathrm{p},k,2},\cdots,\theta_{\mathrm{p},k,d})^\top \in [0, 1]^d$: the parameter of the predictive distribution ($\sum_{l=1}^d \theta_{\mathrm{p}, k,l}=1$)
 
 $$
 \begin{align}
@@ -88,5 +88,5 @@ $$
 where the parameters are obtained from the hyperparameters of the posterior distribution as follows:
 
 $$
-    \theta_{\mathrm{p},k,l}=\frac{\beta_{0,l}+s^{(t)}_{k,l}}{\sum^d_{l=1}\left(\beta_{0,l}+s^{(t)}_{k,l}\right)}.
+    \theta_{\mathrm{p},k,l}=\frac{\beta^{(t)}_{n,k,l}}{\sum^d_{l=1} \beta^{(t)}_{n,k,l}}.
 $$
