@@ -43,3 +43,49 @@ $$
     C(\boldsymbol{a}) &= \frac{\Gamma(\sum_{i=1}^n a_{i})}{\Gamma(a_{1})\cdots\Gamma(a_{n})}\ \ (n\in\mathbb{N},\ \boldsymbol{a}\in\mathbb{R}^n_{>0}).
 \end{align}
 $$
+
+The apporoximate posterior distribution in the $t$-th iteration of a variational Bayesian method is as follows:
+
+* $\boldsymbol{x}^n = (\boldsymbol{x}_1, \boldsymbol{x}_2, \dots , \boldsymbol{x}_n) \in \mathbb{R}^{d \times n}$: given data
+* $\boldsymbol{z}^n = (\boldsymbol{z}_1, \boldsymbol{z}_2, \dots , \boldsymbol{z}_n) \in \{ 0, 1 \}^{K \times n}$: latent classes of given data
+* $\boldsymbol{r}_i^{(t)} = (r_{i,1}^{(t)}, r_{i,2}^{(t)}, \dots , r_{i,K}^{(t)}) \in [0, 1]^K$: a parameter for the $i$-th latent class, ($\sum_{k=1}^K r_{i, k}^{(t)} = 1$)
+* $\boldsymbol{\beta}_{n,k}^{(t)}=(\beta^{(t)}_{n,k,1},\beta^{(t)}_{n,k,2},\cdots,\beta^{(t)}_{n,k,d})^\top \in \mathbb{R}_{> 0}^d$: a hyperparameter
+* $\boldsymbol{\alpha}_n^{(t)}=(\alpha^{(t)}_{n,1},\alpha^{(t)}_{n,2},\cdots,\alpha^{(t)}_{n,K})^\top \in \mathbb{R}_{> 0}^K$: a hyperparameter
+* $\psi (\cdot)$: the digamma function
+
+$$
+\begin{align}
+    q(\boldsymbol{z}^n, \boldsymbol{\theta},\boldsymbol{\pi}) &= \left\{ \prod_{i=1}^n \mathrm{Cat} (\boldsymbol{z}_i | \boldsymbol{r}_i^{(t)}) \right\} \left\{  \prod^K_{k=1}\mathrm{Dir}(\boldsymbol{\theta}_k|\boldsymbol{\beta}^{(t)}_{n,k})\right\} \mathrm{Dir}(\boldsymbol{\pi}|\boldsymbol{\alpha}_n^{(t)}) \\
+    &= \left\{ \prod_{i=1}^n \prod_{k=1}^K \left(r_{i,k}^{(t)}\right)^{z_{i,k}} \right\}\times \prod^K_{k=1}\left\{C(\boldsymbol{\beta}_{n,k}^{(t)})\prod_{l=1}^d \theta^{\beta_{n,k,l}^{(t)}-1}_{k,l}\right\}\times C(\boldsymbol{\alpha}_n^{(t)})\prod_{k=1}^K \pi_k^{\alpha_{n,k}^{(t)}-1},
+\end{align}
+$$
+
+where the updating rule of the hyperparameters is as follows:
+
+$$
+\begin{align}
+    N_k^{(t)} &= \sum_{i=1}^n r_{i,k}^{(t)},\\
+    s^{(t)}_{k,l}&=\sum_{i=1}^nr_{i,k}^{(t)}x_{l,i},\\
+    \beta^{(t+1)}_{n,k,l}&=\beta_{0,l}+s^{(t)}_{k,l},\\
+    \alpha^{(t+1)}_{n,k}&=\alpha_{0,k}+N^{(t)}_k,\\
+    r_{i,k}^{(t+1)}&=\exp\left\{\psi\left(\alpha^{(t+1)}_{n,k}\right)-\psi\left(\sum^K_{k'=1}\alpha^{(t+1)}_{n,k'}\right)+\sum^d_{l=1}x_{i,l}\psi\left(\beta^{(t+1)}_{n,k,l}\right)-\psi\left(\sum^d_{l=1}\beta^{(t+1)}_{n,k,l}\right)\right\}.
+\end{align}
+$$
+
+The approximate predictive distribution is as follows:
+
+* $\boldsymbol{x}_{n+1} \in \mathbb{R}^d$: a new data point
+* $\boldsymbol{\theta}_{\mathrm{p},k}=(\theta_{\mathrm{p},k,1},\theta_{\mathrm{p},k,2},\cdots,\theta_{\mathrm{p},k,d})^\top \in \mathbb{R}^d$: the parameter of the predictive distribution
+
+$$
+\begin{align}
+    p(\boldsymbol{x}_{n+1}|\boldsymbol{x}^n) &= \frac{1}{\sum_{k=1}^K \alpha_{n,k}^{(t)}} \sum_{k=1}^K \alpha_{n,k}^{(t)} \mathrm{Cat}(\boldsymbol{x}_{n+1}|\boldsymbol{\theta}_{\mathrm{p},k})\\
+    &=\frac{1}{\sum_{k=1}^K \alpha_{n,k}^{(t)}} \sum_{k=1}^K \alpha_{n,k}^{(t)}\prod^d_{l=1}\theta^{x_{n+1,l}}_{\mathrm{p},k,l},
+\end{align}
+$$
+
+where the parameters are obtained from the hyperparameters of the posterior distribution as follows:
+
+$$
+    \theta_{\mathrm{p},k,l}=\frac{\beta_{0,l}+s^{(t)}_{k,l}}{\sum^d_{l=1}\left(\beta_{0,l}+s^{(t)}_{k,l}\right)}.
+$$
