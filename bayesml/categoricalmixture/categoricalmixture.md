@@ -68,7 +68,8 @@ $$
     s^{(t)}_{k,l}&=\sum_{i=1}^nr_{i,k}^{(t)}x_{l,i},\\
     \beta^{(t+1)}_{n,k,l}&=\beta_{0,l}+s^{(t)}_{k,l},\\
     \alpha^{(t+1)}_{n,k}&=\alpha_{0,k}+N^{(t)}_k,\\
-    r_{i,k}^{(t+1)}&=\exp\left\{\psi\left(\alpha^{(t+1)}_{n,k}\right)-\psi\left(\sum^K_{k'=1}\alpha^{(t+1)}_{n,k'}\right)+\sum^d_{l=1}x_{i,l}\psi\left(\beta^{(t+1)}_{n,k,l}\right)-\psi\left(\sum^d_{l=1}\beta^{(t+1)}_{n,k,l}\right)\right\}.
+    \rho_{i,k}^{(t+1)}&=\exp\left\{\psi\left(\alpha^{(t+1)}_{n,k}\right)-\psi\left(\sum^K_{k'=1}\alpha^{(t+1)}_{n,k'}\right)+\sum^d_{l=1}x_{i,l}\psi\left(\beta^{(t+1)}_{n,k,l}\right)-\psi\left(\sum^d_{l=1}\beta^{(t+1)}_{n,k,l}\right)\right\},\\
+    r^{(t+1)}_{i,k}&=\frac{\rho_{i,k}^{(t+1)}}{\sum_{k=1}^K \rho_{i,k}^{(t+1)}}.
 \end{align}
 $$
 
