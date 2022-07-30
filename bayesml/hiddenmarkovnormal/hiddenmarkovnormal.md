@@ -57,7 +57,7 @@ $$
     C(\boldsymbol{\zeta}_{0,k'}) &= \frac{\Gamma(\sum_{k=1}^K \zeta_{0,k',k})}{\Gamma(\zeta_{0,k',1})\cdots\Gamma(\zeta_{0,k',K})}. 
 \end{align}
 $$
-
+<!--
 The apporoximate posterior distribution in the $t$-th iteration of a variational Bayesian method is as follows:
 
 * $\boldsymbol{x}^n = (\boldsymbol{x}_1, \boldsymbol{x}_2, \dots , \boldsymbol{x}_n) \in \mathbb{R}^{D \times n}$: given data
@@ -121,3 +121,4 @@ $$
     \nu_{\mathrm{p},k} &= \nu_{n,k}^{(t)} - D + 1.
 \end{align}
 $$
+-->
