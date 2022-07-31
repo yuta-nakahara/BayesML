@@ -13,7 +13,15 @@ The stochastic data generative model is as follows:
 
 $$
 \begin{align}
-    p(y|\boldsymbol{x},\boldsymbol{w}) &= \left\{ \frac{1}{1 + \exp( - \boldsymbol{w}^\top \boldsymbol{x} ) } \right\}^y \left\{ \frac{ \exp( - \boldsymbol{w}^\top \boldsymbol{x} ) }{1 + \exp( - \boldsymbol{w}^\top \boldsymbol{x} )} \right\}^{1 - y}.
+    p(y|\boldsymbol{x},\boldsymbol{w}) &= \sigma( \boldsymbol{w}^\top \boldsymbol{x} )^y \left\{ 1 - \sigma( \boldsymbol{w}^\top \boldsymbol{x} ) \right\}^{1 - y}.
+\end{align}
+$$
+
+where $\sigma(\cdot)$ is defined as follows (called a sigmoid function):
+
+$$
+\begin{align}
+    \sigma(a) &= \frac{1}{1+\exp(-a)}.
 \end{align}
 $$
 
@@ -46,13 +54,13 @@ $$
 
 where the updating rules of the hyperparameters are as follows:
 
-* $\boldsymbol{\xi}_n^{(t)} = (\xi_{1}^{(t)}, \xi_{2}^{(t)}, \dots, \xi_{n}^{(t)}) \in \mathbb{R}_{\geq 0}^n$: a variational parameter
+* $\boldsymbol{\xi}^{(t)} = (\xi_{1}^{(t)}, \xi_{2}^{(t)}, \dots, \xi_{n}^{(t)}) \in \mathbb{R}_{\geq 0}^n$: a variational parameter
 
 $$
 \begin{align}
-    \boldsymbol{\Lambda}_n^{(t)} &= \boldsymbol{\Lambda}_0 + 2 \sum_{i=1}^{n} \lambda(\xi_i^{(t)}) \boldsymbol{x}_i \boldsymbol{x}_i^\top,\\
-    \boldsymbol{\mu}_n^{(t)} &= (\boldsymbol{\Lambda}_n^{(t)})^{-1} \left(\boldsymbol{\Lambda}_0 \boldsymbol{\mu}_0 + \sum_{i=1}^{n} (y_i - 1/2) \boldsymbol{x}_{i} \right),\\
-    \xi_i^{(t)} &= \left[ \boldsymbol{x}_{i}^\top \left\{ (\boldsymbol{\Lambda}_n^{(t)})^{-1} + \boldsymbol{\mu}_n^{(t)} \boldsymbol{\mu}_n^{(t)\top} \right\} \boldsymbol{x}_{i} \right]^{1/2}, 
+    \boldsymbol{\Lambda}_n^{(t+1)} &= \boldsymbol{\Lambda}_0 + 2 \sum_{i=1}^{n} \lambda(\xi_i^{(t)}) \boldsymbol{x}_i \boldsymbol{x}_i^\top,\\
+    \boldsymbol{\mu}_n^{(t+1)} &= \left(\boldsymbol{\Lambda}_n^{(t+1)}\right)^{-1} \left(\boldsymbol{\Lambda}_0 \boldsymbol{\mu}_0 + \sum_{i=1}^{n} (y_i - 1/2) \boldsymbol{x}_{i} \right),\\
+    \xi_i^{(t+1)} &= \left[ \boldsymbol{x}_{i}^\top \left\{ \left(\boldsymbol{\Lambda}_n^{(t+1)} \right)^{-1} + \boldsymbol{\mu}_n^{(t+1)} \boldsymbol{\mu}_n^{(t+1)\top} \right\} \boldsymbol{x}_{i} \right]^{1/2}, 
 \end{align}
 $$
 
@@ -60,6 +68,6 @@ where $\lambda(\cdot)$ is defined as follows:
 
 $$
 \begin{align}
-    \lambda(\xi) &= \frac{1}{2\xi} \left\{ \frac{1}{1+\exp(-\xi)} - \frac{1}{2} \right\}.
+    \lambda(\xi) &= \frac{1}{2\xi} \left\{ \sigma(\xi) - \frac{1}{2} \right\}.
 \end{align}
 $$
