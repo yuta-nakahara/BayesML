@@ -71,3 +71,31 @@ $$
     \lambda(\xi) &= \frac{1}{2\xi} \left\{ \sigma(\xi) - \frac{1}{2} \right\}.
 \end{align}
 $$
+
+The approximate predictive distribution is as follows:
+
+* $\boldsymbol{x}_{n+1}\in \mathbb{R}^d$: a new data point
+* $y_{n+1}\in \{ 0, 1\}$: a new objective variable
+
+$$
+\begin{align}
+    p(y_{n+1} | \boldsymbol{x}^n, \boldsymbol{y}^n, \boldsymbol{x}_{n+1} ) &= \sigma \left( \kappa(\sigma_a^2) \mu_a \right)^y \left\{ 1 - \sigma \left( \kappa(\sigma_a^2) \mu_a \right) \right\}^{1 - y}
+\end{align}
+$$
+
+where $\sigma_a^2, \mu_a$ are obtained from the hyperparameters of the approximate posterior distribution as follows:
+
+$$
+\begin{align}
+    \sigma_a^2 &= \boldsymbol{x}_{n+1}^\top (\boldsymbol{\Lambda}_n^{(t)})^{-1} \boldsymbol{x}_{n+1} , \\
+    \mu_a &= \boldsymbol{x}_{n+1}^\top \boldsymbol{\mu}_n^{(t)}, 
+\end{align}
+$$
+
+and $\kappa(\cdot)$ is defined as 
+
+$$
+\begin{align}
+    \kappa(\sigma^2) &= (1 + \pi \sigma^2 / 8)^{-1/2}.
+\end{align}
+$$
