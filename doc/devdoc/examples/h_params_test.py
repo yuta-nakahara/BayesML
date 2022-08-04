@@ -1,7 +1,7 @@
-from bayesml import exponential as bayesml_model
+from bayesml import linearregression as bayesml_model
 import numpy as np
 
-h0_params = {'h0_alpha':2,'h0_beta':3}
+h0_params = {'h0_mu_vec':np.ones(3),'h0_lambda_mat':np.eye(3)*2,"h0_alpha":2.1, "h0_beta":2.34}
 
 print('Gen to Learn 1')
 model = bayesml_model.GenModel()
