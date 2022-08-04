@@ -1,7 +1,7 @@
-from bayesml import categorical as bayesml_model
+from bayesml import poisson as bayesml_model
 import numpy as np
 
-h0_params = {'h0_alpha_vec':np.ones(5)}
+h0_params = {'h0_alpha':2,'h0_beta':3}
 
 print('Gen to Learn 1')
 model = bayesml_model.GenModel()
