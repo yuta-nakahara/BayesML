@@ -200,9 +200,9 @@ class GenModel(base.Generative):
             a positive definite symetric matrix
         """
         self.h_m_vec = _check.float_vec(h_m_vec,'h_m_vec',ParameterFormatError)
-        self.h_w_mat = _check.pos_def_sym_mat(h_w_mat,'h_w_mat',ParameterFormatError)
-        self.h_nu = _check.pos_float(h_nu,'h_nu',ParameterFormatError)
         self.h_kappa = _check.pos_float(h_kappa,'h_kappa',ParameterFormatError)
+        self.h_nu = _check.pos_float(h_nu,'h_nu',ParameterFormatError)
+        self.h_w_mat = _check.pos_def_sym_mat(h_w_mat,'h_w_mat',ParameterFormatError)
 
         if (self.h_m_vec.shape[0] != self.h_w_mat.shape[0]
             or self.h_nu <= self.h_m_vec.shape[0] - 1):

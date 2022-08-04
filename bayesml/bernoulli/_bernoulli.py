@@ -220,9 +220,9 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         
         Parameters
         ----------
-        h0_alpha : float
+        hn_alpha : float
             a positive real number
-        h0_beta : float
+        hn_beta : float
             a positibe real number
         """
         self.hn_alpha = _check.pos_float(hn_alpha,'hn_alpha',ParameterFormatError)
