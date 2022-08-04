@@ -1,7 +1,7 @@
-from bayesml import multivariate_normal as bayesml_model
+from bayesml import exponential as bayesml_model
 import numpy as np
 
-h0_params = {'h0_m_vec':np.ones(2),'h0_kappa':3,'h0_nu':2,'h0_w_mat':np.eye(2)*2}
+h0_params = {'h0_alpha':2,'h0_beta':3}
 
 print('Gen to Learn 1')
 model = bayesml_model.GenModel()
