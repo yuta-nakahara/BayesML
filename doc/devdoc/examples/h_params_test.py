@@ -1,7 +1,7 @@
-from bayesml import poisson as bayesml_model
+from bayesml import normal as bayesml_model
 import numpy as np
 
-h0_params = {'h0_alpha':2,'h0_beta':3}
+h0_params = {'h0_m':2,'h0_kappa':1,'h0_alpha':3,'h0_beta':4}
 
 print('Gen to Learn 1')
 model = bayesml_model.GenModel()
