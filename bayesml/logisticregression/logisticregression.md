@@ -13,7 +13,7 @@ The stochastic data generative model is as follows:
 
 $$
 \begin{align}
-    p(y|\boldsymbol{x},\boldsymbol{w}) &= \sigma( \boldsymbol{w}^\top \boldsymbol{x} )^y \left\{ 1 - \sigma( \boldsymbol{w}^\top \boldsymbol{x} ) \right\}^{1 - y}.
+    p(y|\boldsymbol{x},\boldsymbol{w}) &= \sigma( \boldsymbol{w}^\top \boldsymbol{x} )^y \left\{ 1 - \sigma( \boldsymbol{w}^\top \boldsymbol{x} ) \right\}^{1 - y},
 \end{align}
 $$
 
@@ -48,7 +48,7 @@ The apporoximate posterior distribution in the $t$-th iteration of a variational
 $$
 \begin{align}
     q(\boldsymbol{w}) &= \mathcal{N}(\boldsymbol{w}|\boldsymbol{\mu}_n^{(t)}, (\boldsymbol{\Lambda}_n^{(t)})^{-1})\\
-    &= \frac{|\boldsymbol{\Lambda}_n^{(t)}|^{1/2}}{(2 \pi)^{d/2}} \exp \left\{ -\frac{1}{2} (\boldsymbol{w} - \boldsymbol{\mu}_n^{(t)})^\top \boldsymbol{\Lambda}_n^{(t)} (\boldsymbol{w} - \boldsymbol{\mu}_n^{(t)}) \right\}.
+    &= \frac{|\boldsymbol{\Lambda}_n^{(t)}|^{1/2}}{(2 \pi)^{d/2}} \exp \left\{ -\frac{1}{2} (\boldsymbol{w} - \boldsymbol{\mu}_n^{(t)})^\top \boldsymbol{\Lambda}_n^{(t)} (\boldsymbol{w} - \boldsymbol{\mu}_n^{(t)}) \right\},
 \end{align}
 $$
 
@@ -79,16 +79,16 @@ The approximate predictive distribution is as follows:
 
 $$
 \begin{align}
-    p(y_{n+1} | \boldsymbol{x}^n, \boldsymbol{y}^n, \boldsymbol{x}_{n+1} ) &= \sigma \left( \kappa(\sigma_a^2) \mu_a \right)^y \left\{ 1 - \sigma \left( \kappa(\sigma_a^2) \mu_a \right) \right\}^{1 - y}
+    p(y_{n+1} | \boldsymbol{x}^n, \boldsymbol{y}^n, \boldsymbol{x}_{n+1} ) &= \sigma \left( \kappa(\sigma_\mathrm{p}^2) \mu_\mathrm{p} \right)^y \left\{ 1 - \sigma \left( \kappa(\sigma_\mathrm{p}^2) \mu_\mathrm{p} \right) \right\}^{1 - y},
 \end{align}
 $$
 
-where $\sigma_a^2, \mu_a$ are obtained from the hyperparameters of the approximate posterior distribution as follows:
+where $\sigma_\mathrm{p}^2$, $\mu_\mathrm{p}$ are obtained from the hyperparameters of the approximate posterior distribution as follows:
 
 $$
 \begin{align}
-    \sigma_a^2 &= \boldsymbol{x}_{n+1}^\top (\boldsymbol{\Lambda}_n^{(t)})^{-1} \boldsymbol{x}_{n+1} , \\
-    \mu_a &= \boldsymbol{x}_{n+1}^\top \boldsymbol{\mu}_n^{(t)}, 
+    \sigma_\mathrm{p}^2 &= \boldsymbol{x}_{n+1}^\top (\boldsymbol{\Lambda}_n^{(t)})^{-1} \boldsymbol{x}_{n+1} , \\
+    \mu_\mathrm{p} &= \boldsymbol{x}_{n+1}^\top \boldsymbol{\mu}_n^{(t)}, 
 \end{align}
 $$
 
