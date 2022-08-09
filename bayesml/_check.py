@@ -100,6 +100,22 @@ def pos_def_sym_mat(val,val_name,exception_class):
         pass
     raise(exception_class(val_name + " must be a positive definite symmetric 2-dimensional numpy.ndarray."))
 
+def sym_mats(val,val_name,exception_class):
+    if type(val) is np.ndarray:
+        if val.ndim >= 2 and val.shape[-1] == val.shape[-2]:
+            if np.allclose(val, np.swapaxes(val,-1,-2)):
+                return val
+    raise(exception_class(val_name + " must be a symmetric 2-dimensional numpy.ndarray."))
+
+def pos_def_sym_mats(val,val_name,exception_class):
+    sym_mats(val,val_name,exception_class)
+    try:
+        np.linalg.cholesky(val)
+        return val
+    except np.linalg.LinAlgError:
+        pass
+    raise(exception_class(val_name + " must be a positive definite symmetric 2-dimensional numpy.ndarray."))
+
 def float_(val,val_name,exception_class):
     if np.issubdtype(type(val),np.floating):
         return val

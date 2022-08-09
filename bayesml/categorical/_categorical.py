@@ -81,34 +81,16 @@ class GenModel(base.Generative):
                 +" if two or more of them are specified."))
 
         self.rng = np.random.default_rng(seed)
-        self._H_PARAM_KEYS = {'h_alpha_vec'}
-        self._H0_PARAM_KEYS = {'h0_alpha_vec'}
-        self._HN_PARAM_KEYS = {'hn_alpha_vec'}
 
-    def set_h_params(self,**kwargs):
+    def set_h_params(self,h_alpha_vec):
         """Set the hyperparameters of the prior distribution.
 
         Parameters
         ----------
-        **kwargs
-            a python dictionary {'h_alpha_vec':ndarray}, 
-            {'h0_alpha_vec':ndarray}, or {'hn_alpha_vec':ndarray}. 
-            They are obtained by ``get_h_params()`` of GenModel,
-            ``get_h0_params`` of LearnModel or ``get_hn_params`` of LearnModel.
+        h_alpha_vec : numpy ndarray
+            a vector of positive real numbers
         """
-        if kwargs.keys() == self._H_PARAM_KEYS:
-            self.h_alpha_vec = _check.pos_float_vec(kwargs['h_alpha_vec'],'h_alpha_vec',ParameterFormatError)
-        elif kwargs.keys() == self._H0_PARAM_KEYS:
-            self.h_alpha_vec = _check.pos_float_vec(kwargs['h0_alpha_vec'],'h_alpha_vec',ParameterFormatError)
-        elif kwargs.keys() == self._HN_PARAM_KEYS:
-            self.h_alpha_vec = _check.pos_float_vec(kwargs['hn_alpha_vec'],'h_alpha_vec',ParameterFormatError)
-        else:
-            raise(ParameterFormatError(
-                "The input of this function must be a python dictionary with keys:"
-                +str(self._H_PARAM_KEYS)+" or "
-                +str(self._H0_PARAM_KEYS)+" or "
-                +str(self._HN_PARAM_KEYS)+".")
-                )
+        self.h_alpha_vec = _check.pos_float_vec(h_alpha_vec,'h_alpha_vec',ParameterFormatError)
 
         self.degree = self.h_alpha_vec.shape[0]
         if self.degree != self.theta_vec.shape[0]:
@@ -264,6 +246,13 @@ class LearnModel(base.Posterior, base.PredictiveMixin):
         degree is assumed to be 3.
     h0_alpha_vec : numpy.ndarray, optional
         a vector of positive real numbers, by default [1/2, 1/2, ... , 1/2]
+
+    Attributes
+    ----------
+    hn_alpha_vec : numpy.ndarray
+        a vector of positive real numbers
+    p_theta_vec : numpy.ndarray
+        a real vector in :math:`[0, 1]^d`
     """
     def __init__(self, degree=None, h0_alpha_vec=None):
         if degree is not None:
@@ -289,35 +278,15 @@ class LearnModel(base.Posterior, base.PredictiveMixin):
         self.hn_alpha_vec = np.copy(self.h0_alpha_vec)
         self.p_theta_vec = self.hn_alpha_vec / self.hn_alpha_vec.sum()
 
-        self._H_PARAM_KEYS = {'h_alpha_vec'}
-        self._H0_PARAM_KEYS = {'h0_alpha_vec'}
-        self._HN_PARAM_KEYS = {'hn_alpha_vec'}
-
-    def set_h0_params(self,**kwargs):
+    def set_h0_params(self,h0_alpha_vec):
         """Set the hyperparameters of the prior distribution.
         
         Parameters
         ----------
-        **kwargs
-            a python dictionary {'h_alpha_vec':ndarray}, 
-            {'h0_alpha_vec':ndarray}, or {'hn_alpha_vec':ndarray}. 
-            They are obtained by ``get_h_params()`` of GenModel,
-            ``get_h0_params`` of LearnModel or ``get_hn_params`` of LearnModel.
+        h0_alpha_vec : numpy.ndarray
+            a vector of positive real numbers
         """
-        if kwargs.keys() == self._H_PARAM_KEYS:
-            self.h0_alpha_vec = _check.pos_float_vec(kwargs['h_alpha_vec'],'h0_alpha_vec',ParameterFormatError)
-        elif kwargs.keys() == self._H0_PARAM_KEYS:
-            self.h0_alpha_vec = _check.pos_float_vec(kwargs['h0_alpha_vec'],'h0_alpha_vec',ParameterFormatError)
-        elif kwargs.keys() == self._HN_PARAM_KEYS:
-            self.h0_alpha_vec = _check.pos_float_vec(kwargs['hn_alpha_vec'],'h0_alpha_vec',ParameterFormatError)
-        else:
-            raise(ParameterFormatError(
-                "The input of this function must be a python dictionary with keys:"
-                +str(self._H_PARAM_KEYS)+" or "
-                +str(self._H0_PARAM_KEYS)+" or "
-                +str(self._HN_PARAM_KEYS)+".")
-                )
-
+        self.h0_alpha_vec = _check.pos_float_vec(h0_alpha_vec,'h0_alpha_vec',ParameterFormatError)
         self.degree = self.h0_alpha_vec.shape[0]
         self.reset_hn_params()
 
@@ -331,31 +300,15 @@ class LearnModel(base.Posterior, base.PredictiveMixin):
         """
         return {"h0_alpha_vec": self.h0_alpha_vec}
 
-    def set_hn_params(self,**kwargs):
+    def set_hn_params(self,hn_alpha_vec):
         """Set updated values of the hyperparameter of the posterior distribution.
         
         Parameters
         ----------
-        **kwargs
-            a python dictionary {'h_alpha_vec':ndarray}, 
-            {'h0_alpha_vec':ndarray}, or {'hn_alpha_vec':ndarray}. 
-            They are obtained by ``get_h_params()`` of GenModel,
-            ``get_h0_params`` of LearnModel or ``get_hn_params`` of LearnModel.
+        hn_alpha_vec : numpy.ndarray
+            a vector of positive real numbers
         """
-        if kwargs.keys() == self._H_PARAM_KEYS:
-            self.hn_alpha_vec = _check.pos_float_vec(kwargs['h_alpha_vec'],'hn_alpha_vec',ParameterFormatError)
-        elif kwargs.keys() == self._H0_PARAM_KEYS:
-            self.hn_alpha_vec = _check.pos_float_vec(kwargs['h0_alpha_vec'],'hn_alpha_vec',ParameterFormatError)
-        elif kwargs.keys() == self._HN_PARAM_KEYS:
-            self.hn_alpha_vec = _check.pos_float_vec(kwargs['hn_alpha_vec'],'hn_alpha_vec',ParameterFormatError)
-        else:
-            raise(ParameterFormatError(
-                "The input of this function must be a python dictionary with keys:"
-                +str(self._H_PARAM_KEYS)+" or "
-                +str(self._H0_PARAM_KEYS)+" or "
-                +str(self._HN_PARAM_KEYS)+".")
-                )
-
+        self.hn_alpha_vec = _check.pos_float_vec(hn_alpha_vec,'hn_alpha_vec',ParameterFormatError)
         self.degree = self.hn_alpha_vec.shape[0]
         self.calc_pred_dist()
 
