@@ -47,44 +47,25 @@ class GenModel(base.Generative):
         self.h_alpha = _check.pos_float(h_alpha,'h_alpha',ParameterFormatError)
         self.h_beta = _check.pos_float(h_beta,'h_beta',ParameterFormatError)
         self.rng = np.random.default_rng(seed)
-        self._H_PARAM_KEYS = {'h_m','h_kappa','h_alpha','h_beta'}
-        self._H0_PARAM_KEYS = {'h0_m','h0_kappa','h0_alpha','h0_beta'}
-        self._HN_PARAM_KEYS = {'hn_m','hn_kappa','hn_alpha','hn_beta'}
 
-    def set_h_params(self,**kwargs):
+    def set_h_params(self,h_m,h_kappa,h_alpha,h_beta):
         """Set the hyperparameters of the prior distribution.
 
         Parameters
         ----------
-        **kwargs
-            a python dictionary {'h_m':float, 'h_kappa':float, 'h_alpha':float, 'h_beta':float} or
-            {'h0_m':float, 'h0_kappa':float, 'h0_alpha':float, 'h0_beta':float} or 
-            {'hn_m':float, 'hn_kappa':float, 'hn_alpha':float, 'hn_beta':float}
-            They are obtained by ``get_h_params()`` of GenModel,
-            ``get_h0_params`` of LearnModel or ``get_hn_params`` of LearnModel.
+        h_m : float
+            a real number
+        h_kappa : float
+            a positibe real number
+        h_alpha : float
+            a positibe real number
+        h_beta : float
+            a positibe real number
         """
-        if kwargs.keys() == self._H_PARAM_KEYS:
-            self.h_m = _check.float_(kwargs['h_m'],'h_m',ParameterFormatError)
-            self.h_kappa = _check.pos_float(kwargs['h_kappa'],'h_alpha',ParameterFormatError)
-            self.h_alpha = _check.pos_float(kwargs['h_alpha'],'h_alpha',ParameterFormatError)
-            self.h_beta = _check.pos_float(kwargs['h_beta'],'h_beta',ParameterFormatError)
-        elif kwargs.keys() == self._H0_PARAM_KEYS:
-            self.h_m = _check.float_(kwargs['h0_m'],'h_m',ParameterFormatError)
-            self.h_kappa = _check.pos_float(kwargs['h0_kappa'],'h_alpha',ParameterFormatError)
-            self.h_alpha = _check.pos_float(kwargs['h0_alpha'],'h_alpha',ParameterFormatError)
-            self.h_beta = _check.pos_float(kwargs['h0_beta'],'h_beta',ParameterFormatError)
-        elif kwargs.keys() == self._HN_PARAM_KEYS:
-            self.h_m = _check.float_(kwargs['hn_m'],'h_m',ParameterFormatError)
-            self.h_kappa = _check.pos_float(kwargs['hn_kappa'],'h_alpha',ParameterFormatError)
-            self.h_alpha = _check.pos_float(kwargs['hn_alpha'],'h_alpha',ParameterFormatError)
-            self.h_beta = _check.pos_float(kwargs['hn_beta'],'h_beta',ParameterFormatError)
-        else:
-            raise(ParameterFormatError(
-                "The input of this function must be a python dictionary with keys:"
-                +str(self._H_PARAM_KEYS)+" or "
-                +str(self._H0_PARAM_KEYS)+" or "
-                +str(self._HN_PARAM_KEYS)+".")
-                )
+        self.h_m = _check.float_(h_m,'h_m',ParameterFormatError)
+        self.h_kappa = _check.pos_float(h_kappa,'h_kappa',ParameterFormatError)
+        self.h_alpha = _check.pos_float(h_alpha,'h_alpha',ParameterFormatError)
+        self.h_beta = _check.pos_float(h_beta,'h_beta',ParameterFormatError)
 
     def get_h_params(self):
         """Get the hyperparameters of the prior distribution.
@@ -251,45 +232,24 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self.p_nu = 2*self.hn_alpha
         self.p_lambda = self.hn_kappa / (self.hn_kappa+1) * self.hn_alpha / self.hn_beta
 
-        self._H_PARAM_KEYS = {'h_m','h_kappa','h_alpha','h_beta'}
-        self._H0_PARAM_KEYS = {'h0_m','h0_kappa','h0_alpha','h0_beta'}
-        self._HN_PARAM_KEYS = {'hn_m','hn_kappa','hn_alpha','hn_beta'}
-
-    def set_h0_params(self,**kwargs):
+    def set_h0_params(self,h0_m,h0_kappa,h0_alpha,h0_beta):
         """Set the hyperparameters of the prior distribution.
         
         Parameters
         ----------
-        **kwargs
-            a python dictionary {'h_m':float, 'h_kappa':float, 'h_alpha':float, 'h_beta':float} or
-            {'h0_m':float, 'h0_kappa':float, 'h0_alpha':float, 'h0_beta':float} or 
-            {'hn_m':float, 'hn_kappa':float, 'hn_alpha':float, 'hn_beta':float}
-            They are obtained by ``get_h_params()`` of GenModel,
-            ``get_h0_params`` of LearnModel or ``get_hn_params`` of LearnModel.
+        h0_m : float
+            a real number
+        h0_kappa : float
+            a positive real number
+        h0_alpha : float
+            a positive real number
+        h0_beta : float
+            a positive real number
         """
-    
-        if kwargs.keys() == self._H_PARAM_KEYS:
-            self.h0_m = _check.float_(kwargs['h_m'],'h0_m',ParameterFormatError)
-            self.h0_kappa = _check.pos_float(kwargs['h_kappa'],'h0_alpha',ParameterFormatError)
-            self.h0_alpha = _check.pos_float(kwargs['h_alpha'],'h0_alpha',ParameterFormatError)
-            self.h0_beta = _check.pos_float(kwargs['h_beta'],'h0_beta',ParameterFormatError)
-        elif kwargs.keys() == self._H0_PARAM_KEYS:
-            self.h0_m = _check.float_(kwargs['h0_m'],'h0_m',ParameterFormatError)
-            self.h0_kappa = _check.pos_float(kwargs['h0_kappa'],'h0_alpha',ParameterFormatError)
-            self.h0_alpha = _check.pos_float(kwargs['h0_alpha'],'h0_alpha',ParameterFormatError)
-            self.h0_beta = _check.pos_float(kwargs['h0_beta'],'h0_beta',ParameterFormatError)
-        elif kwargs.keys() == self._HN_PARAM_KEYS:
-            self.h0_m = _check.float_(kwargs['hn_m'],'h0_m',ParameterFormatError)
-            self.h0_kappa = _check.pos_float(kwargs['hn_kappa'],'h0_alpha',ParameterFormatError)
-            self.h0_alpha = _check.pos_float(kwargs['hn_alpha'],'h0_alpha',ParameterFormatError)
-            self.h0_beta = _check.pos_float(kwargs['hn_beta'],'h0_beta',ParameterFormatError)
-        else:
-            raise(ParameterFormatError(
-                "The input of this function must be a python dictionary with keys:"
-                +str(self._H_PARAM_KEYS)+" or "
-                +str(self._H0_PARAM_KEYS)+" or "
-                +str(self._HN_PARAM_KEYS)+".")
-                )
+        self.h0_m = _check.float_(h0_m,'h0_m',ParameterFormatError)
+        self.h0_kappa = _check.pos_float(h0_kappa,'h0_kappa',ParameterFormatError)
+        self.h0_alpha = _check.pos_float(h0_alpha,'h0_alpha',ParameterFormatError)
+        self.h0_beta = _check.pos_float(h0_beta,'h0_beta',ParameterFormatError)
         self.reset_hn_params()
 
     def get_h0_params(self):
@@ -305,41 +265,24 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         """
         return {"h0_m":self.h0_m, "h0_kappa":self.h0_kappa, "h0_alpha":self.h0_alpha, "h0_beta":self.h0_beta}
     
-    def set_hn_params(self,**kwargs):
+    def set_hn_params(self,hn_m,hn_kappa,hn_alpha,hn_beta):
         """Set updated values of the hyperparameter of the posterior distribution.
         
         Parameters
         ----------
-        **kwargs
-            a python dictionary {'h_m':float, 'h_kappa':float, 'h_alpha':float, 'h_beta':float} or
-            {'h0_m':float, 'h0_kappa':float, 'h0_alpha':float, 'h0_beta':float} or 
-            {'hn_m':float, 'hn_kappa':float, 'hn_alpha':float, 'hn_beta':float}
-            They are obtained by ``get_h_params()`` of GenModel,
-            ``get_h0_params`` of LearnModel or ``get_hn_params`` of LearnModel.
+        hn_m : float
+            a real number
+        hn_kappa : float
+            a positive real number
+        hn_alpha : float
+            a positive real number
+        hn_beta : float
+            a positive real number
         """
-    
-        if kwargs.keys() == self._H_PARAM_KEYS:
-            self.hn_m = _check.float_(kwargs['h_m'],'hn_m',ParameterFormatError)
-            self.hn_kappa = _check.pos_float(kwargs['h_kappa'],'hn_alpha',ParameterFormatError)
-            self.hn_alpha = _check.pos_float(kwargs['h_alpha'],'hn_alpha',ParameterFormatError)
-            self.hn_beta = _check.pos_float(kwargs['h_beta'],'hn_beta',ParameterFormatError)
-        elif kwargs.keys() == self._H0_PARAM_KEYS:
-            self.hn_m = _check.float_(kwargs['h0_m'],'hn_m',ParameterFormatError)
-            self.hn_kappa = _check.pos_float(kwargs['h0_kappa'],'hn_alpha',ParameterFormatError)
-            self.hn_alpha = _check.pos_float(kwargs['h0_alpha'],'hn_alpha',ParameterFormatError)
-            self.hn_beta = _check.pos_float(kwargs['h0_beta'],'hn_beta',ParameterFormatError)
-        elif kwargs.keys() == self._HN_PARAM_KEYS:
-            self.hn_m = _check.float_(kwargs['hn_m'],'hn_m',ParameterFormatError)
-            self.hn_kappa = _check.pos_float(kwargs['hn_kappa'],'hn_alpha',ParameterFormatError)
-            self.hn_alpha = _check.pos_float(kwargs['hn_alpha'],'hn_alpha',ParameterFormatError)
-            self.hn_beta = _check.pos_float(kwargs['hn_beta'],'hn_beta',ParameterFormatError)
-        else:
-            raise(ParameterFormatError(
-                "The input of this function must be a python dictionary with keys:"
-                +str(self._H_PARAM_KEYS)+" or "
-                +str(self._H0_PARAM_KEYS)+" or "
-                +str(self._HN_PARAM_KEYS)+".")
-                )
+        self.hn_m = _check.float_(hn_m,'hn_m',ParameterFormatError)
+        self.hn_kappa = _check.pos_float(hn_kappa,'hn_kappa',ParameterFormatError)
+        self.hn_alpha = _check.pos_float(hn_alpha,'hn_alpha',ParameterFormatError)
+        self.hn_beta = _check.pos_float(hn_beta,'hn_beta',ParameterFormatError)
         self.calc_pred_dist()
 
     def get_hn_params(self):
