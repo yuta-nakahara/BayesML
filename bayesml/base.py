@@ -17,7 +17,7 @@ class Generative(metaclass=ABCMeta):
     def save_h_params(self,filename):
         """Save the hyperparameters using python ``pickle`` module.
 
-        They are saved as a python dictionary obtained by ``get_h_params()``.
+        They are saved as a python dictionary obtained by ``GenModel.get_h_params()``.
 
         Parameters
         ----------
@@ -43,8 +43,8 @@ class Generative(metaclass=ABCMeta):
         filename : str
             The filename (including a extention like .pkl) to be loaded.
             It must be a pickled python dictionary obtained by
-            ``save_h_params()`` of GenModel, ``save_h0_params()`` of LearnModel 
-            or ``save_hn_params()`` of LearnModel.
+            ``GenModel.save_h_params()``, ``LearnModel.save_h0_params()`` 
+            or ``LearnModel.save_hn_params()``.
 
         Warnings
         --------
@@ -57,13 +57,13 @@ class Generative(metaclass=ABCMeta):
         with open(filename, 'rb') as f:
             tmp_h_params = pickle.load(f)
         if type(tmp_h_params) is dict:
-            self.set_h_params(**tmp_h_params)
+            self.set_h_params(*tmp_h_params.values())
             return
         
         raise(ParameterFormatError(
-            filename+" must be a pickled python dictionary with "
-            +str(self.get_h_params().keys())
-            +", where `h_`, `h0_`, and `hn_` can be replaced to each other.")
+            filename+" must be a pickled python dictionary obtained by "
+            +"``GenModel.save_h_params()``, ``LearnModel.save_h0_params()`` "
+            +'or ``LearnModel.save_hn_params()``.')
             )
 
     @abstractmethod
@@ -81,7 +81,7 @@ class Generative(metaclass=ABCMeta):
     def save_params(self,filename):
         """Save the parameters using python ``pickle`` module.
 
-        They are saved as a pickled python dictionary obtained by ``get_params()``.
+        They are saved as a pickled python dictionary obtained by ``GenModel.get_params()``.
 
         Parameters
         ----------
@@ -106,7 +106,7 @@ class Generative(metaclass=ABCMeta):
         ----------
         filename : str
             The filename (including a extention like .pkl) to be loaded.
-            It must be a pickled python dictionary with keys obtained by ``get_params().keys()``.
+            It must be a pickled python dictionary obtained by ``GenModel.save_params()``.
 
         Warnings
         --------
@@ -119,11 +119,10 @@ class Generative(metaclass=ABCMeta):
         with open(filename, 'rb') as f:
             params = pickle.load(f)
         if type(params) is dict:
-            if params.keys() == self.get_params().keys():
-                self.set_params(**params)
-                return
+            self.set_params(*params.values())
+            return
         
-        raise(ParameterFormatError(filename+" must be a pickled python dictionary with "+str(self.get_params().keys())))
+        raise(ParameterFormatError(filename+" must be a pickled python dictionary obtained by ``GenModel.save_params()``"))
 
     @abstractmethod
     def gen_sample(self):
@@ -149,7 +148,7 @@ class Posterior(metaclass=ABCMeta):
     def save_h0_params(self,filename):
         """Save the hyperparameters using python ``pickle`` module.
 
-        They are saved as a pickled python dictionary obtained by ``get_h0_params()``.
+        They are saved as a pickled python dictionary obtained by ``LearnModel.get_h0_params()``.
 
         Parameters
         ----------
@@ -175,8 +174,8 @@ class Posterior(metaclass=ABCMeta):
         filename : str
             The filename (including a extention like .pkl) to be loaded.
             It must be a pickled python dictionary obtained by
-            ``save_h_params()`` of GenModel, ``save_h0_params()`` of LearnModel 
-            or ``save_hn_params()`` of LearnModel.
+            ``GenModel.save_h_params()``, ``LearnModel.save_h0_params()`` 
+            or ``LearnModel.save_hn_params()``.
 
         Warnings
         --------
@@ -189,13 +188,13 @@ class Posterior(metaclass=ABCMeta):
         with open(filename, 'rb') as f:
             tmp_h_params = pickle.load(f)
         if type(tmp_h_params) is dict:
-            self.set_h0_params(**tmp_h_params)
+            self.set_h0_params(*tmp_h_params.values())
             return
         
         raise(ParameterFormatError(
-            filename+" must be a pickled python dictionary with "
-            +str(self.get_h0_params().keys())
-            +", where `h_`, `h0_`, and `hn_` can be replaced to each other.")
+            filename+" must be a pickled python dictionary obtained by "
+            +"``GenModel.save_h_params()``, ``LearnModel.save_h0_params()`` "
+            +'or ``LearnModel.save_hn_params()``.')
             )
 
     @abstractmethod
@@ -209,7 +208,7 @@ class Posterior(metaclass=ABCMeta):
     def save_hn_params(self,filename):
         """Save the hyperparameters using python ``pickle`` module.
 
-        They are saved as a pickled python dictionary obtained by ``get_hn_params()``.
+        They are saved as a pickled python dictionary obtained by ``LearnModel.get_hn_params()``.
 
         Parameters
         ----------
@@ -235,8 +234,8 @@ class Posterior(metaclass=ABCMeta):
         filename : str
             The filename (including a extention like .pkl) to be loaded.
             It must be a pickled python dictionary obtained by
-            ``save_h_params()`` of GenModel, ``save_h0_params()`` of LearnModel 
-            or ``save_hn_params()`` of LearnModel.
+            ``GenModel.save_h_params()``, ``LearnModel.save_h0_params()`` 
+            or ``LearnModel.save_hn_params()``.
 
         Warnings
         --------
@@ -249,13 +248,13 @@ class Posterior(metaclass=ABCMeta):
         with open(filename, 'rb') as f:
             tmp_h_params = pickle.load(f)
         if type(tmp_h_params) is dict:
-            self.set_hn_params(**tmp_h_params)
+            self.set_hn_params(*tmp_h_params.values())
             return
         
         raise(ParameterFormatError(
-            filename+" must be a pickled python dictionary with "
-            +str(self.get_hn_params().keys())
-            +", where `h_`, `h0_`, and `hn_` can be replaced to each other.")
+            filename+" must be a pickled python dictionary obtained by "
+            +"``GenModel.save_h_params()``, ``LearnModel.save_h0_params()`` "
+            +'or ``LearnModel.save_hn_params()``.')
             )
 
     @abstractmethod
