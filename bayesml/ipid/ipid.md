@@ -72,7 +72,7 @@ $$
 \pi(\theta_t | x^t) = \sum_{l=1}^t p(T_t = l | x^t) \cdot \pi(\theta_t | T_t = l, x^t),
 \end{align}
 $$
-where $p(T_t = l | x^t)$ can be updated by (4), (5), (6), (7), (8) and $\pi(\theta_t | T_t = l, x^t)$ can be calculated as follows.
+where $p(T_t = l | x^t)$ can be updated as above and $\pi(\theta_t | T_t = l, x^t)$ can be calculated as follows.
 $$
 \begin{align}
 \pi(\theta_t | T_t = l, x^t) = \frac{\prod_{i=l}^{t}p(x_i | \theta_{t}) \cdot \pi(\theta_{t})}
@@ -80,3 +80,29 @@ $$
 \end{align}
 $$
 The predictive distribution is as follows:
+$$
+\begin{align}
+p(x_t | x^{t-1}) &= \sum_{l=1}^t p(x_t | T_t=l, x^{t-1}) \cdot p(T_t = l | x^{t-1}),
+\end{align}
+$$
+where,
+$$
+\begin{align}
+p(x_t | T_t=l, x^{t-1}) &= \int p(x_t | \theta_{l}) \cdot \pi(\theta_{l} | T_t=l, x^{t-1}) d\theta_l, \\
+\pi(\theta_{l} | T_t=l, x^{t-1}) &=  \left \{
+\begin{array}{ll}
+\frac{\prod_{i=l}^{t-1}p(x_i | \theta_{l}) \cdot \pi(\theta_{l})}
+{\int \prod_{i=l}^{t-1}p(x_i | \theta_{l}) \cdot \pi(\theta_{l}) d\theta_{l}}
+& (1 \leq l \leq t-1), \\
+\pi(\theta_{l})
+& (l = t),
+\end{array}
+\right. \\
+p(T_t = l | x^{t-1}) &= \left \{
+\begin{array}{ll}
+(1 - \alpha_0) \cdot \frac{p(x_{t-1} | T_{t-1}=l, x^{t-2}) \cdot p(T_{t-1}=l | x^{t-2})}{p(x_{t-1} | x^{t-2})} & (1 \leq l \leq t-1), \\
+\alpha_0 & (l=t),
+\end{array}
+\right.
+\end{align}
+$$
