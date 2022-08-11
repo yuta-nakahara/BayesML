@@ -21,7 +21,7 @@ $$
 \begin{align}
     p(\boldsymbol{z} | \boldsymbol{\pi}) &= \mathrm{Cat}(\boldsymbol{z}|\boldsymbol{\pi}) = \prod_{k=1}^K \pi_k^{z_k},\\
     p(\boldsymbol{x} | \boldsymbol{\mu}, \boldsymbol{\Lambda}, \boldsymbol{z}) &= \prod_{k=1}^K \mathcal{N}(\boldsymbol{x}|\boldsymbol{\mu}_k,\boldsymbol{\Lambda}_k^{-1})^{z_k} \\
-    &= \prod_{k=1}^K \left( \frac{| \boldsymbol{\Lambda} |^{1/2}}{(2\pi)^{D/2}} \exp \left\{ -\frac{1}{2}(\boldsymbol{x}-\boldsymbol{\mu})^\top \boldsymbol{\Lambda} (\boldsymbol{x}-\boldsymbol{\mu}) \right\} \right)^{z_k},
+    &= \prod_{k=1}^K \left( \frac{| \boldsymbol{\Lambda}_k |^{1/2}}{(2\pi)^{D/2}} \exp \left\{ -\frac{1}{2}(\boldsymbol{x}-\boldsymbol{\mu}_k)^\top \boldsymbol{\Lambda}_k (\boldsymbol{x}-\boldsymbol{\mu}_k) \right\} \right)^{z_k}.
 \end{align}
 $$
 
@@ -38,8 +38,8 @@ The prior distribution is as follows:
 $$
 \begin{align}
     p(\boldsymbol{\mu},\boldsymbol{\Lambda},\boldsymbol{\pi}) &= \left\{ \prod_{k=1}^K \mathcal{N}(\boldsymbol{\mu}_k|\boldsymbol{m}_0,(\kappa_0 \boldsymbol{\Lambda}_k)^{-1})\mathcal{W}(\boldsymbol{\Lambda}_k|\boldsymbol{W}_0, \nu_0) \right\} \mathrm{Dir}(\boldsymbol{\pi}|\boldsymbol{\alpha}_0) \\
-    &= \Biggl[ \prod_{k=1}^K \left( \frac{\kappa_0}{2\pi} \right)^{D/2} |\boldsymbol{\Lambda}_k|^{1/2} \exp \left\{ -\frac{\kappa_0}{2}(\boldsymbol{\mu}_k -\boldsymbol{m}_0)^\top \boldsymbol{\Lambda}_k (\boldsymbol{\mu}_k - \boldsymbol{m}_0) \right\} \\
-    &\qquad \times B(\boldsymbol{W}_0, \nu_0) | \boldsymbol{\Lambda}_k |^{(\nu_0 - D - 1) / 2} \exp \left\{ -\frac{1}{2} \mathrm{Tr} \{ \boldsymbol{W}_0^{-1} \boldsymbol{\Lambda}_k \} \right\} \Biggr] \\
+    &= \Biggl[\, \prod_{k=1}^K \left( \frac{\kappa_0}{2\pi} \right)^{D/2} |\boldsymbol{\Lambda}_k|^{1/2} \exp \left\{ -\frac{\kappa_0}{2}(\boldsymbol{\mu}_k -\boldsymbol{m}_0)^\top \boldsymbol{\Lambda}_k (\boldsymbol{\mu}_k - \boldsymbol{m}_0) \right\} \notag \\
+    &\qquad \times B(\boldsymbol{W}_0, \nu_0) | \boldsymbol{\Lambda}_k |^{(\nu_0 - D - 1) / 2} \exp \left\{ -\frac{1}{2} \mathrm{Tr} \{ \boldsymbol{W}_0^{-1} \boldsymbol{\Lambda}_k \} \right\} \Biggr] \notag \\
     &\qquad \times C(\boldsymbol{\alpha}_0)\prod_{k=1}^K \pi_k^{\alpha_{0,k}-1},\\
 \end{align}
 $$
@@ -67,7 +67,7 @@ The apporoximate posterior distribution in the $t$-th iteration of a variational
 $$
 \begin{align}
     q(\boldsymbol{z}^n, \boldsymbol{\mu},\boldsymbol{\Lambda},\boldsymbol{\pi}) &= \left\{ \prod_{i=1}^n \mathrm{Cat} (\boldsymbol{z}_i | \boldsymbol{r}_i^{(t)}) \right\} \left\{ \prod_{k=1}^K \mathcal{N}(\boldsymbol{\mu}_k|\boldsymbol{m}_{n,k}^{(t)},(\kappa_{n,k}^{(t)} \boldsymbol{\Lambda}_k)^{-1})\mathcal{W}(\boldsymbol{\Lambda}_k|\boldsymbol{W}_{n,k}^{(t)}, \nu_{n,k}^{(t)}) \right\} \mathrm{Dir}(\boldsymbol{\pi}|\boldsymbol{\alpha}_n^{(t)}) \\
-    &= \Biggl[ \prod_{i=1}^n \prod_{k=1}^K (r_{i,k}^{(t)})^{z_{i,k}} \Biggr] \Biggl[ \prod_{k=1}^K \left( \frac{\kappa_{n,k}^{(t)}}{2\pi} \right)^{D/2} |\boldsymbol{\Lambda}_k|^{1/2} \exp \left\{ -\frac{\kappa_{n,k}^{(t)}}{2}(\boldsymbol{\mu}_k -\boldsymbol{m}_{n,k}^{(t)})^\top \boldsymbol{\Lambda}_k (\boldsymbol{\mu}_k - \boldsymbol{m}_{n,k}^{(t)}) \right\} \\
+    &= \Biggl[\, \prod_{i=1}^n \prod_{k=1}^K (r_{i,k}^{(t)})^{z_{i,k}} \Biggr] \Biggl[\, \prod_{k=1}^K \left( \frac{\kappa_{n,k}^{(t)}}{2\pi} \right)^{D/2} |\boldsymbol{\Lambda}_k|^{1/2} \exp \left\{ -\frac{\kappa_{n,k}^{(t)}}{2}(\boldsymbol{\mu}_k -\boldsymbol{m}_{n,k}^{(t)})^\top \boldsymbol{\Lambda}_k (\boldsymbol{\mu}_k - \boldsymbol{m}_{n,k}^{(t)}) \right\} \\
     &\qquad \times B(\boldsymbol{W}_{n,k}^{(t)}, \nu_{n,k}^{(t)}) | \boldsymbol{\Lambda}_k |^{(\nu_{n,k}^{(t)} - D - 1) / 2} \exp \left\{ -\frac{1}{2} \mathrm{Tr} \{ ( \boldsymbol{W}_{n,k}^{(t)} )^{-1} \boldsymbol{\Lambda}_k \} \right\} \Biggr] \\
     &\qquad \times C(\boldsymbol{\alpha}_n^{(t)})\prod_{k=1}^K \pi_k^{\alpha_{n,k}^{(t)}-1},\\
 \end{align}
@@ -77,17 +77,17 @@ where the updating rule of the hyperparameters is as follows.
 
 $$
 \begin{align}
-    N_k^{(t)} &= \sum_{i=1}^n r_{i,k}^{(t)} \\
-    \bar{\boldsymbol{x}}_k^{(t)} &= \frac{1}{N_k^{(t)}} \sum_{i=1}^n r_{i,k}^{(t)} \boldsymbol{x}_i \\
+    N_k^{(t)} &= \sum_{i=1}^n r_{i,k}^{(t)}, \\
+    \bar{\boldsymbol{x}}_k^{(t)} &= \frac{1}{N_k^{(t)}} \sum_{i=1}^n r_{i,k}^{(t)} \boldsymbol{x}_i, \\
     \boldsymbol{m}_{n,k}^{(t+1)} &= \frac{\kappa_0\boldsymbol{\mu}_0 + N_k^{(t)} \bar{\boldsymbol{x}}_k^{(t)}}{\kappa_0 + N_k^{(t)}}, \\
     \kappa_{n,k}^{(t+1)} &= \kappa_0 + N_k^{(t)}, \\
     (\boldsymbol{W}_{n,k}^{(t+1)})^{-1} &= \boldsymbol{W}_0^{-1} + \sum_{i=1}^{n} r_{i,k}^{(t)} (\boldsymbol{x}_i-\bar{\boldsymbol{x}}_k^{(t)})(\boldsymbol{x}_i-\bar{\boldsymbol{x}}_k^{(t)})^\top + \frac{\kappa_0 N_k^{(t)}}{\kappa_0 + N_k^{(t)}}(\bar{\boldsymbol{x}}_k^{(t)}-\boldsymbol{\mu}_0)(\bar{\boldsymbol{x}}_k^{(t)}-\boldsymbol{\mu}_0)^\top, \\
     \nu_{n,k}^{(t+1)} &= \nu_0 + N_k^{(t)},\\
-    \alpha_{n,k}^{(t+1)} &= \alpha_{0,k} + N_k^{(t)} \\
-    \ln \rho_{i,k}^{(t+1)} &= \psi (\alpha_{n,k}^{(t+1)}) - \psi ( {\textstyle \sum_{k=1}^K \alpha_{n,k}^{(t+1)}} ) \nonumber \\
-    &\qquad + \frac{1}{2} \Biggl[ \sum_{d=1}^D \psi \left( \frac{\nu_{n,k}^{(t+1)} + 1 - d}{2} \right) + D \ln 2 + \ln | \boldsymbol{W}_{n,k}^{(t+1)} | \nonumber \\
-    &\qquad - D \ln (2 \pi ) - \frac{D}{\kappa_{n,k}^{(t+1)}} - \nu_{n,k}^{(t+1)} (\boldsymbol{x}_i - \boldsymbol{m}_{n,k}^{(t+1)})^\top \boldsymbol{W}_{n,k}^{(t+1)} (\boldsymbol{x}_i - \boldsymbol{m}_{n,k}^{(t+1)}) \Biggr] \\
-    r_{i,k}^{(t+1)} &= \frac{\rho_{i,k}^{(t+1)}}{\sum_{k=1}^K \rho_{i,k}^{(t+1)}}
+    \alpha_{n,k}^{(t+1)} &= \alpha_{0,k} + N_k^{(t)}, \\
+    \ln \rho_{i,k}^{(t+1)} &= \psi (\alpha_{n,k}^{(t+1)}) - \psi ( {\textstyle \sum_{k=1}^K \alpha_{n,k}^{(t+1)}} ) \notag \\
+    &\qquad + \frac{1}{2} \Biggl[\, \sum_{d=1}^D \psi \left( \frac{\nu_{n,k}^{(t+1)} + 1 - d}{2} \right) + D \ln 2 + \ln | \boldsymbol{W}_{n,k}^{(t+1)} | \notag \\
+    &\qquad - D \ln (2 \pi ) - \frac{D}{\kappa_{n,k}^{(t+1)}} - \nu_{n,k}^{(t+1)} (\boldsymbol{x}_i - \boldsymbol{m}_{n,k}^{(t+1)})^\top \boldsymbol{W}_{n,k}^{(t+1)} (\boldsymbol{x}_i - \boldsymbol{m}_{n,k}^{(t+1)}) \Biggr], \\
+    r_{i,k}^{(t+1)} &= \frac{\rho_{i,k}^{(t+1)}}{\sum_{j=1}^K \rho_{i,j}^{(t+1)}}.
 \end{align}
 $$
 
@@ -102,7 +102,7 @@ $$
 \begin{align}
     &p(x_{n+1}|x^n) \\
     &= \frac{1}{\sum_{k=1}^K \alpha_{n,k}^{(t)}} \sum_{k=1}^K \alpha_{n,k}^{(t)} \mathrm{St}(x_{n+1}|\boldsymbol{\mu}_{\mathrm{p},k},\boldsymbol{\Lambda}_{\mathrm{p},k}, \nu_{\mathrm{p},k}) \\
-    &= \frac{1}{\sum_{k=1}^K \alpha_{n,k}^{(t)}} \sum_{k=1}^K \alpha_{n,k}^{(t)} \Biggl[ \frac{\Gamma (\nu_{\mathrm{p},k} / 2 + D / 2)}{\Gamma (\nu_{\mathrm{p},k} / 2)} \frac{|\boldsymbol{\Lambda}_{\mathrm{p},k}|^{1/2}}{(\nu_{\mathrm{p},k} \pi)^{D/2}} \nonumber \\
+    &= \frac{1}{\sum_{k=1}^K \alpha_{n,k}^{(t)}} \sum_{k=1}^K \alpha_{n,k}^{(t)} \Biggl[ \frac{\Gamma (\nu_{\mathrm{p},k} / 2 + D / 2)}{\Gamma (\nu_{\mathrm{p},k} / 2)} \frac{|\boldsymbol{\Lambda}_{\mathrm{p},k}|^{1/2}}{(\nu_{\mathrm{p},k} \pi)^{D/2}} \notag \\
     &\qquad \qquad \qquad \qquad \qquad \times \left( 1 + \frac{1}{\nu_{\mathrm{p},k}} (\boldsymbol{x}_{n+1} - \boldsymbol{\mu}_{\mathrm{p},k})^\top \boldsymbol{\Lambda}_{\mathrm{p},k} (\boldsymbol{x}_{n+1} - \boldsymbol{\mu}_{\mathrm{p},k}) \right)^{-\nu_{\mathrm{p},k}/2 - D/2} \Biggr],
 \end{align}
 $$
@@ -111,8 +111,8 @@ where the parameters are obtained from the hyperparameters of the posterior dist
 
 $$
 \begin{align}
-    \boldsymbol{\mu}_{\mathrm{p},k} &= \boldsymbol{m}_{n,k}^{(t)} \\
-    \boldsymbol{\Lambda}_{\mathrm{p},k} &= \frac{\kappa_{n,k}^{(t)} (\nu_{n,k}^{(t)} - D + 1)}{\kappa_{n,k}^{(t)} + 1} \boldsymbol{W}_{n,k}^{(t)}, \\
-    \nu_{\mathrm{p},k} &= \nu_{n,k}^{(t)} - D + 1.
+    \boldsymbol{\mu}_{\mathrm{p},k} &= \boldsymbol{m}_{n,k}^{(t)}, \\
+    \nu_{\mathrm{p},k} &= \nu_{n,k}^{(t)} - D + 1,\\
+    \boldsymbol{\Lambda}_{\mathrm{p},k} &= \frac{\kappa_{n,k}^{(t)} \nu_{\mathrm{p},k}}{\kappa_{n,k}^{(t)} + 1} \boldsymbol{W}_{n,k}^{(t)}.
 \end{align}
 $$
