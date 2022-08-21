@@ -10,6 +10,7 @@ RUN apt-get upgrade -y
 RUN apt-get install -y build-essential checkinstall libssl-dev libffi-dev libbz2-dev libdb-dev libnss3-dev \
     libreadline-dev libgdbm-dev liblzma-dev libncursesw5-dev libsqlite3-dev zlib1g-dev uuid-dev tk-dev
 RUN apt-get install -y libglib2.0-0 libsm6 libxext6 libxrender-dev
+RUN apt-get install -y apt-utils
 RUN apt-get install -y tzdata
 RUN apt-get install -y git
 RUN apt-get install -y nano
