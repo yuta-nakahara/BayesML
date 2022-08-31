@@ -136,3 +136,6 @@ dmypy.json
 *.pkl
 *.gv
 .DS_Store
+
+# The settings of container
+.devcontainer

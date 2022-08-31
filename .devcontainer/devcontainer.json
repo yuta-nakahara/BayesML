@@ -5,7 +5,7 @@
     // Sets the run context to one level up instead of the .devcontainer folder.
     "context": "../../",
     // Update the 'dockerFile' property if you aren't using the standard 'Dockerfile' filename.
-    "dockerFile": "Dockerfile",
+    "dockerFile": "../docker/Dockerfile",
     "build": {
         "args": {
             "USER": "esaki"
@@ -17,9 +17,23 @@
                 "path": "/bin/bash"
             }
         },
-    "terminal.integrated.defaultProfile.linux": "bash"
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "python.languageServer": "Default",
+        "python.defaultInterpreterPath": "/bin/python3",
+        "python.linting.enabled": true,
+        "python.linting.pylintEnabled": false,
+        "python.linting.flake8Enabled": true,
+        "python.linting.flake8Args": [
+            "--max-line-length",
+            "119"
+        ],
+        "python.linting.lintOnSave": true,
+        "python.formatting.provider": "yapf",
+        "python.formatting.yapfArgs": [
+            "--style={column_limit: 119}"
+        ],
+        "editor.formatOnSave": true
     },
-
     "extensions": [
         "MS-CEINTL.vscode-language-pack-ja",
         "ms-dotnettools.vscode-dotnet-runtime",
@@ -42,17 +56,23 @@
         "yzhang.markdown-all-in-one",
         "DavidAnson.vscode-markdownlint"
     ],
-    
     "shutdownAction": "none",
     // Use 'forwardPorts' to make a list of ports inside the container available locally.
     // "forwardPorts": [],
     // Uncomment the next line to run commands after the container is created - for example installing curl.
     // "postCreateCommand": "apt-get update && apt-get install -y curl",
     // Uncomment when using a ptrace-based debugger like C++, Go, and Rust
-     "runArgs": ["--name", "bayesml-dev", "--memory","64g", "--shm-size","8gb"],
+    "runArgs": [
+        "--name",
+        "bayesml-dev",
+        "--shm-size",
+        "8gb",
+        "-e",
+        "TZ=Asia/Tokyo"
+    ],
     // Uncomment to use the Docker CLI from inside the container. See https://aka.ms/vscode-remote/samples/docker-from-docker.
-    "workspaceMount": "source=/home/yasushiesaki/BayesML,target=/home/esaki/BayesML,type=bind",
-    "workspaceFolder": "/home/esaki/BayesML",
+    "workspaceMount": "source=/home/${localEnv:USER}/BayesML,target=/home/esaki/BayesML,type=bind",
+    "workspaceFolder": "/home/esaki/BayesML"
     // Uncomment to connect as a non-root user if you've added one. See https://aka.ms/vscode-remote/containers/non-root.
-    "remoteUser": "esaki"
+    //"remoteUser": "vscode"
 }
