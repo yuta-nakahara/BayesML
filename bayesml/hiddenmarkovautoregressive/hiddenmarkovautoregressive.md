@@ -37,16 +37,6 @@ The prior distribution is as follows:
 * $\alpha_0 \in \mathbb{R}_{>0}$: a hyperparameter for $\tau$
 * $\beta_0 \in \mathbb{R}_{>0}$: a hyperparameter for $\tau$
 * $\Gamma(\cdot): \mathbb{R}_{>0} \to \mathbb{R}$: the Gamma function
-* $D \in \mathbb{N}$: a dimension of data
-* $\boldsymbol{\mu}_k \in \mathbb{R}^D$: a parameter
-* $\boldsymbol{\mu} := \{ \boldsymbol{\mu}_k \}_{k=1}^K$
-* $\boldsymbol{\Lambda}_k \in \mathbb{R}^{D\times D}$ : a parameter (a positive definite matrix)
-* $| \boldsymbol{\Lambda}_k | \in \mathbb{R}$: the determinant of $\boldsymbol{\Lambda}_k$
-* $\boldsymbol{\Lambda} := \{ \boldsymbol{\Lambda}_k \}_{k=1}^K$
-* $\boldsymbol{m}_0 \in \mathbb{R}^{D}$: a hyperparameter
-* $\kappa_0 \in \mathbb{R}_{>0}$: a hyperparameter
-* $\nu_0 \in \mathbb{R}$: a hyperparameter ($\nu_0 > D-1$)
-* $\boldsymbol{W}_0 \in \mathbb{R}^{D\times D}$: a hyperparameter (a positive definite matrix)
 * $\boldsymbol{\eta}_0=(\eta_{0,1},\dots,\eta_{0,K}) \in \mathbb{R}_{> 0}^K$: a hyperparameter
 * $\boldsymbol{\zeta}_{0,j}=(\zeta_{0,j,1},\dots,\zeta_{0,j,K}) \in \mathbb{R}_{> 0}^K$: a hyperparameter for $j=1,\dots,K$
 * $\boldsymbol{a}_{j}=\{a_{j,k}\}_{k=1}^{K}$ for $j=1,\dots,K$
@@ -68,11 +58,10 @@ $$
 \end{align}
 $$
 ​
-where $B(\boldsymbol{W}_0, \nu_0)$ and $C(\boldsymbol{\eta}_0)$ are defined as follows:
+where $C(\boldsymbol{\eta}_0)$ is defined as follows:
 ​
 $$
 \begin{align}
-    B(\boldsymbol{W}_0, \nu_0) &= | \boldsymbol{W}_0 |^{-\nu_0 / 2} \left( 2^{\nu_0 D / 2} \pi^{D(D-1)/4} \prod_{i=1}^D \Gamma \left( \frac{\nu_0 + 1 - i}{2} \right) \right)^{-1}, \\
     C(\boldsymbol{\eta}_0) &= \frac{\Gamma(\sum_{k=1}^K \eta_{0,k})}{\Gamma(\eta_{0,1})\cdots\Gamma(\eta_{0,K})},\\
     C(\boldsymbol{\zeta}_{0,j}) &= \frac{\Gamma(\sum_{k=1}^K \zeta_{0,j,k})}{\Gamma(\zeta_{0,j,1})\cdots\Gamma(\zeta_{0,j,K})}. 
 \end{align}
