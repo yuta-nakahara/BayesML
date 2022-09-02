@@ -64,7 +64,7 @@ $$
     \boldsymbol{\Lambda}_0 (\boldsymbol{\theta}_{k} - \boldsymbol{\mu}_0) \right\}
     \frac{\beta_0^{\alpha_0}}{\Gamma (\alpha_0)} \tau_{k}^{\alpha_0 - 1} \exp \{ -\beta_0 \tau_{k} \}\right]
     \\
-    &\qquad\times\left[ \prod_{k=1}^KC(\boldsymbol{\eta}_0)\pi_k^{\eta_{0,k}-1}\biggl]\times \biggl[\prod_{j=1}^KC(\boldsymbol{\zeta}_{0,j})\prod_{k=1}^K a_{jk}^{\zeta_{0,j,k}-1}\right]
+    &\qquad\times\left[ \prod_{k=1}^KC(\boldsymbol{\eta}_0)\pi_k^{\eta_{0,k}-1}\biggl]\times \biggl[\prod_{j=1}^KC(\boldsymbol{\zeta}_{0,j})\prod_{k=1}^K a_{jk}^{\zeta_{0,j,k}-1}\right],
 \end{align}
 $$
 ​
