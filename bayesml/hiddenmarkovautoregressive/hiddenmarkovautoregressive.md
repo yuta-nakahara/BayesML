@@ -17,7 +17,7 @@ The stochastic data generative model is as follows:
 * $\boldsymbol{\theta}:=\{\boldsymbol{\theta}_{k}\}_{k=1}^{K}$
 * $x_n \in \mathbb{R}$: a data point at $n$
 * $\tau_{k} \in \mathbb{R}_{>0}$: a precision parameter of noise
-* $\boldsymbol{\tau}:=[\tau_{1},\dots,\tau_{K}]^{\top}\in\mathbb{R}^{K}$.
+* $\boldsymbol{\tau}:=\{\tau_{k}\}_{k=1}^{K}$.
 
 
 $$
