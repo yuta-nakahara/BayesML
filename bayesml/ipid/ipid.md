@@ -16,7 +16,7 @@ The stochastic data generative model is as follows:
 
 $$
 \begin{align}
-p(\boldsymbol{x}^n \mid m, \theta_m) = \prod_{j=0}^{|\mathcal{T}_m|-1} \prod_{t=t_j}^{t_{j+1}-1}p(\boldsymbol{x}_t \mid \theta_{t_j}).
+p(\boldsymbol{x}^n | m, \theta_m) = \prod_{j=0}^{|\mathcal{T}_m|-1} \prod_{t=t_j}^{t_{j+1}-1}p(\boldsymbol{x}_t | \theta_{t_j}).
 \end{align}
 $$
 
@@ -26,8 +26,8 @@ The prior distribution is as follows:
 
 $$
 \begin{align}
-p(m \mid \alpha_0) &= \alpha_0^{|\mathcal{T}_m|-1} \cdot (1 - \alpha_0)^{n - |\mathcal{T}_m|}, \\
-p(\theta_m \mid m) &= \prod_{j=0}^{|\mathcal{T}_m|-1}p(\theta_{t_j}).
+p(m | \alpha_0) &= \alpha_0^{|\mathcal{T}_m|-1} \cdot (1 - \alpha_0)^{n - |\mathcal{T}_m|}, \\
+p(\theta_m | m) &= \prod_{j=0}^{|\mathcal{T}_m|-1}p(\theta_{t_j}).
 \end{align}
 $$
 
@@ -35,7 +35,7 @@ $$
 
 $$
 \begin{align}
-p(\tau_t) := \sum_{m : \max\{t^{\prime} \in \mathcal{T}_m \mid t^{\prime} \leq t\}=\tau_t} p(m \mid \alpha_0)
+p(\tau_t) := \sum_{m : \max\{t^{\prime} \in \mathcal{T}_m \mid t^{\prime} \leq t\}=\tau_t} p(m | \alpha_0)
 \end{align}
 $$
 
@@ -43,49 +43,49 @@ The posterior distribution of the last change point less than time $t$ is as fol
 
 $$
 \begin{equation}
-p(\tau_t \mid x^t) = \frac{p(x_t \mid \tau_t, x^{t-1}) \cdot p(\tau_t \mid x^{t-1})}{p(x_t \mid x^{t-1})},
+p(\tau_t | x^t) = \frac{p(x_t | \tau_t, x^{t-1}) \cdot p(\tau_t | x^{t-1})}{p(x_t | x^{t-1})},
 \end{equation}
 $$
-where $p(x_t \mid \tau_t, x^{t-1})$, $p(\tau_t \mid x^{t-1})$, $p(x_t \mid x^{t-1})$ can be calculated sequentially as follows.
+where $p(x_t | \tau_t, x^{t-1})$, $p(\tau_t | x^{t-1})$, $p(x_t | x^{t-1})$ can be calculated sequentially as follows.
 $$
 \begin{align}
-p(x_t \mid \tau_t, x^{t-1}) &= \int p(x_t \mid \theta_{\tau_t}) \cdot p(\theta_{\tau_t} \mid \tau_t, x^{t-1}) d\theta_{\tau_t}, \\
-p(\theta_{\tau_t} \mid \tau_t, x^{t-1}) &=  \left \{
+p(x_t | \tau_t, x^{t-1}) &= \int p(x_t | \theta_{\tau_t}) \cdot p(\theta_{\tau_t} | \tau_t, x^{t-1}) \mathrm{d}\theta_{\tau_t}, \\
+p(\theta_{\tau_t} | \tau_t, x^{t-1}) &=  \left \{
 \begin{array}{ll}
-\frac{\prod_{i=\tau_t}^{t-1}p(x_i \mid \theta_{\tau_t}) \cdot p(\theta_{\tau_t})}
-{\int \prod_{i=\tau_t}^{t-1}p(x_i \mid \theta_{\tau_t}) \cdot p(\theta_{\tau_t}) d\theta_{\tau_t}}
+\frac{\prod_{i=\tau_t}^{t-1}p(x_i | \theta_{\tau_t}) \cdot p(\theta_{\tau_t})}
+{\int \prod_{i=\tau_t}^{t-1}p(x_i | \theta_{\tau_t}) \cdot p(\theta_{\tau_t}) \mathrm{d} \theta_{\tau_t}}
 & (1 \leq \tau_t \leq t-1), \\
 p(\theta_{\tau_t})
 & (\tau_t = t),
 \end{array}
 \right. \\
-p(\tau_t \mid x^{t-1}) &= \left \{
+p(\tau_t | x^{t-1}) &= \left \{
 \begin{array}{ll}
-(1 - \alpha_0) \cdot p(\tau_{t-1} \mid x^{t-1}) & (\tau_t = \tau_{t-1}), \\
+(1 - \alpha_0) \cdot p(\tau_{t-1} | x^{t-1}) & (\tau_t = \tau_{t-1}), \\
 \alpha_0 & (\tau_t = t),
 \end{array}
 \right. \\
 % p(T_1 = 1) &= 1, \\
-p(x_t \mid x^{t-1}) &= \sum_{\tau_t=1}^{t} p(x_t \mid \tau_t, x^{t-1}) \cdot p(\tau_t \mid x^{t-1}).
+p(x_t | x^{t-1}) &= \sum_{\tau_t=1}^{t} p(x_t | \tau_t, x^{t-1}) \cdot p(\tau_t | x^{t-1}).
 \end{align}
 $$
 
 The posterior distribution of the parameter at time $t$ is as follows:
 $$
 \begin{align}
-p(\theta_{t} \mid x^t) = \sum_{\tau_t=1}^t p(\tau_t \mid x^t) \cdot p(\theta_t \mid  \tau_t, x^t),
+p(\theta_{t} | x^t) = \sum_{\tau_t=1}^t p(\tau_t | x^t) \cdot p(\theta_t | \tau_t, x^t),
 \end{align}
 $$
-where $p(\tau_t \mid x^t)$ can be updated as above and $p(\theta_t \mid \tau_t, x^t)$ can be calculated as follows.
+where $p(\tau_t | x^t)$ can be updated as above and $p(\theta_t | \tau_t, x^t)$ can be calculated as follows.
 $$
 \begin{align}
-p(\theta_t \mid \tau_t, x^t) = \frac{\prod_{i=\tau_t}^{t}p(x_i \mid \theta_{t}) \cdot p(\theta_{t})}
-{\int \prod_{i=\tau_t}^{t}p(x_i \mid \theta_{t}) \cdot p(\theta_{t}) d\theta_{t}}.
+p(\theta_t | \tau_t, x^t) = \frac{\prod_{i=\tau_t}^{t}p(x_i | \theta_{t}) \cdot p(\theta_{t})}
+{\int \prod_{i=\tau_t}^{t}p(x_i | \theta_{t}) \cdot p(\theta_{t}) \mathrm{d}\theta_{t}}.
 \end{align}
 $$
 The predictive distribution is as follows:
 $$
 \begin{align}
-p(x_t \mid x^{t-1}) &= \sum_{\tau_t=1}^t p(x_t \mid \tau_t, x^{t-1}) \cdot p(\tau_t \mid x^{t-1}),
+p(x_t | x^{t-1}) &= \sum_{\tau_t=1}^t p(x_t | \tau_t, x^{t-1}) \cdot p(\tau_t | x^{t-1}),
 \end{align}
 $$
