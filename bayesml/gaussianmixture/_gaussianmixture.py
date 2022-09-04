@@ -204,7 +204,7 @@ class GenModel(base.Generative):
             * ``"h_m_vec"`` : The value of ``self.h_mu_vec``
             * ``"h_kappa"`` : The value of ``self.h_kappa``
             * ``"h_nu"`` : The value of ``self.h_nu``
-            * ``"h_w_mat"`` : The value of ``self.h_lambda_mat``
+            * ``"h_w_mat"`` : The value of ``self.h_w_mat``
         """
         return {"h_alpha_vec":self.h_alpha_vec,
                 "h_m_vec":self.h_m_vec, 
@@ -215,11 +215,12 @@ class GenModel(base.Generative):
     def gen_params(self):
         """Generate the parameter from the prior distribution.
         
-        The generated vaule is set at ``self.mu_vec`` and ``self.lambda_mat``.
+        The generated vaule is set at ``self.pi_vec``, ``self.mu_vecs`` and ``self.lambda_mats``.
         """
-        pass
-        # self.lambda_mat[:] = ss_wishart.rvs(df=self.h_nu,scale=self.h_w_mat,random_state=self.rng)
-        # self.mu_vec[:] = self.rng.multivariate_normal(mean=self.h_m_vec,cov=np.linalg.inv(self.h_kappa*self.lambda_mat))
+        self.pi_vec[:] = self.rng.dirichlet(self.h_alpha_vec)
+        for k in range(self.num_classes):
+            self.lambda_mats[k] = ss_wishart.rvs(df=self.h_nu,scale=self.h_w_mat,random_state=self.rng)
+            self.mu_vecs[k] = self.rng.multivariate_normal(mean=self.h_m_vec,cov=np.linalg.inv(self.h_kappa*self.lambda_mats[k]))
     
     def set_params(self,pi_vec,mu_vecs,lambda_mats):
         """Set the parameter of the sthocastic data generative model.
@@ -285,16 +286,24 @@ class GenModel(base.Generative):
         Returns
         -------
         x : numpy ndarray
-            2-dimensional array whose shape is ``(sammple_size,degree)`` and its elements are real number.
+            2-dimensional array whose shape is ``(sammple_size,degree)`` and its elements are real numbers.
+        z : numpy ndarray
+            2-dimensional array whose shape is ``(sample_size,num_classes)`` whose rows are one-hot vectors.
         """
-        pass
-        # _check.pos_int(sample_size,'sample_size',DataFormatError)
-        # return self.rng.multivariate_normal(mean=self.mu_vec,cov=np.linalg.inv(self.lambda_mat),size=sample_size)
+        _check.pos_int(sample_size,'sample_size',DataFormatError)
+        z = np.zeros([sample_size,self.num_classes],dtype=int)
+        x = np.empty([sample_size,self.degree])
+        _lambda_mats_inv = np.linalg.inv(self.lambda_mats)
+        for i in range(sample_size):
+            k = self.rng.choice(self.num_classes,p=self.pi_vec)
+            z[i,k] = 1
+            x[i] = self.rng.multivariate_normal(mean=self.mu_vecs[k],cov=_lambda_mats_inv[k])
+        return x,z
         
     def save_sample(self,filename,sample_size):
         """Save the generated sample as NumPy ``.npz`` format.
 
-        It is saved as a NpzFile with keyword: \"x\".
+        It is saved as a NpzFile with keyword: \"x\", \"z\".
 
         Parameters
         ----------
@@ -308,8 +317,8 @@ class GenModel(base.Generative):
         --------
         numpy.savez_compressed
         """
-        pass
-        # np.savez_compressed(filename,x=self.gen_sample(sample_size))
+        x,z=self.gen_sample(sample_size)
+        np.savez_compressed(filename,x=x,z=z)
 
     def visualize_model(self,sample_size=100):
         """Visualize the stochastic data generative model and generated samples.
@@ -317,62 +326,82 @@ class GenModel(base.Generative):
         Parameters
         ----------
         sample_size : int, optional
-            A positive integer, by default 1
+            A positive integer, by default 100
         
         Examples
         --------
-        >>> from bayesml import multivariate_normal
-        >>> model = multivariate_normal.GenModel()
+        >>> from bayesml import gaussianmixture
+        >>> import numpy as np
+        >>> model = gaussianmixture.GenModel(
+        >>>             pi_vec=np.array([0.444,0.444,0.112]),
+        >>>             mu_vecs=np.array([[-2.8],[-0.8],[2]]),
+        >>>             lambda_mats=np.array([[[6.25]],[[6.25]],[[100]]])
+        >>>             )
         >>> model.visualize_model()
-        mu:
-        [0. 0.]
-        lambda_mat:
-        [[1. 0.]
-         [0. 1.]]
+        pi_vec:
+         [0.444 0.444 0.112]
+        mu_vecs:
+         [[-2.8]
+         [-0.8]
+         [ 2. ]]
+        lambda_mats:
+         [[[  6.25]]
+
+         [[  6.25]]
+
+         [[100.  ]]]
         
-        .. image:: ./images/multivariate_normal_example.png
+        .. image:: ./images/gaussianmixture_example.png
         """
-        pass
-        # if self.degree == 1:
-        #     print(f"mu: {self.mu_vec}")
-        #     print(f"lambda_mat: {self.lambda_mat}")
-        #     lambda_mat_inv = np.linalg.inv(self.lambda_mat)
-        #     fig, axes = plt.subplots()
-        #     sample = self.gen_sample(sample_size)
-        #     x = np.linspace(sample.min()-(sample.max()-sample.min())*0.25,
-        #                     sample.max()+(sample.max()-sample.min())*0.25,
-        #                     100)
-        #     axes.plot(x,ss_multivariate_normal.pdf(x,self.mu_vec,lambda_mat_inv))
-        #     axes.hist(sample,density=True)
-        #     axes.set_xlabel("x")
-        #     axes.set_ylabel("Density or frequency")
-        #     plt.show()
+        if self.degree == 1:
+            print(f"pi_vec:\n {self.pi_vec}")
+            print(f"mu_vecs:\n {self.mu_vecs}")
+            print(f"lambda_mats:\n {self.lambda_mats}")
+            _lambda_mats_inv = np.linalg.inv(self.lambda_mats)
+            fig, axes = plt.subplots()
+            sample, _ = self.gen_sample(sample_size)
+            x = np.linspace(sample.min()-(sample.max()-sample.min())*0.25,
+                            sample.max()+(sample.max()-sample.min())*0.25,
+                            1000)
+            y = np.zeros(1000)
+            for k in range(self.num_classes):
+                y += self.pi_vec[k] * ss_multivariate_normal.pdf(x,self.mu_vecs[k],_lambda_mats_inv[k])
+            axes.plot(x,y)
+            axes.hist(sample,density=True)
+            axes.set_xlabel("x")
+            axes.set_ylabel("Density or frequency")
+            plt.show()
 
-        # elif self.degree == 2:
-        #     print(f"mu:\n{self.mu_vec}")
-        #     print(f"lambda_mat:\n{self.lambda_mat}")
-        #     lambda_mat_inv = np.linalg.inv(self.lambda_mat)
-        #     fig, axes = plt.subplots()
-        #     sample = self.gen_sample(sample_size)
-        #     x = np.linspace(sample[:,0].min()-(sample[:,0].max()-sample[:,0].min())*0.25,
-        #                     sample[:,0].max()+(sample[:,0].max()-sample[:,0].min())*0.25,
-        #                     100)
-        #     y = np.linspace(sample[:,1].min()-(sample[:,1].max()-sample[:,1].min())*0.25,
-        #                     sample[:,1].max()+(sample[:,1].max()-sample[:,1].min())*0.25,
-        #                     100)
-        #     xx, yy = np.meshgrid(x,y)
-        #     grid = np.empty((100,100,2))
-        #     grid[:,:,0] = xx
-        #     grid[:,:,1] = yy
-        #     axes.contourf(xx,yy,ss_multivariate_normal.pdf(grid,self.mu_vec,lambda_mat_inv),cmap='Blues')
-        #     axes.plot(self.mu_vec[0],self.mu_vec[1],marker="x",color='red')
-        #     axes.set_xlabel("x[0]")
-        #     axes.set_ylabel("x[1]")
-        #     axes.scatter(sample[:,0],sample[:,1],color='tab:orange')
-        #     plt.show()
+        elif self.degree == 2:
+            print(f"pi_vec:\n {self.pi_vec}")
+            print(f"mu_vecs:\n {self.mu_vecs}")
+            print(f"lambda_mats:\n {self.lambda_mats}")
+            _lambda_mats_inv = np.linalg.inv(self.lambda_mats)
+            fig, axes = plt.subplots()
+            sample, _ = self.gen_sample(sample_size)
+            x = np.linspace(sample[:,0].min()-(sample[:,0].max()-sample[:,0].min())*0.25,
+                            sample[:,0].max()+(sample[:,0].max()-sample[:,0].min())*0.25,
+                            1000)
+            y = np.linspace(sample[:,1].min()-(sample[:,1].max()-sample[:,1].min())*0.25,
+                            sample[:,1].max()+(sample[:,1].max()-sample[:,1].min())*0.25,
+                            1000)
+            xx, yy = np.meshgrid(x,y)
+            grid = np.empty((1000,1000,2))
+            grid[:,:,0] = xx
+            grid[:,:,1] = yy
+            z = np.zeros([1000,1000])
+            for k in range(self.num_classes):
+                z += self.pi_vec[k] * ss_multivariate_normal.pdf(grid,self.mu_vecs[k],_lambda_mats_inv[k])
+            axes.contourf(xx,yy,z,cmap='Blues')
+            for k in range(self.num_classes):
+                axes.plot(self.mu_vecs[k,0],self.mu_vecs[k,1],marker="x",color='red')
+            axes.set_xlabel("x[0]")
+            axes.set_ylabel("x[1]")
+            axes.scatter(sample[:,0],sample[:,1],color='tab:orange')
+            plt.show()
 
-        # else:
-        #     raise(ParameterFormatError("if degree > 2, it is impossible to visualize the model by this function."))
+        else:
+            raise(ParameterFormatError("if degree > 2, it is impossible to visualize the model by this function."))
 
 # class LearnModel(base.Posterior,base.PredictiveMixin):
 #     """The posterior distribution and the predictive distribution.
