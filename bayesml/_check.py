@@ -1,6 +1,7 @@
 # Code Author
 # Yuta Nakahara <yuta.nakahara@aoni.waseda.jp>
 # Yuji Iikubo <yuji-iikubo.8@fuji.waseda.jp>
+# Yasushi Esaki <esakiful@gmail.com>
 import numpy as np
 
 _EPSILON = np.sqrt(np.finfo(np.float64).eps)
@@ -178,6 +179,14 @@ def float_vec_sum_1(val,val_name,exception_class):
         if np.issubdtype(val.dtype,np.floating) and val.ndim == 1 and abs(val.sum() - 1.) <= _EPSILON:
             return val
     raise(exception_class(val_name + " must be a 1-dimensional numpy.ndarray, and the sum of its elements must equal to 1."))
+
+def float_vecs_sum_1(val,val_name,exception_class):
+    if type(val) is np.ndarray:
+        if np.issubdtype(val.dtype,np.integer) and val.ndim >= 1 and np.all(np.abs(np.sum(val, axis=-1) - 1.) <= _EPSILON):
+            return val.astype(float)
+        if np.issubdtype(val.dtype,np.floating) and val.ndim >= 1 and np.all(np.abs(np.sum(val, axis=-1) - 1.) <= _EPSILON):
+            return val
+    raise(exception_class(val_name + " must be a numpy.ndarray whose ndim >= 1, and the sum along the last dimension must equal to 1."))
 
 def int_(val,val_name,exception_class):   
     if np.issubdtype(type(val),np.integer):
