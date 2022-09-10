@@ -1,0 +1,124 @@
+\documentclass{jsarticle}%プリアンブル%
+\usepackage{amsmath,amssymb,amscd,amsthm}%数式用のパッケージ%
+\usepackage{multicol}%ノーテーション用のパッケージ%
+\usepackage[dvipdfmx]{graphicx}%画像挿入用%
+\usepackage{ascmac,fancybox}%枠囲み用のパッケージ%
+%\usepackage{latexsym}%忘れた%
+\usepackage{here}%配置に使えるやつ%
+\usepackage{bm}
+\usepackage[dvipdfmx]{color}
+\usepackage{comment}
+\usepackage{lscape}
+\usepackage[a4paper]{geometry}
+\usepackage{url}
+\usepackage{natbib}
+\usepackage{xcolor}
+\definecolor{midnightblue}{cmyk}{0.98,0.13,0.00,0.43}
+%\definecolor{violet}{cmyk}{0.79,0.88,0.00,0.00}
+%\definecolor{blueviolet}{cmyk}{0.86,0.91,0.00,0.04}
+\usepackage[bookmarksnumbered=true,hidelinks,dvipdfmx]{hyperref}%しおり，ハイパーリンク
+\hypersetup{
+    colorlinks=true,
+    citecolor=midnightblue,
+    linkcolor=black,
+    urlcolor=blue,
+}
+\usepackage{pxjahyper}
+\usepackage{mathtools}
+%\usepackage[linesnumbered, ruled]{algorithm2e}
+%\usepackage{eufrak}
+%\usepackage{setspace}
+%\usepackage{lscape}
+%\usepackage{pdflscape}
+\usepackage{comment}
+\usepackage{here}
+%\usepackage[top=30truemm,bottom=40truemm]{geometry}
+%\pagestyle{empty}
+
+\theoremstyle{definition}
+\newtheorem{proofp}{Proof of Proposition}
+\newtheorem{proofl}{Proof of Lemma}
+%\SetKwRepeat{DO}{do}{while}
+%\newcommand{\ctext}[1]{\textcircled{\scriptsize{#1}}}
+\newcommand{\argmax}{\mathop{\rm arg~max}\limits}
+\newcommand{\argmin}{\mathop{\rm arg~min}\limits}
+\newcommand{\esssup}{\mathop{\rm ess~sup}\limits}
+%\newcommand{\arginf}{\mathop{\rm arg~inf}\limits}
+%\newcommand{\dis}{\mathrm{dis}}
+%\newcommand{\sign}{\mathrm{sign}}の
+\begin{document}
+%\maketitle
+\tableofcontents
+\section*{ノーテーション}
+\begin{itemize}
+    \item $S=\{\bm{z}\in\{0,1\}^K\ |\ \sum^K_{k=1}z_k=1\}$
+\end{itemize}
+\section{変分下界全体}
+\begin{align}
+    \ln \int \int \sum_{\bm{z}^n\in S^n}p(\bm{x}^n, \bm{z}^n, \bm{\theta}, \bm{\pi}|\bm{\alpha}_0,\bm{\beta}_0)d\bm{\theta}d\bm{\pi}
+     & =\ln \int \int \sum_{\bm{z}^n\in S^n}q(\bm{z}^n, \bm{\theta}, \bm{\pi})\frac{p(\bm{x}^n, \bm{z}^n, \bm{\theta}, \bm{\pi}|\bm{\alpha}_0,\bm{\beta}_0)}{q(\bm{z}^n, \bm{\theta}, \bm{\pi})}d\bm{\theta}d\bm{\pi}     \\
+     & \geq \int \int \sum_{\bm{z}^n\in S^n}q(\bm{z}^n, \bm{\theta}, \bm{\pi})\ln \frac{p(\bm{x}^n, \bm{z}^n, \bm{\theta}, \bm{\pi}|\bm{\alpha}_0,\bm{\beta}_0)}{q(\bm{z}^n, \bm{\theta}, \bm{\pi})}d\bm{\theta}d\bm{\pi} \\
+     & = \int \int \sum_{\bm{z}^n\in S^n}q(\bm{z}^n, \bm{\theta}, \bm{\pi})\ln p(\bm{x}^n, \bm{z}^n, \bm{\theta}, \bm{\pi}|\bm{\alpha}_0,\bm{\beta}_0)d\bm{\theta}d\bm{\pi} \label{eqlikelihood}                          \\
+     & \hspace{1cm} - \int \int \sum_{\bm{z}^n\in S^n}q(\bm{z}^n, \bm{\theta}, \bm{\pi})\ln q(\bm{z}^n, \bm{\theta}, \bm{\pi})d\bm{\theta}d\bm{\pi} \label{eqentropy}
+\end{align}
+\newpage
+\section{前半 (式(\ref{eqlikelihood}))}
+\begin{align}
+    (\ref{eqlikelihood}) & = \int \int \sum_{\bm{z}^n\in S^n}q(\bm{z}^n, \bm{\theta}, \bm{\pi})\ln p(\bm{x}^n, \bm{z}^n, \bm{\theta}, \bm{\pi}|\bm{\alpha}_0,\bm{\beta}_0)d\bm{\theta}d\bm{\pi}                                                    \\
+                         & =\underbrace{\int \sum_{\bm{z}^n\in S^n}q(\bm{z}^n)q(\boldsymbol{\theta})\ln p(\bm{x}^n|\bm{\theta}, \bm{z}^n)d\bm{\theta}}_{第1項}+\underbrace{\int q(\bm{\theta})\ln p(\bm{\theta}|\bm{\beta}_0)d\bm{\theta}}_{第2項} \\
+                         & \hspace{3cm}+\underbrace{\int\sum_{\bm{z}^n\in S^n}q(\bm{z}^n)q(\bm{\pi})\ln p(\bm{z}|\bm{\pi})d\bm{\pi}}_{第3項}+\underbrace{\int q(\bm{\pi})\ln p(\bm{\pi}|\bm{\alpha}_0)d\bm{\pi}}_{第4項}
+\end{align}
+\begin{align}
+    第1項 & =\int \sum_{\bm{z}^n\in S^n}q(\bm{z}^n)q(\boldsymbol{\theta})\ln p(\bm{x}^n|\bm{\theta}, \bm{z}^n)d\bm{\theta}                                                                        \\
+          & =\sum^n_{i=1}\sum_{\bm{z}_i\in S}q(\bm{z}_i)\int q(\bm{\theta})\ln p(\bm{x}_i|\bm{\theta}, \bm{z}_{i})d\bm{\theta}                                                                    \\
+          & =\sum^n_{i=1}\sum^K_{k=1}r^{(t)}_{i,k}\int q(\bm{\theta}_k)\ln \frac{\Gamma(\sum^d_{l=1}x_{l,i}+1)}{\prod^d_{l=1}\Gamma(x_{l,i}+1)}\prod^d_{l=1}\theta^{x_{l,i}}_{k,l} d\bm{\theta}_k \\
+          & =\sum^n_{i=1}\sum^K_{k=1}r^{(t)}_{i,k}\sum^d_{l=1}x_{l,i}\int q(\bm{\theta}_k)\ln \theta_{k,l}d\bm{\theta}_{k}\nonumber                                                               \\
+          & \hspace{2cm}+\sum^n_{i=1}\sum^K_{k=1}r^{(t)}_{i,k}\ln \Gamma\left(\sum^d_{l=1}x_{l,i}+1\right)-\sum^n_{i=1}\sum^K_{k=1}r^{(t)}_{i,k}\sum^d_{l=1}\ln \Gamma\left(x_{l,i}+1\right)      \\
+          & =\sum^n_{i=1}\sum^K_{k=1}r^{(t)}_{i,k}\sum^{d}_{l=1}x_{l,i}\left\{\psi(\beta^{(t)}_{n,k,l})-\psi\left(\sum^d_{l'=1}\beta^{(t)}_{n,k,l'}\right)\right\}\nonumber                       \\
+          & \hspace{2cm}+\sum^n_{i=1}\sum^K_{k=1}r^{(t)}_{i,k}\ln \Gamma\left(\sum^d_{l=1}x_{l,i}+1\right)-\sum^n_{i=1}\sum^K_{k=1}r^{(t)}_{i,k}\sum^d_{l=1}\ln \Gamma\left(x_{l,i}+1\right)
+\end{align}
+\begin{align}
+    第2項 & =\int q(\bm{\theta})\ln p(\bm{\theta}|\bm{\beta}_0)d\bm{\theta}                                                                                          \\
+          & =\int q(\bm{\theta})\ln \prod^K_{k=1}\left\{C(\boldsymbol{\beta}_0)\prod^d_{l=1}\theta_{k,l}^{\beta_{0,l}-1}\right\}d\bm{\theta}                         \\
+          & =\int q(\bm{\theta})\ln \left\{C(\boldsymbol{\beta}_0)^K\prod^K_{k=1}\prod^d_{l=1}\theta_{k,l}^{\beta_{0,l}-1}\right\}d\bm{\theta}                       \\
+          & =K\ln C(\bm{\beta}_0)+\sum^d_{l=1}(\beta_{0,l}-1)\sum^K_{k=1}\int q(\bm{\theta}_k)\ln \theta_{k,l}d\bm{\theta}_k                                         \\
+          & =K\ln C(\bm{\beta}_0)+\sum^{d}_{l=1}(\beta_{0,l}-1)\sum^K_{k=1}\left(\psi(\beta^{(t)}_{n,k,l})-\psi\left(\sum^d_{l'=1}\beta^{(t)}_{n,k,l'}\right)\right)
+\end{align}
+
+\begin{align}
+    第3項 & =\int\sum_{\bm{z}^n\in S^n}q(\bm{z}^n)q(\bm{\pi})\ln p(\bm{z}|\bm{\pi})d\bm{\pi}                                              \\
+          & =\sum^n_{i=1}\sum_{\bm{z}_i\in S}q(\bm{z}_i)\int q(\bm{\pi})\ln p(\bm{z}_i|\bm{\pi})d\bm{\pi}                                 \\
+          & =\sum^n_{i=1}\sum^K_{k=1}r^{(t)}_{i,k}\int q(\bm{\pi})\ln \pi_{k} d\bm{\pi}                                                   \\
+          & =\sum^n_{i=1}\sum^K_{k=1}r^{(t)}_{i,k}\left(\psi(\alpha^{(t)}_{n,k})-\psi\left(\sum^K_{k'=1}\alpha^{(t)}_{n,k'}\right)\right)
+\end{align}
+\begin{align}
+    第4項 & =\int q(\bm{\pi})\ln p(\bm{\pi}|\bm{\alpha}_0)d\bm{\pi}                                                                                     \\
+          & =\int q(\bm{\pi})\ln \left\{C(\boldsymbol{\alpha}_0)\prod^K_{k=1}\pi_{k}^{\alpha_{0,k}-1}\right\}d\bm{\pi}                                  \\
+          & =\ln C(\bm{\alpha}_0)+\sum^K_{k=1}(\alpha_{0,k}-1)\int q(\bm{\pi})\ln \pi_{k}d\bm{\pi}                                                      \\
+          & =\ln C(\bm{\alpha}_0)+\sum^{K}_{k=1}(\alpha_{0,k}-1)\left(\psi(\alpha^{(t)}_{n,k})-\psi\left(\sum^K_{k'=1}\alpha^{(t)}_{n,k'}\right)\right)
+\end{align}
+\newpage
+\section{後半 (式(\ref{eqentropy}))}
+\begin{align}
+    (\ref{eqentropy}) & =\int \int \sum_{\bm{z}^n\in S^n}q(\bm{z}^n, \bm{\theta}, \bm{\pi})\ln q(\bm{z}^n, \bm{\theta}, \bm{\pi})d\bm{\theta}d\bm{\pi}                                                                              \\
+                      & =\underbrace{\sum_{\bm{z}^n\in S^n}q(\bm{z}^n)\ln q(\bm{z}^n)}_{第1項}+\underbrace{\int q(\bm{\theta})\ln q(\bm{\theta})d\bm{\theta}}_{第2項}+\underbrace{\int q(\bm{\pi})\ln q(\bm{\pi})d\bm{\pi}}_{第3項}
+\end{align}
+\begin{align}
+    第1項 & =\sum_{\bm{z}^n\in S^n}q(\bm{z}^n)\ln q(\bm{z}^n)           \\
+          & =\sum^n_{i=1}\sum_{\bm{z}_i\in S}q(\bm{z}_i)\ln q(\bm{z}_i) \\
+          & =\sum^n_{i=1}\sum^K_{k=1}r^{(t)}_{i,k}\ln r^{(t)}_{i,k}
+\end{align}
+\begin{align}
+    第2項 & =\int q(\bm{\theta})\ln q(\bm{\theta})d\bm{\theta}                                                                                                                                             \\
+          & =\sum^K_{k=1}\int q(\bm{\theta}_k)\ln q(\bm{\theta}_k)d\bm{\theta}_k                                                                                                                           \\
+          & =\sum^K_{k=1}\int q(\bm{\theta}_k)\ln\left\{C(\boldsymbol{\beta}_{n,k}^{(t)})\prod_{l=1}^d \theta^{\beta_{n,k,l}^{(t)}-1}_{k,l}\right\}d\bm{\theta}_k                                          \\
+          & =\sum^K_{k=1}\left\{\ln C(\boldsymbol{\beta}_{n,k}^{(t)})+\sum^d_{l=1}(\beta_{n,k,l}^{(t)}-1)\int q(\bm{\theta}_k)\ln \theta_{k,l}d\bm{\theta}_k\right\}                                       \\
+          & =\sum^K_{k=1}\left\{\ln C(\boldsymbol{\beta}_{n,k}^{(t)})+\sum^d_{l=1}(\beta_{n,k,l}^{(t)}-1)\left(\psi(\beta^{(t)}_{n,k,l})-\psi\left(\sum^d_{l'=1}\beta^{(t)}_{n,k,l'}\right)\right)\right\}
+\end{align}
+\begin{align}
+    第3項 & =\int q(\bm{\pi})\ln q(\bm{\pi})d\bm{\pi}                                                                                                                       \\
+          & =\int q(\bm{\pi})\ln\left\{C(\boldsymbol{\alpha}_{n}^{(t)})\prod_{k=1}^K \pi^{\alpha_{n,k}^{(t)}-1}_{k}\right\}d\bm{\pi}                                        \\
+          & =\ln C(\boldsymbol{\alpha}_{n}^{(t)})+\sum^K_{k=1}(\alpha_{n,k}^{(t)}-1)\int q(\bm{\pi})\ln \pi_{k}d\bm{\pi}                                                    \\
+          & =\ln C(\boldsymbol{\alpha}_{n}^{(t)})+\sum^K_{k=1}(\alpha_{n,k}^{(t)}-1)\left(\psi(\alpha^{(t)}_{n,k})-\psi\left(\sum^K_{k'=1}\alpha^{(t)}_{n,k'}\right)\right)
+\end{align}
+\end{document}

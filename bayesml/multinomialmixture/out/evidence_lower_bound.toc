@@ -1,0 +1,3 @@
+\contentsline {section}{\numberline {1}変分下界全体}{1}{section.1}%
+\contentsline {section}{\numberline {2}前半 (式(\ref {eqlikelihood}))}{2}{section.2}%
+\contentsline {section}{\numberline {3}後半 (式(\ref {eqentropy}))}{4}{section.3}%
