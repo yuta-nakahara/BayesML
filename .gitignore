@@ -131,7 +131,7 @@ dmypy.json
 # Manually added
 *.npz
 *.npy
-*.pdf
+#*.pdf
 *.dot
 *.pkl
 *.gv
@@ -139,3 +139,6 @@ dmypy.json
 
 # The settings of container
 .devcontainer
+
+# vscode settings
+.vscode
