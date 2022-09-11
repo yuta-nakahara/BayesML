@@ -6,13 +6,15 @@
 
 import numpy as np
 
+from .. import base
 from .. import _check
 from .._exceptions import ParameterFormatError
 
-class GenModel:
+class GenModel(base.Generative):
     def __init__(
         self, 
         *, 
+        # [stochastic data generative model]
         degree: int = 1, 
         K: int = 2, 
         n: int = 1, 
@@ -22,17 +24,20 @@ class GenModel:
         x_n_vec: np.ndarray = None, 
         theta_matrix: np.ndarray = None, 
         x_n: float = 1, 
-        tau_vec: np.ndarray = None
+        tau_vec: np.ndarray = None, 
+        # [prior distribution]
+
     ):
         # TODO: get default values
         # TODO: 境界値テスト
 
-        # [input variables]
+        # [stochastic data generative model]
+        # ===== input variables =====
         self.degree = _check.pos_int(degree, "degree", ParameterFormatError)
         self.K = _check.pos_int(K, "K", ParameterFormatError)
         self.n = _check.pos_int(n, "n", ParameterFormatError)
         self.x_n = _check.float_(x_n, "x_n", ParameterFormatError)
-        # [check values or set default values]
+        # ===== check values or set default values =====
         self.z_vec = np.array([1,] + [0,]*self.K) \
             if z_vec is None else _check.onehot_vec(z_vec, "z_vec", ParameterFormatError)
         self.pi_vec = np.ones(self.K) / self.K  \
