@@ -1,3 +1,5 @@
+# Code Author
+# Yasushi Esaki <esakiful@gmail.com>
 r"""
 The multinomial mixture model with the dirichlet prior distributions.
 
