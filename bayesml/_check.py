@@ -212,3 +212,20 @@ def onehot_vecs(val,val_name,exception_class):
         if np.issubdtype(val.dtype,np.integer) and val.ndim >= 1 and np.all(val >= 0) and np.all(val.sum(axis=-1)==1):
             return val
     raise(exception_class(val_name + " must be a numpy.ndarray whose dtype is int and whose last axis constitutes one-hot vectors."))
+
+def dimension_consistency(ref_shape: int, ref_name: str, check_dict: dict, exception_class):
+    message = f"{ref_name} and dimensions of "
+    ng_name_list = []
+    for key in check_dict:
+        if ref_shape != check_dict[key]:
+            ng_name_list.append(key)
+    if len(ng_name_list) > 0:
+        for i, key in enumerate(ng_name_list):
+            message += key
+            if i != len(ng_name_list) - 1:
+                if i < len(ng_name_list) - 2:
+                    message += ", "
+                else:
+                    message += "and "
+        message += " must be the same, if two or more of them are specified."
+        raise(exception_class(message))
