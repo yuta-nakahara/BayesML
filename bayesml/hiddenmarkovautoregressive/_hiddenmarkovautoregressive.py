@@ -18,8 +18,8 @@ class GenModel(base.Generative):
     ----------
     degree : int, optional
         a positive integer. Default is 1, in which case 
-        a value consistent with ``x_n_vec``, ``h0_mu_vec``, ``theta_vecs``, 
-        and ``h0_Lambda_mat`` is used. If all of them are not given,
+        a value consistent with ``x_n_vec``, ``h_mu_vec``, ``theta_vecs``, 
+        and ``h_Lambda_mat`` is used. If all of them are not given,
         degree is assumed to be 1.
     K : int, optional
         a positive integer. Default is 1, in which case 
@@ -44,9 +44,9 @@ class GenModel(base.Generative):
         a real number, a data point at n.
     taus : numpy ndarray, optinal
         K real numbers, a precision parameter of noise. Default is 1.
-    h0_mu_vec : numpy ndarray, optional
+    h_mu_vec : numpy ndarray, optional
         a vector of degree+1-dim real number. Default is (0,...,0).
-    h0_lambda_mat : numpy ndarray, optional
+    h_lambda_mat : numpy ndarray, optional
         a matrix of (degree+1)x(degree+1) real number. Default is identity matrix.
     h_alpha : float, optional
         a positive real number. Default is 1.
@@ -72,8 +72,8 @@ class GenModel(base.Generative):
         x_n: float = 1, 
         taus: np.ndarray = None, 
         # [prior distribution]
-        h0_mu_vec: np.ndarray = None, 
-        h0_lambda_mat: np.ndarray = None, 
+        h_mu_vec: np.ndarray = None, 
+        h_lambda_mat: np.ndarray = None, 
         h_alpha: float = 1, 
         h_beta: float = 1, 
         h_eta_vec: np.ndarray = None, 
@@ -82,7 +82,7 @@ class GenModel(base.Generative):
         # TODO: get default values
         # TODO: 境界値テスト
 
-        # [Check values or set default values]
+        # [Check values and set default values]
         # ===== for stochastic data generative model =====
         self.degree = _check.pos_int(degree, "degree", ParameterFormatError)
         self.K = _check.pos_int(K, "K", ParameterFormatError)
@@ -100,17 +100,17 @@ class GenModel(base.Generative):
         self.taus = self.pi_vec.copy() \
             if taus is None else _check.floats(taus, "taus", ParameterFormatError)
         # ===== for prior distribution =====
-        self.h0_mu_vec = np.zeros(self.degree + 1) \
-            if h0_mu_vec is None else _check.float_vec(h0_mu_vec, "h0_mu_vec", ParameterFormatError)
-        self.h0_lambda_mat = np.identity(self.degree + 1) \
-            if h0_lambda_mat is None else _check.float_vec(h0_lambda_mat, "h0_lambda_mat", ParameterFormatError)
+        self.h_mu_vec = np.zeros(self.degree + 1) \
+            if h_mu_vec is None else _check.float_vec(h_mu_vec, "h_mu_vec", ParameterFormatError)
+        self.h_lambda_mat = np.identity(self.degree + 1) \
+            if h_lambda_mat is None else _check.float_vec(h_lambda_mat, "h_lambda_mat", ParameterFormatError)
         self.h_alpha = _check.float_(h_alpha, "h_alpha", ParameterFormatError)
         self.h_beta = _check.float_(h_beta, "h_beta", ParameterFormatError)
         self.h_eta_vec = np.ones(self.K) / 2. \
             if h_eta_vec is None else _check.pos_float_vec(h_eta_vec, "h_eta_vec", ParameterFormatError)
         self.h_zeta_vecs = np.ones(self.K, self.K) / 2. \
             if h_zeta_vecs is None else _check.pos_float_vec(h_zeta_vecs, "h_zeta_vec", ParameterFormatError)
-        self.det_Lambda = np.linalg.det(h0_lambda_mat)
+        self.det_Lambda = np.linalg.det(h_lambda_mat)
         self.gamma_func = np.frompyfunc(gamma_func,1,1)
 
         # [Check consistency between parameters]
@@ -120,9 +120,9 @@ class GenModel(base.Generative):
             check_dict={
                 "x_n_vec": self.x_n_vec.shape[0], 
                 "theta_vecs": self.theta_vecs.shape[1], 
-                "h0_mu_vec": self.h0_mu_vec.shape[0], 
-                "column of h0_lambda_mat": self.h0_lambda_mat.shape[0], 
-                "row of h0_lambda_mat": self.h0_lambda_mat.shape[1]
+                "h_mu_vec": self.h_mu_vec.shape[0], 
+                "column of h_lambda_mat": self.h_lambda_mat.shape[0], 
+                "row of h_lambda_mat": self.h_lambda_mat.shape[1]
             }
         )
         _check.dimension_consistency(
@@ -140,4 +140,66 @@ class GenModel(base.Generative):
             }
         )
 
+    def set_h_params(
+        self, 
+        h_mu_vec: np.ndarray = None, 
+        h_lambda_mat: np.ndarray = None, 
+        h_alpha: float = 1, 
+        h_beta: float = 1, 
+        h_eta_vec: np.ndarray = None, 
+        h_zeta_vecs: np.ndarray = None
+    ):
+        """Set the hyperparameters of the prior distribution.
+        
+        Parameters
+        ----------
+        h_mu_vec : numpy ndarray, optional
+            a vector of degree+1-dim real number. Default is (0,...,0).
+        h_lambda_mat : numpy ndarray, optional
+            a matrix of (degree+1)x(degree+1) real number. Default is identity matrix.
+        h_alpha : float, optional
+            a positive real number. Default is 1.
+        h_beta : float, optional
+            a positive real number.Default is 1.
+        h_eta_vec : numpy ndarray, optional
+            a vector of positive real numbers. Default is (1/2,...,1/2).
+        h_zeta_vecs : numpy ndarray, optional
+            K vectors of positive real numbers. Default is (1/2,...,1/2).
+        """
+
+        # [Check values and set default values]
+        check_dict_degree = {}
+        check_dict_K = {}
+        if h_mu_vec is not None:
+            self.h_mu_vec = _check.float_vec(h_mu_vec, "h_mu_vec", ParameterFormatError)
+            check_dict_degree["h_mu_vec"] = self.h_mu_vec.shape[0]
+        if h_lambda_mat is not None:
+            self.h_lambda_mat = _check.float_vec(h_lambda_mat, "h_lambda_mat", ParameterFormatError)
+            check_dict_degree["column of h_lambda_mat"] = self.h_lambda_mat.shape[0]
+            check_dict_degree["row of h_lambda_mat"] = self.h_lambda_mat.shape[1]
+        if h_alpha is not None:
+            self.h_alpha = _check.float_(h_alpha, "h_alpha", ParameterFormatError)
+        if h_beta is not None:
+            self.h_beta = _check.float_(h_beta, "h_beta", ParameterFormatError)
+        if h_eta_vec is not None:
+            self.h_eta_vec = _check.pos_float_vec(h_eta_vec, "h_eta_vec", ParameterFormatError)
+            check_dict_K["h_eta_vec"] = self.h_eta_vec.shape[0]
+        if h_zeta_vecs is not None:
+            self.h_zeta_vecs = _check.pos_float_vec(h_zeta_vecs, "h_zeta_vec", ParameterFormatError)
+            check_dict_K["a number of h_zeta_vec"] = self.h_zeta_vecs.shape[0]
+            check_dict_K["each dim of h_zeta_vec"] = self.h_zeta_vecs.shape[1]
+
+        # [Check consistency between parameters]
+        _check.dimension_consistency(
+            ref_shape=self.degree + 1, 
+            ref_name="(degree+1)", 
+            check_dict=check_dict_degree
+        )
+        _check.dimension_consistency(
+            ref_shape=self.K, 
+            ref_name="K", 
+            check_dict=check_dict_K
+        )
+
+        # TODO: degreeの更新(?), これは必要(?)
 
