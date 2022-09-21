@@ -28,7 +28,7 @@ class GenModel(base.Generative):
         The sum of its elements must be 1.
     theta_vecs : numpy ndarray, optional
         A real matrix in :math:`[0, 1]^{K \times d}`, by default [[1/d, 1/d, ... , 1/d]]*K.
-        The sum of its elements must be 1 on axis=1.
+        The sum of each row must be 1.
     h_alpha_vec : numpy.ndarray, optional
         A vector of positive real numbers, by default [1/2, 1/2, ... , 1/2].
     h_beta_vec : numpy.ndarray, optional
@@ -180,7 +180,7 @@ class GenModel(base.Generative):
             The sum of its elements must be 1.
         theta_vecs : numpy.ndarray
             A real matrix in :math:`[0, 1]^{K \times d}`.
-            The sum of its elements must be 1 on axis=1.
+            The sum of each row must be 1.
         """
         self.pi_vec = _check.float_vec_sum_1(pi_vec, 'pi_vec', ParameterFormatError)
         self.theta_vecs = _check.float_vecs_sum_1(theta_vecs, 'theta_vecs', ParameterFormatError)
@@ -230,7 +230,7 @@ class GenModel(base.Generative):
         -------
         x : numpy.ndarray
             2-dimensional array whose shape is ``(sammple_size, degree)`` and
-            its elements are integers greater than or equal to 0.
+            its elements are non-negative integers.
         z : numpy.ndarray
             2-dimensional array whose shape is ``(sample_size, num_classes)`` whose rows are one-hot vectors.
         """
