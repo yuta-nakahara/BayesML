@@ -1,11 +1,11 @@
 # Fdb version 3
-["dvipdf"] 1662792893 "out/evidence_lower_bound.dvi" "out/evidence_lower_bound.pdf" "out/evidence_lower_bound" 1662792894
-  "out/evidence_lower_bound.dvi" 1662792893 20400 a1d2642af7d45b1debceacd183eb2731 "latex"
+["dvipdf"] 1663724428 "out/evidence_lower_bound.dvi" "out/evidence_lower_bound.pdf" "out/evidence_lower_bound" 1663724430
+  "out/evidence_lower_bound.dvi" 1663724428 20400 4d08d61376f0e2b8370603210b720167 "latex"
   (generated)
   "out/evidence_lower_bound.pdf"
-["latex"] 1662792892 "/home/esaki/BayesML/bayesml/multinomialmixture/evidence_lower_bound.tex" "out/evidence_lower_bound.dvi" "evidence_lower_bound" 1662792894
-  "/etc/texmf/web2c/texmf.cnf" 1662789527 475 c0e671620eb5563b2130f56340a5fde8 ""
-  "/home/esaki/BayesML/bayesml/multinomialmixture/evidence_lower_bound.tex" 1662792891 9718 29e0f5e6858813e91ff4350f6dfba4a9 ""
+["latex"] 1663724428 "/home/esaki/BayesML/bayesml/multinomialmixture/evidence_lower_bound.tex" "out/evidence_lower_bound.dvi" "evidence_lower_bound" 1663724430
+  "/etc/texmf/web2c/texmf.cnf" 1663720005 475 c0e671620eb5563b2130f56340a5fde8 ""
+  "/home/esaki/BayesML/bayesml/multinomialmixture/evidence_lower_bound.tex" 1662977490 9718 29e0f5e6858813e91ff4350f6dfba4a9 ""
   "/usr/share/texlive/texmf-dist/fonts/map/fontname/texfonts.map" 1577235249 3524 cb3e574dea2d1052e39280babc910dc8 ""
   "/usr/share/texlive/texmf-dist/fonts/tfm/jknappen/ec/tcrm1000.tfm" 1136768653 1536 e07581a4bb3136ece9eeb4c3ffab8233 ""
   "/usr/share/texlive/texmf-dist/fonts/tfm/ptex-fonts/jis/jis.tfm" 1463434352 468 53f854284f6afa6c36aaa2d1090ecc12 ""
@@ -111,11 +111,11 @@
   "/usr/share/texlive/texmf-dist/tex/platex/pxjahyper/pxjahyper.sty" 1623096304 45778 a49f011e10f5724dbca08e6537be63e6 ""
   "/usr/share/texlive/texmf-dist/web2c/texmf.cnf" 1644012257 39432 7155514e09a3d69036fac785183a21c2 ""
   "/usr/share/texmf/web2c/texmf.cnf" 1644012257 39432 7155514e09a3d69036fac785183a21c2 ""
-  "/var/lib/texmf/web2c/eptex/platex.fmt" 1662789599 1533703 e55033b8eb0ffd3caf40013b1062d87e ""
-  "evidence_lower_bound.tex" 1662792891 9718 29e0f5e6858813e91ff4350f6dfba4a9 ""
-  "out/evidence_lower_bound.aux" 1662792893 1159 2909ee925fd7d03d3083870b20a37284 "latex"
-  "out/evidence_lower_bound.out" 1662792893 221 58617e181a7a95219db8db5d0d8069dd "latex"
-  "out/evidence_lower_bound.toc" 1662792893 249 7d33fe0b0adb035ebfc1d459f7ff6f2c "latex"
+  "/var/lib/texmf/web2c/eptex/platex.fmt" 1663720022 1564903 8cbf0efc2e5a64286882590020d4dc92 ""
+  "evidence_lower_bound.tex" 1662977490 9718 29e0f5e6858813e91ff4350f6dfba4a9 ""
+  "out/evidence_lower_bound.aux" 1663724428 1159 2909ee925fd7d03d3083870b20a37284 "latex"
+  "out/evidence_lower_bound.out" 1663724428 221 58617e181a7a95219db8db5d0d8069dd "latex"
+  "out/evidence_lower_bound.toc" 1663724428 249 7d33fe0b0adb035ebfc1d459f7ff6f2c "latex"
   (generated)
   "out/evidence_lower_bound.aux"
   "out/evidence_lower_bound.dvi"
