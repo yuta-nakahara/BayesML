@@ -213,19 +213,19 @@ def onehot_vecs(val,val_name,exception_class):
             return val
     raise(exception_class(val_name + " must be a numpy.ndarray whose dtype is int and whose last axis constitutes one-hot vectors."))
 
-def dimension_consistency(ref_shape: int, ref_name: str, check_dict: dict, exception_class):
-    message = f"{ref_name} and dimensions of "
-    ng_name_list = []
-    for key in check_dict:
-        if ref_shape != check_dict[key]:
-            ng_name_list.append(key)
-    if len(ng_name_list) > 0:
-        for i, key in enumerate(ng_name_list):
-            message += key
-            if i != len(ng_name_list) - 1:
-                if i < len(ng_name_list) - 2:
-                    message += ", "
-                else:
-                    message += "and "
-        message += " must be the same, if two or more of them are specified."
-        raise(exception_class(message))
+def value_consistency(value_dict: dict, exception_class):
+    key_list = []
+    for key in value_dict:
+        if value_dict[key] is not None and key not in key_list:
+            key_list.append(key)
+    if len(key_list) == 0:
+        message = f"Please set at least one value for the following variables: {value_dict.keys()}"
+    elif len(key_list) > 1:
+        message = f"The following values must be the same: {list(value_dict.keys())}. "
+        message += f"The following values are different: {key_list}. "
+        print("===== Error =====")
+        for key in key_list:
+            print(f"{key} = {value_dict[key]}")
+    else:
+        return value_dict[key_list[0]]
+    raise(exception_class(message))
