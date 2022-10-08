@@ -7,6 +7,8 @@ import numpy as np
 from scipy.stats import multivariate_normal as ss_multivariate_normal
 from scipy.stats import wishart as ss_wishart
 from scipy.stats import multivariate_t as ss_multivariate_t
+from scipy.stats import dirichlet as ss_dirichlet
+from scipy.special import gammaln, digamma, xlogy
 import matplotlib.pyplot as plt
 
 from .. import base
@@ -450,7 +452,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         the inverse matrices of hn_w_mats
     r_vecs : numpy.ndarray
         vectors of real numbers. The sum of its elenemts is 1.
-    Ns : numpy.ndarray
+    ns : numpy.ndarray
         positive real numbers
     s_mats : numpy.ndarray
         positive difinite symmetric matrices
@@ -486,6 +488,9 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self.h0_w_mats = np.tile(np.identity(self.degree),[self.num_classes,1,1])
         self.h0_w_mats_inv = np.linalg.inv(self.h0_w_mats)
 
+        self.LN_C_H0_ALPHA = 0.0
+        self.LN_B_H0_W_NUS = np.empty(self.num_classes)
+        
         # hn_params
         self.hn_alpha_vec = np.empty([self.num_classes])
         self.hn_m_vecs = np.empty([self.num_classes,self.degree])
@@ -493,6 +498,15 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self.hn_nus = np.empty([self.num_classes])
         self.hn_w_mats = np.empty([self.num_classes,self.degree,self.degree])
         self.hn_w_mats_inv = np.empty([self.num_classes,self.degree,self.degree])
+
+        # statistics
+        self.r_vecs = None
+        self.x_bar_vecs = np.empty([self.num_classes,self.degree])
+        self.ns = np.empty(self.num_classes)
+        self.s_mats = np.empty([self.num_classes,self.degree,self.degree])
+        self.e_lambda_mats = np.empty([self.num_classes,self.degree,self.degree])
+        self.e_ln_lambda_dets = np.empty(self.num_classes)
+        self.e_ln_pi_vec = np.empty(self.num_classes)
 
         # p_params
         self.p_pi_vec = np.empty([self.num_classes])
@@ -563,6 +577,15 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                     +f"h0_w_mats.shape[-1]={h0_w_mats.shape[-1]}, h0_w_mats.shape[-2]={h0_w_mats.shape[-2]}, self.degree={self.degree}"))
             self.h0_w_mats[:] = h0_w_mats
             self.h0_w_mats_inv[:] = np.linalg.inv(self.h0_w_mats)
+
+        self.LN_C_H0_ALPHA = gammaln(self.h0_alpha_vec.sum()) - gammaln(self.h0_alpha_vec).sum()
+        self.LN_B_H0_W_NUS = (
+            - self.h0_nus*np.linalg.slogdet(self.h0_w_mats)[1]
+            - self.h0_nus*self.degree*np.log(2.0)
+            - self.degree*(self.degree-1)/2.0*np.log(np.pi)
+            - np.sum(gammaln((self.h0_nus[:,np.newaxis]-np.arange(self.degree)) / 2.0),
+                     axis=1) * 2.0
+            ) / 2.0
 
         self.reset_hn_params()
 
@@ -688,6 +711,67 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self.h0_w_mats_inv = np.linalg.inv(self.h0_w_mats)
 
         self.calc_pred_dist()
+
+    def calc_vl(self):
+        self.e_lambda_mats = self.hn_nus[:,np.newaxis,np.newaxis] * self.hn_w_mats
+        self.e_ln_lambda_dets = (np.sum(digamma((self.hn_nus[:,np.newaxis]-np.arange(self.degree)) / 2.0),axis=1)
+                            + self.degree*np.log(2.0)
+                            - np.linalg.slogdet(self.hn_w_mats_inv)[1])
+        self.e_ln_pi_vec = digamma(self.hn_alpha_vec) - digamma(self.hn_alpha_vec.sum())
+        
+        # tentative
+        self.ns = np.ones(self.num_classes) * 10
+        self.s_mats = np.tile(np.identity(self.degree),[self.num_classes,1,1]) * 5
+        self.r_vecs = np.ones([20,self.degree])/self.degree
+        self.x_bar_vecs = np.ones([self.num_classes,self.degree])
+
+        vl = 0.0
+
+        # E[ln p(X|Z,mu,Lambda)]
+        vl += np.sum(
+            self.ns
+            * (self.e_ln_lambda_dets - self.degree / self.hn_kappas
+               - (self.s_mats * self.e_lambda_mats).sum(axis=(1,2))
+               - ((self.x_bar_vecs - self.hn_m_vecs)[:,np.newaxis,:]
+                  @ self.e_lambda_mats
+                  @ (self.x_bar_vecs - self.hn_m_vecs)[:,:,np.newaxis]
+                  )[:,0,0]
+               - self.degree * np.log(2*np.pi)
+               )
+            ) / 2.0
+
+        # E[ln p(Z|pi)]
+        vl += (self.ns * self.e_ln_pi_vec).sum()
+
+        # E[ln p(pi)]
+        vl += self.LN_C_H0_ALPHA + ((self.h0_alpha_vec - 1) * self.e_ln_pi_vec).sum()
+
+        # E[ln p(mu,Lambda)]
+        vl += np.sum(
+            self.degree * (np.log(self.h0_kappas) - np.log(2*np.pi) - self.h0_kappas/self.hn_kappas)
+            - ((self.hn_m_vecs - self.h0_m_vecs)[:,np.newaxis,:]
+               @ self.e_lambda_mats
+               @ (self.hn_m_vecs - self.h0_m_vecs)[:,:,np.newaxis])[:,0,0]
+            + 2.0 * self.LN_B_H0_W_NUS
+            + (self.h0_nus - self.degree) / 2.0 * self.e_ln_lambda_dets
+            - np.sum(self.h0_w_mats_inv * self.hn_w_mats,axis=(1,2))
+            ) / 2.0
+
+        # E[ln q(Z|pi)]
+        vl -= np.sum(xlogy(self.r_vecs,self.r_vecs))
+
+        # E[ln q(pi)]
+        vl += ss_dirichlet.entropy(self.hn_alpha_vec)
+
+        # E[ln q(mu,Lambda)]
+        vl +=  np.sum(
+            + self.degree * (1.0 + np.log(2.0*np.pi) - np.log(self.hn_kappas))
+            - self.LN_B_H0_W_NUS * 2.0
+            - (self.hn_nus-self.degree)*self.e_ln_lambda_dets
+            + self.hn_nus * self.degree
+            ) / 2.0
+
+        return vl
 
     def update_posterior(self,x):
         pass
