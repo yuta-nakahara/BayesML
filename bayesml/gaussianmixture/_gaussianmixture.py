@@ -403,241 +403,294 @@ class GenModel(base.Generative):
         else:
             raise(ParameterFormatError("if degree > 2, it is impossible to visualize the model by this function."))
 
-# class LearnModel(base.Posterior,base.PredictiveMixin):
-#     """The posterior distribution and the predictive distribution.
+class LearnModel(base.Posterior,base.PredictiveMixin):
+    """The posterior distribution and the predictive distribution.
 
-#     Parameters
-#     ----------
-#     degree : int, optional
-#         a positive integer. Default is None, in which case 
-#         a value consistent with ``h_m_vec``, ``h_w_mat``, 
-#         and ``h_nu` is used. If all of them are not given, 
-#         degree is assumed to be 2.
-#     h0_m_vec : numpy.ndarray, optional
-#         a vector of real numbers, by default [0.0, 0.0, ... , 0.0]
-#     h0_kappa : float, optional
-#         a positive real number, by default 1.0
-#     h0_nu : float, optional
-#         a real number > degree-1, by default the value of ``degree``
-#     h0_w_mat : numpy.ndarray, optional
-#         a positive definite symetric matrix, by default the identity matrix
+    Parameters
+    ----------
+    num_classes : int
+        a positive integer. Default is None, in which case 
+        a value consistent with ``pi_vec``, ``mu_vecs``, 
+        ``lambda_mats``, and ``h_alpha_vec`` is used.
+        If all of them are not given, num_classes is assumed to be 2.
+    degree : int
+        a positive integer. Default is None, in which case 
+        a value consistent with ``mu_vecs``, ``lambda_mats``, 
+        ``h_m_vec``, ``h_w_mat``, and ``h_nu` is used. 
+        If all of them are not given, degree is assumed to be 1.
+    h0_alpha_vec : numpy.ndarray, optional
+        a vector of positive real numbers, by default [1/2, 1/2, ... , 1/2]
+    h0_m_vecs : numpy.ndarray, optional
+        a vector of real numbers, by default [0.0, 0.0, ... , 0.0]
+    h0_kappas : float or numpy.ndarray, optional
+        a positive real number, by default 1.0
+    h0_nus : float or numpy.ndarray, optional
+        a real number > degree-1, by default the value of ``degree``
+    h0_w_mats : numpy.ndarray, optional
+        a positive definite symetric matrix, by default the identity matrix
+    seed : {None, int}, optional
+        A seed to initialize numpy.random.default_rng(),
+        by default None
 
-#     Attributes
-#     ----------
-#     h0_w_mat_inv : numpy.ndarray
-#         the inverse matrix of h0_w_mat
-#     hn_m_vec : numpy.ndarray
-#         a vector of real numbers
-#     hn_kappa : float
-#         a positive real number
-#     hn_nu : float
-#         a real number
-#     hn_w_mat : numpy.ndarray
-#         a positive definite symetric matrix
-#     hn_w_mat_inv : numpy.ndarray
-#         the inverse matrix of hn_w_mat
-#     p_m_vec : numpy.ndarray
-#         a vector of real numbers
-#     p_nu : float, optional
-#         a positive real number
-#     p_v_mat : numpy.ndarray
-#         a positive definite symetric matrix
-#     p_v_mat_inv : numpy.ndarray
-#         the inverse matrix of p_v_mat
-#     """
-#     def __init__(self,degree=None,h0_m_vec=None,h0_kappa=1.0,h0_nu=None,h0_w_mat=None):
-#         if degree is not None:
-#             self.degree = _check.pos_int(degree,'degree',ParameterFormatError)
-#             if h0_m_vec is None:
-#                 self.h0_m_vec = np.zeros(self.degree)
-#             else:
-#                 self.h0_m_vec = _check.float_vec(h0_m_vec,'h0_m_vec',ParameterFormatError)
+    Attributes
+    ----------
+    h0_w_mats_inv : numpy.ndarray
+        the inverse matrix of h0_w_mat
+    hn_alpha_vec : numpy.ndarray
+        a vector of positive real numbers
+    hn_m_vecs : numpy.ndarray
+        vectors of real numbers
+    hn_kappas : numpy.ndarray
+        positive real numbers
+    hn_nus : numpy.ndarray
+        real numbers greater than degree-1
+    hn_w_mats : numpy.ndarray
+        positive definite symetric matrices
+    hn_w_mats_inv : numpy.ndarray
+        the inverse matrices of hn_w_mats
+    r_vecs : numpy.ndarray
+        vectors of real numbers. The sum of its elenemts is 1.
+    Ns : numpy.ndarray
+        positive real numbers
+    s_mats : numpy.ndarray
+        positive difinite symmetric matrices
+    p_mu_vecs : numpy.ndarray
+        vectors of real numbers
+    p_nus : numpy.ndarray
+        positive real numbers
+    p_lambda_mats : numpy.ndarray
+        positive definite symetric matrices
+    """
+    def __init__(
+            self,
+            *,
+            num_classes,
+            degree,
+            h0_alpha_vec = None,
+            h0_m_vecs = None,
+            h0_kappas = None,
+            h0_nus = None,
+            h0_w_mats = None,
+            seed = None
+            ):
+        # constants
+        self.degree = _check.pos_int(degree,'degree',ParameterFormatError)
+        self.num_classes = _check.pos_int(num_classes,'num_classes',ParameterFormatError)
+        self.rng = np.random.default_rng(seed)
 
-#             if h0_w_mat is None:
-#                 self.h0_w_mat = np.identity(self.degree)
-#             else:
-#                 self.h0_w_mat = _check.pos_def_sym_mat(h0_w_mat,'h0_w_mat',ParameterFormatError)
+        # h0_params
+        self.h0_alpha_vec = np.ones(self.num_classes) / 2        
+        self.h0_m_vecs = np.zeros([self.num_classes,self.degree])
+        self.h0_kappas = np.ones(self.num_classes)
+        self.h0_nus = np.ones(self.num_classes) * self.degree
+        self.h0_w_mats = np.tile(np.identity(self.degree),[self.num_classes,1,1])
+        self.h0_w_mats_inv = np.linalg.inv(self.h0_w_mats)
 
-#             if h0_nu is None:
-#                 self.h0_nu = float(self.degree)
-#             else:
-#                 self.h0_nu = _check.pos_float(h0_nu,'h0_nu',ParameterFormatError)
+        # hn_params
+        self.hn_alpha_vec = np.empty([self.num_classes])
+        self.hn_m_vecs = np.empty([self.num_classes,self.degree])
+        self.hn_kappas = np.empty([self.num_classes])
+        self.hn_nus = np.empty([self.num_classes])
+        self.hn_w_mats = np.empty([self.num_classes,self.degree,self.degree])
+        self.hn_w_mats_inv = np.empty([self.num_classes,self.degree,self.degree])
+
+        # p_params
+        self.p_pi_vec = np.empty([self.num_classes])
+        self.p_mu_vecs = np.empty([self.num_classes,self.degree])
+        self.p_nus = np.empty([self.num_classes])
+        self.p_lambda_mats = np.empty([self.num_classes,self.degree,self.degree])
+        self.p_lambda_mats_inv = np.empty([self.num_classes,self.degree,self.degree])
         
-#         elif h0_m_vec is not None:
-#             self.h0_m_vec = _check.float_vec(h0_m_vec,'h0_m_vec',ParameterFormatError)
-#             self.degree = self.h0_m_vec.shape[0]
-#             if h0_w_mat is None:
-#                 self.h0_w_mat = np.identity(self.degree)
-#             else:
-#                 self.h0_w_mat = _check.pos_def_sym_mat(h0_w_mat,'h0_w_mat',ParameterFormatError)
+        self.set_h0_params(
+            h0_alpha_vec,
+            h0_m_vecs,
+            h0_kappas,
+            h0_nus,
+            h0_w_mats,
+        )
 
-#             if h0_nu is None:
-#                 self.h0_nu = float(self.degree)
-#             else:
-#                 self.h0_nu = _check.pos_float(h0_nu,'h0_nu',ParameterFormatError)
+    def set_h0_params(
+            self,
+            h0_alpha_vec = None,
+            h0_m_vecs = None,
+            h0_kappas = None,
+            h0_nus = None,
+            h0_w_mats = None,
+            ):
+        """Set the hyperparameters of the prior distribution.
         
-#         elif h0_w_mat is not None:
-#             self.h0_w_mat = _check.pos_def_sym_mat(h0_w_mat,'h0_w_mat',ParameterFormatError)
-#             self.degree = self.h0_w_mat.shape[0]
-#             self.h0_m_vec = np.zeros(self.degree)
-#             if h0_nu is None:
-#                 self.h0_nu = float(self.degree)
-#             else:
-#                 self.h0_nu = _check.pos_float(h0_nu,'h0_nu',ParameterFormatError)
-        
-#         elif h0_nu is not None:
-#             self.h0_nu = _check.pos_float(h0_nu,'h0_nu',ParameterFormatError)
-#             if self.h0_nu <= 1.0:
-#                 self.degree = 1
-#             else:
-#                 self.degree = 2
-#             self.h0_m_vec = np.zeros(self.degree)
-#             self.h0_w_mat = np.identity(self.degree)
-        
-#         else:
-#             self.degree = 2
-#             self.h0_m_vec = np.zeros(self.degree)
-#             self.h0_w_mat = np.identity(self.degree)
-#             self.h0_nu = float(self.degree)
+        Parameters
+        ----------
+        h0_alpha_vec : numpy.ndarray
+            a vector of positive real numbers
+        h0_m_vecs : numpy.ndarray
+            vectors of real numbers
+        h0_kappas : float
+            positive real numbers
+        h0_nus : float
+            real numbers greater than degree-1
+        h0_w_mats : numpy.ndarray
+            positive definite symetric matrices
+        """
+        if h0_alpha_vec is not None:
+            _check.pos_floats(h0_alpha_vec,'h0_alpha_vec',ParameterFormatError)
+            self.h0_alpha_vec[:] = h0_alpha_vec
 
-#         if (self.degree != self.h0_m_vec.shape[0]
-#             or self.degree != self.h0_w_mat.shape[0]
-#             or self.h0_nu <= self.degree - 1):
-#                 raise(ParameterFormatError(
-#                     "degree and dimensions of"
-#                     +" h0_m_vec, h0_w_mat must be the same,"
-#                     +" and degree must be smaller than h0_nu + 1,"
-#                     +" if two or more of them are specified."))
+        if h0_m_vecs is not None:
+            _check.float_vecs(h0_m_vecs,'h0_m_vecs',ParameterFormatError)
+            if h0_m_vecs.shape[-1] != self.degree:
+                raise(ParameterFormatError(
+                    "h0_m_vecs.shape[-1] must coincide with self.degree:"
+                    +f"h0_m_vecs.shape[-1]={h0_m_vecs.shape[-1]}, self.degree={self.degree}"))
+            self.h0_m_vecs[:] = h0_m_vecs
 
-#         self.h0_kappa = _check.pos_float(h0_kappa,'h0_kappa',ParameterFormatError)
-#         self.h0_w_mat_inv = np.linalg.inv(self.h0_w_mat)
+        if h0_kappas is not None:
+            _check.pos_floats(h0_kappas,'h0_kappas',ParameterFormatError)
+            self.h0_kappas[:] = h0_kappas
 
-#         self.hn_m_vec = np.copy(self.h0_m_vec)
-#         self.hn_kappa = self.h0_kappa
-#         self.hn_nu = self.h0_nu
-#         self.hn_w_mat = np.copy(self.h0_w_mat)
-#         self.hn_w_mat_inv = np.copy(self.h0_w_mat_inv)
+        if h0_nus is not None:
+            _check.pos_floats(h0_nus,'h0_nus',ParameterFormatError)
+            if np.any(h0_nus <= self.degree - 1):
+                raise(ParameterFormatError(
+                    "degree must be smaller than h_nus + 1"))
+            self.h0_nus[:] = h0_nus
 
-#         self.p_m_vec = np.copy(self.hn_m_vec)
-#         self.p_nu = self.hn_nu - self.degree + 1
-#         self.p_v_mat = self.hn_kappa*self.p_nu/(self.hn_kappa+1) * self.hn_w_mat
-#         self.p_v_mat_inv = (self.hn_kappa+1)/self.hn_kappa/self.p_nu * self.hn_w_mat_inv
+        if h0_w_mats is not None:
+            _check.pos_def_sym_mats(h0_w_mats,'h0_w_mats',ParameterFormatError)
+            if h0_w_mats.shape[-1] != self.degree:
+                raise(ParameterFormatError(
+                    "h0_w_mats.shape[-1] and h0_w_mats.shape[-2] must coincide with self.degree:"
+                    +f"h0_w_mats.shape[-1]={h0_w_mats.shape[-1]}, h0_w_mats.shape[-2]={h0_w_mats.shape[-2]}, self.degree={self.degree}"))
+            self.h0_w_mats[:] = h0_w_mats
+            self.h0_w_mats_inv[:] = np.linalg.inv(self.h0_w_mats)
 
-#     def set_h0_params(self,h0_m_vec,h0_kappa,h0_nu,h0_w_mat):
-#         """Set the hyperparameters of the prior distribution.
-        
-#         Parameters
-#         ----------
-#         h0_m_vec : numpy.ndarray
-#             a vector of real numbers
-#         h0_kappa : float
-#             a positive real number
-#         h0_nu : float
-#             a real number > degree-1
-#         h0_w_mat : numpy.ndarray
-#             a positive definite symetric matrix
-#         """
-#         self.h0_m_vec = _check.float_vec(h0_m_vec,'h0_m_vec',ParameterFormatError)
-#         self.h0_kappa = _check.pos_float(h0_kappa,'h0_kappa',ParameterFormatError)
-#         self.h0_nu = _check.pos_float(h0_nu,'h0_nu',ParameterFormatError)
-#         self.h0_w_mat = _check.pos_def_sym_mat(h0_w_mat,'h0_w_mat',ParameterFormatError)
+        self.reset_hn_params()
 
-#         if (self.h0_m_vec.shape[0] != self.h0_w_mat.shape[0]
-#             or self.h0_nu <= self.h0_m_vec.shape[0] - 1):
-#                 raise(ParameterFormatError(
-#                     "They must be h0_m_vec.shape[0] == h0_w_mat.shape[0]"
-#                     +" and h0_nu > h0_m_vec.shape[0] - 1."))
+    def get_h0_params(self):
+        """Get the initial values of the hyperparameters of the posterior distribution.
 
-#         self.h0_w_mat_inv = np.linalg.inv(self.h0_w_mat)
-#         self.degree = self.h0_m_vec.shape[0]
-
-#         self.reset_hn_params()
-
-#     def get_h0_params(self):
-#         """Get the initial values of the hyperparameters of the posterior distribution.
-
-#         Returns
-#         -------
-#         h0_params : dict of {str: float, numpy.ndarray}
-#             * ``"h0_m_vec"`` : The value of ``self.h0_m_vec``
-#             * ``"h0_kappa"`` : The value of ``self.h0_kappa``
-#             * ``"h0_nu"`` : The value of ``self.h0_nu``
-#             * ``"h0_w_mat"`` : The value of ``self.h0_w_mat``
-#         """
-#         return {"h0_m_vec":self.h0_m_vec, "h0_kappa":self.h0_kappa, "h0_nu":self.h0_nu, "h0_w_mat":self.h0_w_mat}
+        Returns
+        -------
+        h0_params : dict of {str: numpy.ndarray}
+            * ``"h0_alpha_vec"`` : The value of ``self.h0_alpha_vec``
+            * ``"h0_m_vecs"`` : The value of ``self.h0_m_vecs``
+            * ``"h0_kappas"`` : The value of ``self.h0_kappas``
+            * ``"h0_nus"`` : The value of ``self.h0_nus``
+            * ``"h0_w_mats"`` : The value of ``self.h0_w_mats``
+        """
+        return {"h0_alpha_vec":self.h0_alpha_vec,
+                "h0_m_vecs":self.h0_m_vecs,
+                "h0_kappas":self.h0_kappas,
+                "h0_nus":self.h0_nus,
+                "h0_w_mat":self.h0_w_mats}
     
-#     def set_hn_params(self,hn_m_vec,hn_kappa,hn_nu,hn_w_mat):
-#         """Set updated values of the hyperparameter of the posterior distribution.
+    def set_hn_params(
+            self,
+            hn_alpha_vec = None,
+            hn_m_vecs = None,
+            hn_kappas = None,
+            hn_nus = None,
+            hn_w_mats = None,
+            ):
+        """Set updated values of the hyperparameter of the posterior distribution.
 
-#         Parameters
-#         ----------
-#         hn_m_vec : numpy.ndarray
-#             a vector of real numbers
-#         hn_kappa : float
-#             a positive real number
-#         hn_nu : float
-#             a real number > degree-1
-#         hn_w_mat : numpy.ndarray
-#             a positive definite symetric matrix
-#         """
-#         self.hn_m_vec = _check.float_vec(hn_m_vec,'hn_m_vec',ParameterFormatError)
-#         self.hn_kappa = _check.pos_float(hn_kappa,'hn_kappa',ParameterFormatError)
-#         self.hn_nu = _check.pos_float(hn_nu,'hn_nu',ParameterFormatError)
-#         self.hn_w_mat = _check.pos_def_sym_mat(hn_w_mat,'hn_w_mat',ParameterFormatError)
+        Parameters
+        ----------
+        hn_alpha_vec : numpy.ndarray
+            a vector of positive real numbers
+        hn_m_vecs : numpy.ndarray
+            vectors of real numbers
+        hn_kappas : float
+            positive real numbers
+        hn_nus : float
+            real numbers greater than degree-1
+        hn_w_mats : numpy.ndarray
+            positive definite symetric matrices
+        """
+        if hn_alpha_vec is not None:
+            _check.pos_floats(hn_alpha_vec,'hn_alpha_vec',ParameterFormatError)
+            self.hn_alpha_vec[:] = hn_alpha_vec
 
-#         if (self.hn_m_vec.shape[0] != self.hn_w_mat.shape[0]
-#             or self.hn_nu <= self.hn_m_vec.shape[0] - 1):
-#                 raise(ParameterFormatError(
-#                     "They must be hn_m_vec.shape[0] == hn_w_mat.shape[0]"
-#                     +" and hn_nu > hn_m_vec.shape[0] - 1."))
+        if hn_m_vecs is not None:
+            _check.float_vecs(hn_m_vecs,'hn_m_vecs',ParameterFormatError)
+            if hn_m_vecs.shape[-1] != self.degree:
+                raise(ParameterFormatError(
+                    "hn_m_vecs.shape[-1] must coincide with self.degree:"
+                    +f"hn_m_vecs.shape[-1]={hn_m_vecs.shape[-1]}, self.degree={self.degree}"))
+            self.hn_m_vecs[:] = hn_m_vecs
 
-#         self.hn_w_mat_inv = np.linalg.inv(self.hn_w_mat)
-#         self.degree = self.hn_m_vec.shape[0]
+        if hn_kappas is not None:
+            _check.pos_floats(hn_kappas,'hn_kappas',ParameterFormatError)
+            self.hn_kappas[:] = hn_kappas
 
-#         self.calc_pred_dist()
+        if hn_nus is not None:
+            _check.pos_floats(hn_nus,'hn_nus',ParameterFormatError)
+            if np.any(hn_nus <= self.degree - 1):
+                raise(ParameterFormatError(
+                    "degree must be smaller than h_nus + 1"))
+            self.hn_nus[:] = hn_nus
 
-#     def get_hn_params(self):
-#         """Get the hyperparameters of the posterior distribution.
+        if hn_w_mats is not None:
+            _check.pos_def_sym_mats(hn_w_mats,'hn_w_mats',ParameterFormatError)
+            if hn_w_mats.shape[-1] != self.degree:
+                raise(ParameterFormatError(
+                    "hn_w_mats.shape[-1] and hn_w_mats.shape[-2] must coincide with self.degree:"
+                    +f"hn_w_mats.shape[-1]={hn_w_mats.shape[-1]}, hn_w_mats.shape[-2]={hn_w_mats.shape[-2]}, self.degree={self.degree}"))
+            self.hn_w_mats[:] = hn_w_mats
+            self.hn_w_mats_inv[:] = np.linalg.inv(self.hn_w_mats)
 
-#         Returns
-#         -------
-#         hn_params : dict of {str: numpy.ndarray}
-#             * ``"hn_m_vec"`` : The value of ``self.hn_m_vec``
-#             * ``"hn_kappa"`` : The value of ``self.hn_kappa``
-#             * ``"hn_nu"`` : The value of ``self.hn_nu``
-#             * ``"hn_w_mat"`` : The value of ``self.hn_w_mat``
-#         """
-#         return {"hn_m_vec":self.hn_m_vec, "hn_kappa":self.hn_kappa, "hn_nu":self.hn_nu, "hn_w_mat":self.hn_w_mat}
+        self.calc_pred_dist()
+
+    def get_hn_params(self):
+        """Get the hyperparameters of the posterior distribution.
+
+        Returns
+        -------
+        hn_params : dict of {str: numpy.ndarray}
+            * ``"hn_alpha_vec"`` : The value of ``self.hn_alpha_vec``
+            * ``"hn_m_vecs"`` : The value of ``self.hn_m_vecs``
+            * ``"hn_kappas"`` : The value of ``self.hn_kappas``
+            * ``"hn_nus"`` : The value of ``self.hn_nus``
+            * ``"hn_w_mats"`` : The value of ``self.hn_w_mats``
+        """
+        return {"hn_alpha_vec":self.hn_alpha_vec,
+                "hn_m_vec":self.hn_m_vecs,
+                "hn_kappa":self.hn_kappas,
+                "hn_nu":self.hn_nus,
+                "hn_w_mat":self.hn_w_mats}
     
-#     def reset_hn_params(self):
-#         """Reset the hyperparameters of the posterior distribution to their initial values.
+    def reset_hn_params(self):
+        """Reset the hyperparameters of the posterior distribution to their initial values.
         
-#         They are reset to `self.h0_m_vec`, `self.h0_kappa`, `self.h0_nu` and `self.h0_w_hat`.
-#         Note that the parameters of the predictive distribution are also calculated from `self.h0_m_vec`, `self.h0_kappa`, `self.h0_nu` and `self.h0_w_hat`.
-#         """
-#         self.hn_m_vec = np.copy(self.h0_m_vec)
-#         self.hn_kappa = self.h0_kappa
-#         self.hn_nu = self.h0_nu
-#         self.hn_w_mat = np.copy(self.h0_w_mat)
-#         self.hn_w_mat_inv = np.copy(self.h0_w_mat_inv)
+        They are reset to `self.h0_alpha_vec`, `self.h0_m_vecs`, `self.h0_kappas`, `self.h0_nus` and `self.h0_w_mats`.
+        Note that the parameters of the predictive distribution are also calculated from them.
+        """
+        self.hn_alpha_vec[:] = self.h0_alpha_vec
+        self.hn_m_vecs[:] = self.h0_m_vecs
+        self.hn_kappas[:] = self.h0_kappas
+        self.hn_nus[:] = self.h0_nus
+        self.hn_w_mats[:] = self.h0_w_mats
+        self.hn_w_mats_inv = np.linalg.inv(self.hn_w_mats)
 
-#         self.calc_pred_dist()
+        self.calc_pred_dist()
     
-#     def overwrite_h0_params(self):
-#         """Overwrite the initial values of the hyperparameters of the posterior distribution by the learned values.
+    def overwrite_h0_params(self):
+        """Overwrite the initial values of the hyperparameters of the posterior distribution by the learned values.
         
-#         They are overwitten by `self.hn_m_vec`, `self.hn_kappa`, `self.hn_nu` and `self.hn_w_mat`.
-#         Note that the parameters of the predictive distribution are also calculated from `self.hn_m_vec`, `self.hn_kappa`, `self.hn_nu` and `self.hn_w_mat`.
-#         """
-#         self.h0_m_vec = np.copy(self.hn_m_vec)
-#         self.h0_kappa = self.hn_kappa
-#         self.h0_nu = self.hn_nu
-#         self.h0_w_mat = np.copy(self.hn_w_mat)
-#         self.h0_w_mat_inv = np.copy(self.hn_w_mat_inv)
+        They are overwitten by `self.hn_alpha_vec`, `self.hn_m_vecs`, `self.hn_kappas`, `self.hn_nus` and `self.hn_w_mats`.
+        Note that the parameters of the predictive distribution are also calculated from them.
+        """
+        self.h0_alpha_vec[:] = self.hn_alpha_vec
+        self.h0_m_vecs[:] = self.hn_m_vecs
+        self.h0_kappas[:] = self.hn_kappas
+        self.h0_nus[:] = self.hn_nus
+        self.h0_w_mats[:] = self.hn_w_mats
+        self.h0_w_mats_inv = np.linalg.inv(self.h0_w_mats)
 
-#         self.calc_pred_dist()
+        self.calc_pred_dist()
 
-#     def update_posterior(self,x):
+    def update_posterior(self,x):
+        pass
 #         """Update the hyperparameters of the posterior distribution using traning data.
 
 #         Parameters
@@ -662,7 +715,8 @@ class GenModel(base.Generative):
 
 #         self.hn_w_mat[:] = np.linalg.inv(self.hn_w_mat_inv) 
 
-#     def estimate_params(self,loss="squared"):
+    def estimate_params(self,loss="squared"):
+        pass
 #         """Estimate the parameter of the stochastic data generative model under the given criterion.
 
 #         Note that the criterion is applied to estimating ``mu_vec`` and ``lambda_mat`` independently.
@@ -706,7 +760,8 @@ class GenModel(base.Generative):
 #             raise(CriteriaError("Unsupported loss function! "
 #                                 +"This function supports \"squared\", \"0-1\", and \"KL\"."))
     
-#     def visualize_posterior(self):
+    def visualize_posterior(self):
+        pass
 #         """Visualize the posterior distribution for the parameter.
         
 #         Examples
@@ -784,58 +839,62 @@ class GenModel(base.Generative):
 
 #         else:
 #             raise(ParameterFormatError("if degree > 2, it is impossible to visualize the model by this function."))
-    
-#     def get_p_params(self):
-#         """Get the parameters of the predictive distribution.
+        
+    def get_p_params(self):
+        """Get the parameters of the predictive distribution.
 
-#         Returns
-#         -------
-#         p_params : dict of {str: numpy.ndarray}
-#             * ``"p_m_vec"`` : The value of ``self.p_m_vec``
-#             * ``"p_nu"`` : The value of ``self.p_nu``
-#             * ``"p_v_mat"`` : The value of ``self.p_v_mat``
-#         """
-#         return {"p_m_vec":self.p_m_vec, "p_nu":self.p_nu, "p_v_mat":self.p_v_mat}
-    
-#     def calc_pred_dist(self):
-#         """Calculate the parameters of the predictive distribution."""
-#         self.p_m_vec = np.copy(self.hn_m_vec)
-#         self.p_nu = self.hn_nu - self.degree + 1
-#         self.p_v_mat = self.hn_kappa*self.p_nu/(self.hn_kappa+1) * self.hn_w_mat
-#         self.p_v_mat_inv = (self.hn_kappa+1)/self.hn_kappa/self.p_nu * self.hn_w_mat_inv
+        Returns
+        -------
+        p_params : dict of {str: numpy.ndarray}
+            * ``"p_mu_vecs"`` : The value of ``self.p_mu_vecs``
+            * ``"p_nus"`` : The value of ``self.p_nus``
+            * ``"p_lambda_mats"`` : The value of ``self.p_lambda_mats``
+        """
+        return {"p_mu_vecs":self.p_mu_vecs, "p_nus":self.p_nus, "p_lambda_mats":self.p_lambda_mats}
 
-#     def make_prediction(self,loss="squared"):
-#         """Predict a new data point under the given criterion.
+    def calc_pred_dist(self):
+        """Calculate the parameters of the predictive distribution."""
+        self.p_pi_vec[:] = self.hn_alpha_vec / self.hn_alpha_vec.sum()
+        self.p_mu_vecs[:] = self.hn_m_vecs
+        self.p_nus[:] = self.hn_nus - self.degree + 1
+        self.p_lambda_mats[:] = (self.hn_kappas * self.p_nus / (self.hn_kappas + 1))[:,np.newaxis,np.newaxis] * self.hn_w_mats
+        self.p_lambda_mats_inv[:] = np.linalg.inv(self.p_lambda_mats)
 
-#         Parameters
-#         ----------
-#         loss : str, optional
-#             Loss function underlying the Bayes risk function, by default \"squared\".
-#             This function supports \"squared\", \"0-1\", and \"KL\".
+    def make_prediction(self,loss="squared"):
+        pass
+        # """Predict a new data point under the given criterion.
 
-#         Returns
-#         -------
-#         Predicted_value : {float, numpy.ndarray}
-#             The predicted value under the given loss function. 
-#             If the loss function is \"KL\", the posterior distribution itself will be returned
-#             as rv_frozen object of scipy.stats.
+        # Parameters
+        # ----------
+        # loss : str, optional
+        #     Loss function underlying the Bayes risk function, by default \"squared\".
+        #     This function supports \"squared\" and \"0-1\".
 
-#         See Also
-#         --------
-#         scipy.stats.rv_continuous
-#         scipy.stats.rv_discrete
-#         """
-#         if loss == "squared" or loss == "0-1":
-#             return self.p_m_vec
-#         elif loss == "KL":
-#             return ss_multivariate_t(loc=self.p_m_vec,
-#                                      shape=self.p_v_mat_inv,
-#                                      df=self.p_nu)
-#         else:
-#             raise(CriteriaError("Unsupported loss function! "
-#                                 +"This function supports \"squared\", \"0-1\", and \"KL\"."))
+        # Returns
+        # -------
+        # Predicted_value : {float, numpy.ndarray}
+        #     The predicted value under the given loss function. 
+        # """
+        # if loss == "squared":
+        #     return np.sum(self.p_pi_vec[:,np.newaxis] * self.p_mu_vecs, axis=0)
+        # elif loss == "0-1":
+        #     tmp_max = -1.0
+        #     tmp_argmax = np.empty([self.degree])
+        #     for k in range(self.num_classes):
+        #         val = ss_multivariate_t.pdf(x=self.p_mu_vecs[k],
+        #                                     loc=self.p_mu_vecs[k],
+        #                                     shape=self.p_lambda_mats_inv[k],
+        #                                     df=self.p_nus[k])
+        #         if val * self.p_pi_vec[k] > tmp_max:
+        #             tmp_argmax[:] = self.p_mu_vecs[k]
+        #             tmp_max = val * self.p_pi_vec[k]
+        #     return tmp_argmax
+        # else:
+        #     raise(CriteriaError("Unsupported loss function! "
+        #                         +"This function supports \"squared\", \"0-1\", and \"KL\"."))
 
-#     def pred_and_update(self,x,loss="squared"):
+    def pred_and_update(self,x,loss="squared"):
+        pass
 #         """Predict a new data point and update the posterior sequentially.
 
 #         Parameters
