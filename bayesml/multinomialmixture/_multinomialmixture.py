@@ -2,7 +2,6 @@
 # Yasushi Esaki <esakiful@gmail.com>
 
 import warnings
-import random
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -217,15 +216,14 @@ class GenModel(base.Generative):
         for k in range(self.num_classes):
             self.theta_vecs[k] = self.rng.dirichlet(self.h_beta_vec)
 
-    def gen_sample(self, sample_size, trials_limit=100):
+    def gen_sample(self, sample_size, num_trials=50):
         """Generate a sample from the stochastic data generative model.
         Parameters
         ----------
         sample_size : int
             A positive integer.
-        trials_limit : int, optional
-            A positive integer, by default 100.
-            The maximum value of the number of trials.
+        num_trials : int, optional
+            A positive integer, by default 50.
         Returns
         -------
         x : numpy.ndarray
@@ -235,17 +233,16 @@ class GenModel(base.Generative):
             2-dimensional array whose shape is ``(sample_size, num_classes)`` whose rows are one-hot vectors.
         """
         _check.pos_int(sample_size, 'sample_size', DataFormatError)
-        _check.pos_int(trials_limit, 'trials_limit', ValueError)
+        _check.pos_int(num_trials, 'num_trials', ValueError)
         z = np.zeros([sample_size, self.num_classes], dtype=int)
         x = np.empty([sample_size, self.degree])
         for i in range(sample_size):
             k = self.rng.choice(self.num_classes, p=self.pi_vec)
             z[i, k] = 1
-            num_trials = random.randint(1, trials_limit)
             x[i] = self.rng.multinomial(num_trials, pvals=self.theta_vecs[k])
         return x, z
 
-    def save_sample(self, filename, sample_size):
+    def save_sample(self, filename, sample_size, num_trials=50):
         """Save the generated sample as NumPy ``.npz`` format.
         It is saved as a NpzFile with keyword: \"x\", \"z\".
         Parameters
@@ -255,14 +252,16 @@ class GenModel(base.Generative):
             ``.npz`` will be appended if it isn't there.
         sample_size : int
             A positive integer.
+        num_trials : int, optional
+            A positive integer, by default 50.
         See Also
         --------
         numpy.savez_compressed
         """
-        x, z = self.gen_sample(sample_size)
+        x, z = self.gen_sample(sample_size, num_trials)
         np.savez_compressed(filename, x=x, z=z)
 
-    def visualize_model(self, save_path, sample_size=100, trials_limit=100):
+    def visualize_model(self, save_path, sample_size=100, num_trials=50):
         """Visualize the stochastic data generative model and generated samples.
 
         Parameters
@@ -271,9 +270,8 @@ class GenModel(base.Generative):
             The filename to which the figure is saved.
         sample_size : int, optional
             A positive integer, by default 100.
-        trials_limit : int, optional
-            A positive integer, by default 100.
-            The maximum value of the number of trials.
+        num_trials : int, optional
+            A positive integer, by default 50.
         Examples
         --------
         >>> from bayesml import multinomialmixture
@@ -292,18 +290,32 @@ class GenModel(base.Generative):
         .. image:: ./images/multinomialmixture_example.png
         """
         _check.pos_int(sample_size, 'sample_size', DataFormatError)
-        _check.pos_int(trials_limit, 'trials_limit', ValueError)
-        if self.degree == 3:
+        _check.pos_int(num_trials, 'num_trials', ValueError)
+        if self.degree == 2:
             print(f"pi_vec:\n {self.pi_vec}")
             print(f"theta_vecs:\n {self.theta_vecs}")
 
-            x, _ = self.gen_sample(sample_size, trials_limit)
-            num_trials_array = np.sum(x, axis=1, keepdims=True)
-            x /= num_trials_array
+            x, _ = self.gen_sample(sample_size, num_trials)
+            x /= np.sum(x, axis=1, keepdims=True)
 
-            fig, ax = plt.subplots()
-            img = ax.scatter(x[:, 0], x[:, 1], s=20, c=num_trials_array, cmap='Blues', label='samples')
-            fig.colorbar(img, label='The number of trials')
+            _, ax = plt.subplots()
+            n, _, _ = ax.hist(x[:, 0], bins=30, label='frequency of samples')
+            ax.vlines(self.theta_vecs[:, 0], ymin=0, ymax=n.max() * 1.2, colors='red', label='theta_vecs')
+            ax.set_xlabel('x[0]')
+            ax.set_ylabel('frequency')
+            ax.set_xlim(0.0, 1.0)
+            ax.set_ylim(0.0, n.max() * 1.2)
+            ax.legend()
+            plt.savefig(save_path)
+        elif self.degree == 3:
+            print(f"pi_vec:\n {self.pi_vec}")
+            print(f"theta_vecs:\n {self.theta_vecs}")
+
+            x, _ = self.gen_sample(sample_size, num_trials)
+            x /= np.sum(x, axis=1, keepdims=True)
+
+            _, ax = plt.subplots()
+            ax.scatter(x[:, 0], x[:, 1], s=20, label='samples')
             ax.scatter(self.theta_vecs[:, 0], self.theta_vecs[:, 1], s=20, c='red', label='theta_vecs')
             _x = np.linspace(0.0, 1.0, 1000)
             ax.fill_between(
@@ -312,12 +324,11 @@ class GenModel(base.Generative):
                 y2=1.0,
                 facecolor='gray',
             )
-            plt.xlabel('x[0]')
-            plt.ylabel('x[1]')
-            plt.xlim(0.0, 1.0)
-            plt.ylim(0.0, 1.0)
-            plt.legend()
+            ax.set_xlabel('x[0]')
+            ax.set_ylabel('x[1]')
+            ax.set_xlim(0.0, 1.0)
+            ax.set_ylim(0.0, 1.0)
+            ax.legend()
             plt.savefig(save_path)
         else:
-            raise (
-                ParameterFormatError("if degree is not 3, it is impossible to visualize the model by this function."))
+            raise (ParameterFormatError("if degree > 3, it is impossible to visualize the model by this function."))
