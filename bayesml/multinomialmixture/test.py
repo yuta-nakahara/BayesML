@@ -35,8 +35,8 @@ model = GenModel(c_num_classes=5,
                  h_alpha_vec=np.array([1.0] * 5),
                  h_beta_vec=np.array([1.0] * 4))
 
-#model.set_params(pi_vec=np.array([0.2, 0.2, 0.2, 0.4]),
-#                 theta_vecs=np.array([[0.25, 0.25, 0.5], [0.5, 0.25, 0.25], [0.5, 0.25, 0.25], [0.25, 0.5, 0.25]]))
+model.set_params(pi_vec=np.array([0.2, 0.2, 0.2, 0.4]),
+                 theta_vecs=np.array([[0.25, 0.25, 0.5], [0.5, 0.25, 0.25], [0.5, 0.25, 0.25], [0.25, 0.5, 0.25]]))
 
 print(model.get_params())
 print(model.get_h_params())

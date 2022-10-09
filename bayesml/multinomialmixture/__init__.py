@@ -65,6 +65,6 @@ where the updating rule of the hyperparameters is as follows:
 
 """
 
-from ._multinomialmixture import GenModel
+from ._multinomialmixture import GenModel, LearnModel
 
-__all__ = ["GenModel"]
+__all__ = ["GenModel", "LearnModel"]

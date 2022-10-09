@@ -448,3 +448,39 @@ class LearnModel(base.Posterior, base.PredictiveMixin):
 
         self.hn_alpha_vec[:] = self.h0_alpha_vec
         self.hn_beta_vecs[:] = self.h0_beta_vecs
+
+    def overwrite_h0_params(self):
+        return super().overwrite_h0_params()
+
+    def get_p_params(self):
+        return super().get_p_params()
+
+    def save_h0_params(self, filename):
+        return super().save_h0_params(filename)
+
+    def save_hn_params(self, filename):
+        return super().save_hn_params(filename)
+
+    def estimate_params(self):
+        return super().estimate_params()
+
+    def update_posterior(self):
+        return super().update_posterior()
+
+    def pred_and_update(self):
+        return super().pred_and_update()
+
+    def calc_pred_dist(self):
+        return super().calc_pred_dist()
+
+    def make_prediction(self):
+        return super().make_prediction()
+
+    def load_h0_params(self, filename):
+        return super().load_h0_params(filename)
+
+    def load_hn_params(self, filename):
+        return super().load_hn_params(filename)
+
+    def visualize_posterior(self):
+        return super().visualize_posterior()
