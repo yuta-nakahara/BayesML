@@ -26,8 +26,8 @@ class GenModel(base.Generative):
         The sum of each row must be 1.
     h_alpha_vec : numpy.ndarray, optional
         A vector of positive real numbers, by default [1/2, 1/2, ... , 1/2].
-    h_beta_vec : numpy.ndarray, optional
-        A vector of positive real numbers, by default [1/2, 1/2, ... , 1/2].
+    h_beta_vecs : numpy.ndarray, optional
+        positive real vectors, by default [[1/2, 1/2, ... , 1/2]]*K.
     seed : {None, int}, optional
         A seed to initialize numpy.random.default_rng(),
         by default None.
@@ -41,7 +41,7 @@ class GenModel(base.Generative):
         pi_vec=None,
         theta_vecs=None,
         h_alpha_vec=None,
-        h_beta_vec=None,
+        h_beta_vecs=None,
         seed=None,
     ):
 
@@ -56,19 +56,19 @@ class GenModel(base.Generative):
 
         # h_params
         self.h_alpha_vec = np.ones(self.c_num_classes) / 2.0
-        self.h_beta_vec = np.ones(self.c_degree) / 2.0
+        self.h_beta_vecs = np.ones([self.c_num_classes, self.c_degree]) / 2.0
 
         self.set_params(pi_vec, theta_vecs)
-        self.set_h_params(h_alpha_vec, h_beta_vec)
+        self.set_h_params(h_alpha_vec, h_beta_vecs)
 
-    def set_h_params(self, h_alpha_vec=None, h_beta_vec=None):
+    def set_h_params(self, h_alpha_vec=None, h_beta_vecs=None):
         """Set the hyperparameters of the prior distribution.
         Parameters
         ----------
         h_alpha_vec : numpy.ndarray, optional
             A vector of positive real numbers.
-        h_beta_vec : numpy.ndarray, optional
-            A vector of positive real numbers.
+        h_beta_vecs : numpy.ndarray, optional
+            positive real vectors.
         """
 
         if h_alpha_vec is not None:
@@ -77,23 +77,37 @@ class GenModel(base.Generative):
                 raise (ParameterFormatError(
                     "h_alpha_vec.shape[0] must coincide with c_num_classes: " +
                     f"h_alpha_vec.shape[0]={h_alpha_vec.shape[0]}, c_num_classes={self.c_num_classes}"))
-            self.h_alpha_vec = h_alpha_vec
+            self.h_alpha_vec[:] = h_alpha_vec
 
-        if h_beta_vec is not None:
-            _check.pos_floats(h_beta_vec, 'h_beta_vec', ParameterFormatError)
-            if h_beta_vec.shape[0] != self.c_degree:
-                raise (ParameterFormatError("h_beta_vec.shape[0] must coincide with c_degree: " +
-                                            f"h_beta_vec.shape[0]={h_beta_vec.shape[0]}, c_degree={self.c_degree}"))
-            self.h_beta_vec = h_beta_vec
+        if h_beta_vecs is not None:
+            _check.pos_floats(h_beta_vecs, 'h_beta_vecs', ParameterFormatError)
+            if h_beta_vecs.ndim == 1:
+                if h_beta_vecs.shape[0] != self.c_degree:
+                    raise (
+                        ParameterFormatError("h_beta_vecs.shape[0] must coincide with c_degree: " +
+                                             f"h_beta_vecs.shape[0]={h_beta_vecs.shape[0]}, c_degree={self.c_degree}"))
+            elif h_beta_vecs.ndim == 2:
+                if h_beta_vecs.shape[0] != self.c_num_classes:
+                    raise (ParameterFormatError(
+                        "h_beta_vecs.shape[0] must coincide with c_num_classes: " +
+                        f"h_beta_vecs.shape[0]={h_beta_vecs.shape[0]}, c_num_classes={self.c_num_classes}"))
+                elif h_beta_vecs.shape[1] != self.c_degree:
+                    raise (
+                        ParameterFormatError("h_beta_vecs.shape[1] must coincide with c_degree: " +
+                                             f"h_beta_vecs.shape[1]={h_beta_vecs.shape[1]}, c_degree={self.c_degree}"))
+            else:
+                raise ParameterFormatError("The number of dimensions of h_beta_vecs must be 1 or 2.")
+
+            self.h_beta_vecs[:] = h_beta_vecs
 
     def get_h_params(self):
         """Get the hyperparameters of the prior distribution.
         Returns
         -------
         h_params : dict of {str:numpy.ndarray}
-            ``{"h_alpha_vec": self.h_alpha_vec, "h_beta_vec": self.h_beta_vec}``
+            ``{"h_alpha_vec": self.h_alpha_vec, "h_beta_vec": self.h_beta_vecs}``
         """
-        return {"h_alpha_vec": self.h_alpha_vec, "h_beta_vec": self.h_beta_vec}
+        return {"h_alpha_vec": self.h_alpha_vec, "h_beta_vec": self.h_beta_vecs}
 
     def set_params(self, pi_vec=None, theta_vecs=None):
         """Set the parameter of the sthocastic data generative model.
@@ -112,19 +126,23 @@ class GenModel(base.Generative):
             if pi_vec.shape[0] != self.c_num_classes:
                 raise (ParameterFormatError("pi_vec.shape[0] must coincide with c_num_classes: " +
                                             f"pi_vec.shape[0]={pi_vec.shape[0]}, c_num_classes={self.c_num_classes}"))
-            self.pi_vec = pi_vec
+            self.pi_vec[:] = pi_vec
 
         if theta_vecs is not None:
             _check.float_vecs_sum_1(theta_vecs, 'theta_vecs', ParameterFormatError)
-            if theta_vecs.shape[0] != self.c_num_classes:
-                raise (ParameterFormatError(
-                    "theta_vecs.shape[0] must coincide with c_num_classes: " +
-                    f"theta_vecs.shape[0]={theta_vecs.shape[0]}, c_num_classes={self.c_num_classes}"))
-            elif theta_vecs.shape[1] != self.c_degree:
-                raise (ParameterFormatError("theta_vecs.shape[1] must coincide with c_degree: " +
-                                            f"theta_vecs.shape[1]={theta_vecs.shape[1]}, c_degree={self.c_degree}"))
+            if theta_vecs.ndim == 2:
+                if theta_vecs.shape[0] != self.c_num_classes:
+                    raise (ParameterFormatError(
+                        "theta_vecs.shape[0] must coincide with c_num_classes: " +
+                        f"theta_vecs.shape[0]={theta_vecs.shape[0]}, c_num_classes={self.c_num_classes}"))
+                elif theta_vecs.shape[1] != self.c_degree:
+                    raise (
+                        ParameterFormatError("theta_vecs.shape[1] must coincide with c_degree: " +
+                                             f"theta_vecs.shape[1]={theta_vecs.shape[1]}, c_degree={self.c_degree}"))
+            else:
+                raise ParameterFormatError("The number of dimensions of theta_vecs must be 2.")
 
-            self.theta_vecs = theta_vecs
+            self.theta_vecs[:] = theta_vecs
 
     def get_params(self):
         """Get the parameter of the sthocastic data generative model.
@@ -141,7 +159,7 @@ class GenModel(base.Generative):
         """
         self.pi_vec[:] = self.c_rng.dirichlet(self.h_alpha_vec)
         for k in range(self.c_num_classes):
-            self.theta_vecs[k] = self.c_rng.dirichlet(self.h_beta_vec)
+            self.theta_vecs[k] = self.c_rng.dirichlet(self.h_beta_vecs[k])
 
     def gen_sample(self, sample_size, num_trials=50):
         """Generate a sample from the stochastic data generative model.
@@ -272,8 +290,8 @@ class LearnModel(base.Posterior, base.PredictiveMixin):
         A positive integer.
     h0_alpha_vec : numpy.ndarray, optional
         A vector of positive real numbers, by default [1/2, 1/2, ... , 1/2].
-    h0_beta_vec : numpy.ndarray, optional
-        A vector of positive real numbers, by default [1/2, 1/2, ... , 1/2].
+    h0_beta_vecs : numpy.ndarray, optional
+        positive real vectors, by default [[1/2, 1/2, ... , 1/2]]*K.
     seed : {None, int}, optional
         A seed to initialize numpy.random.default_rng(), by default None.
 
@@ -281,8 +299,8 @@ class LearnModel(base.Posterior, base.PredictiveMixin):
     ----------
     hn_alpha_vec : numpy.ndarray
         A vector of positive real numbers.
-    hn_alpha_vec : numpy.ndarray
-        A vector of positive real numbers.
+    hn_beta_vecs : numpy.ndarray
+        positive real vectors.
     r_vecs : numpy.ndarray
         vectors of real numbers. The sum of its elenemts is 1.
     ns : numpy.ndarray
@@ -295,7 +313,7 @@ class LearnModel(base.Posterior, base.PredictiveMixin):
         real vectors in :math:`[0, 1]^{K \times d}`.
     """
 
-    def __init__(self, *, c_num_classes, c_degree, h0_alpha_vec=None, h0_beta_vec=None, seed=None):
+    def __init__(self, *, c_num_classes, c_degree, h0_alpha_vec=None, h0_beta_vecs=None, seed=None):
 
         # constants
         self.c_degree = _check.pos_int(c_degree, 'c_degree', ParameterFormatError)
@@ -303,15 +321,15 @@ class LearnModel(base.Posterior, base.PredictiveMixin):
         self.c_rng = np.random.default_rng(seed)
 
         # h0_params
-        self.h0_alpha_vec = np.ones(self.c_num_classes) / 2.0
-        self.h0_beta_vec = np.ones(self.c_degree) / 2.0
+        self.h0_alpha_vec = np.ones([self.c_num_classes]) / 2.0
+        self.h0_beta_vecs = np.ones([self.c_num_classes, self.c_degree]) / 2.0
 
         self.LN_C_H0_ALPHA = None
         self.LN_C_H0_BETA = None
 
         # hn_params
         self.hn_alpha_vec = np.empty([self.c_num_classes])
-        self.hn_beta_vec = np.empty([self.c_degree])
+        self.hn_beta_vecs = np.empty([self.c_num_classes, self.c_degree])
 
         self.r_vecs = None
         self.ns = np.empty([self.c_num_classes])
@@ -320,36 +338,50 @@ class LearnModel(base.Posterior, base.PredictiveMixin):
         self.p_pi_vec = np.empty([self.c_num_classes])
         self.p_theta_vecs = np.empty([self.c_num_classes, self.c_degree])
 
-        self.set_h0_params(h0_alpha_vec, h0_beta_vec)
+        self.set_h0_params(h0_alpha_vec, h0_beta_vecs)
 
-    def set_h0_params(self, h0_alpha_vec=None, h0_beta_vec=None):
+    def set_h0_params(self, h0_alpha_vec=None, h0_beta_vecs=None):
         """Set the hyperparameters of the prior distribution.
 
         Parameters
         ----------
         h0_alpha_vec : numpy.ndarra, optional
             A vector of positive real numbers.
-        h0_beta_vec : numpy.ndarray, optional
-            A vector of positive real numbers.
+        h0_beta_vecs : numpy.ndarray, optional
+            positive real vectors.
         """
 
         if h0_alpha_vec is not None:
-            _check.pos_float_vec(h0_alpha_vec, 'h0_alpha_vec', ParameterFormatError)
+            _check.pos_floats(h0_alpha_vec, 'h0_alpha_vec', ParameterFormatError)
             if h0_alpha_vec.shape[0] != self.c_num_classes:
                 raise (ParameterFormatError(
                     "h0_alpha_vec.shape[0] must coincide with c_num_classes: " +
                     f"h0_alpha_vec.shape[0]={h0_alpha_vec.shape[0]}, c_num_classes={self.c_num_classes}"))
             self.h0_alpha_vec[:] = h0_alpha_vec
 
-        if h0_beta_vec is not None:
-            _check.pos_float_vec(h0_beta_vec, 'h0_beta_vec', ParameterFormatError)
-            if h0_beta_vec.shape[0] != self.c_degree:
-                raise (ParameterFormatError("h0_beta_vec.shape[0] must coincide with c_degree: " +
-                                            f"h0_beta_vec.shape[0]={h0_beta_vec.shape[0]}, c_degree={self.c_degree}"))
-            self.h0_beta_vec[:] = h0_beta_vec
+        if h0_beta_vecs is not None:
+            _check.pos_floats(h0_beta_vecs, 'h0_beta_vecs', ParameterFormatError)
+            if h0_beta_vecs.ndim == 1:
+                if h0_beta_vecs.shape[0] != self.c_degree:
+                    raise (ParameterFormatError(
+                        "h0_beta_vecs.shape[0] must coincide with c_degree: " +
+                        f"h0_beta_vecs.shape[0]={h0_beta_vecs.shape[0]}, c_degree={self.c_degree}"))
+            elif h0_beta_vecs.ndim == 2:
+                if h0_beta_vecs.shape[0] != self.c_num_classes:
+                    raise (ParameterFormatError(
+                        "h0_beta_vecs.shape[0] must coincide with c_num_classes: " +
+                        f"h0_beta_vecs.shape[0]={h0_beta_vecs.shape[0]}, c_num_classes={self.c_num_classes}"))
+                elif h0_beta_vecs.shape[1] != self.c_degree:
+                    raise (ParameterFormatError(
+                        "h0_beta_vecs.shape[1] must coincide with c_degree: " +
+                        f"h0_beta_vecs.shape[1]={h0_beta_vecs.shape[1]}, c_degree={self.c_degree}"))
+            else:
+                raise ParameterFormatError("The number of dimensions of h0_beta_vecs must be 1 or 2.")
+
+            self.h0_beta_vecs[:] = h0_beta_vecs
 
         self.LN_C_H0_ALPHA = gammaln(self.h0_alpha_vec.sum()) - gammaln(self.h0_alpha_vec).sum()
-        self.LN_C_H0_BETA = gammaln(self.h0_beta_vec.sum()) - gammaln(self.h0_beta_vec).sum()
+        self.LN_C_H0_BETA = gammaln(self.h0_beta_vecs.sum(axis=1)) - gammaln(self.h0_beta_vecs).sum(axis=1)
 
         self.reset_hn_params()
 
@@ -359,34 +391,43 @@ class LearnModel(base.Posterior, base.PredictiveMixin):
         -------
         h0_params : dict of {str: numpy.ndarray}
             * ``"h0_alpha_vec"`` : The value of ``self.h0_alpha_vec``
-            * ``"h0_beta_vec"`` : The value of ``self.h0_beta_vec``
+            * ``"h0_beta_vecs"`` : The value of ``self.h0_beta_vecs``
         """
-        return {"h0_alpha_vec": self.h0_alpha_vec, "h0_beta_vec": self.h0_beta_vec}
+        return {"h0_alpha_vec": self.h0_alpha_vec, "h0_beta_vecs": self.h0_beta_vecs}
 
-    def set_hn_params(self, hn_alpha_vec=None, hn_beta_vec=None):
+    def set_hn_params(self, hn_alpha_vec=None, hn_beta_vecs=None):
         """Set updated values of the hyperparameter of the posterior distribution.
         Parameters
         ----------
         hn_alpha_vec : numpy.ndarray, optional
             A vector of positive real numbers.
-        hn_beta_vec : numpy.ndarray, optional
-            A vector of positive real numbers.
+        hn_beta_vecs : numpy.ndarray, optional
+            positive real vectors.
         """
 
         if hn_alpha_vec is not None:
-            _check.pos_float_vec(hn_alpha_vec, 'hn_alpha_vec', ParameterFormatError)
+            _check.pos_floats(hn_alpha_vec, 'hn_alpha_vec', ParameterFormatError)
             if hn_alpha_vec.shape[0] != self.c_num_classes:
                 raise (ParameterFormatError(
                     "hn_alpha_vec.shape[0] must coincide with c_num_classes: " +
                     f"hn_alpha_vec.shape[0]={hn_alpha_vec.shape[0]}, c_num_classes={self.c_num_classes}"))
             self.hn_alpha_vec[:] = hn_alpha_vec
 
-        if hn_beta_vec is not None:
-            _check.pos_float_vec(hn_beta_vec, 'hn_beta_vec', ParameterFormatError)
-            if hn_beta_vec.shape[0] != self.c_degree:
-                raise (ParameterFormatError("hn_beta_vec.shape[0] must coincide with c_degree: " +
-                                            f"hn_beta_vec.shape[0]={hn_beta_vec.shape[0]}, c_degree={self.c_degree}"))
-            self.hn_beta_vec[:] = hn_beta_vec
+        if hn_beta_vecs is not None:
+            _check.pos_floats(hn_beta_vecs, 'hn_beta_vecs', ParameterFormatError)
+            if hn_beta_vecs.ndim == 2:
+                if hn_beta_vecs.shape[0] != self.c_num_classes:
+                    raise (ParameterFormatError(
+                        "hn_beta_vecs.shape[0] must coincide with c_num_classes: " +
+                        f"hn_beta_vecs.shape[0]={hn_beta_vecs.shape[0]}, c_degree={self.c_num_classes}"))
+                elif hn_beta_vecs.shape[1] != self.c_degree:
+                    raise (ParameterFormatError(
+                        "hn_beta_vecs.shape[1] must coincide with c_degree: " +
+                        f"hn_beta_vecs.shape[1]={hn_beta_vecs.shape[1]}, c_degree={self.c_degree}"))
+            else:
+                raise ParameterFormatError("The number of dimensions of hn_beta_vecs must be 2.")
+
+            self.hn_beta_vecs[:] = hn_beta_vecs
 
     def get_hn_params(self):
         """Get the hyperparameters of the posterior distribution.
@@ -396,14 +437,14 @@ class LearnModel(base.Posterior, base.PredictiveMixin):
             * ``"hn_alpha_vec"`` : The value of ``self.hn_alpha_vec``
             * ``"hn_beta_vecs"`` : The value of ``self.hn_beta_vecs``
         """
-        return {"hn_alpha_vec": self.hn_alpha_vec, "hn_beta_vec": self.hn_beta_vec}
+        return {"hn_alpha_vec": self.hn_alpha_vec, "hn_beta_vecs": self.hn_beta_vecs}
 
     def reset_hn_params(self):
         """Reset the hyperparameters of the posterior distribution to their initial values.
 
-        They are reset to `self.h0_alpha_vec`, and `self.h0_beta_vec`.
+        They are reset to `self.h0_alpha_vec`, and `self.h0_beta_vecs`.
         Note that the parameters of the predictive distribution are also calculated from them.
         """
 
         self.hn_alpha_vec[:] = self.h0_alpha_vec
-        self.hn_beta_vec[:] = self.h0_beta_vec
+        self.hn_beta_vecs[:] = self.h0_beta_vecs
