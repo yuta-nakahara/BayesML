@@ -1104,59 +1104,61 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self.p_lambda_mats_inv[:] = np.linalg.inv(self.p_lambda_mats)
 
     def make_prediction(self,loss="squared"):
-        pass
-        # """Predict a new data point under the given criterion.
+        """Predict a new data point under the given criterion.
 
-        # Parameters
-        # ----------
-        # loss : str, optional
-        #     Loss function underlying the Bayes risk function, by default \"squared\".
-        #     This function supports \"squared\" and \"0-1\".
+        Parameters
+        ----------
+        loss : str, optional
+            Loss function underlying the Bayes risk function, by default \"squared\".
+            This function supports \"squared\" and \"0-1\".
 
-        # Returns
-        # -------
-        # Predicted_value : {float, numpy.ndarray}
-        #     The predicted value under the given loss function. 
-        # """
-        # if loss == "squared":
-        #     return np.sum(self.p_pi_vec[:,np.newaxis] * self.p_mu_vecs, axis=0)
-        # elif loss == "0-1":
-        #     tmp_max = -1.0
-        #     tmp_argmax = np.empty([self.degree])
-        #     for k in range(self.num_classes):
-        #         val = ss_multivariate_t.pdf(x=self.p_mu_vecs[k],
-        #                                     loc=self.p_mu_vecs[k],
-        #                                     shape=self.p_lambda_mats_inv[k],
-        #                                     df=self.p_nus[k])
-        #         if val * self.p_pi_vec[k] > tmp_max:
-        #             tmp_argmax[:] = self.p_mu_vecs[k]
-        #             tmp_max = val * self.p_pi_vec[k]
-        #     return tmp_argmax
-        # else:
-        #     raise(CriteriaError("Unsupported loss function! "
-        #                         +"This function supports \"squared\", \"0-1\", and \"KL\"."))
+        Returns
+        -------
+        Predicted_value : {float, numpy.ndarray}
+            The predicted value under the given loss function. 
+        """
+        if loss == "squared":
+            return np.sum(self.p_pi_vec[:,np.newaxis] * self.p_mu_vecs, axis=0)
+        elif loss == "0-1":
+            tmp_max = -1.0
+            tmp_argmax = np.empty([self.degree])
+            for k in range(self.num_classes):
+                val = ss_multivariate_t.pdf(x=self.p_mu_vecs[k],
+                                            loc=self.p_mu_vecs[k],
+                                            shape=self.p_lambda_mats_inv[k],
+                                            df=self.p_nus[k])
+                if val * self.p_pi_vec[k] > tmp_max:
+                    tmp_argmax[:] = self.p_mu_vecs[k]
+                    tmp_max = val * self.p_pi_vec[k]
+            return tmp_argmax
+        else:
+            raise(CriteriaError(f"loss={loss} is unsupported. "
+                                +"This function supports \"squared\" and \"0-1\"."))
 
     def pred_and_update(self,x,loss="squared"):
-        pass
-#         """Predict a new data point and update the posterior sequentially.
+        """Predict a new data point and update the posterior sequentially.
 
-#         Parameters
-#         ----------
-#         x : numpy.ndarray
-#             It must be a degree-dimensional vector
-#         loss : str, optional
-#             Loss function underlying the Bayes risk function, by default \"squared\".
-#             This function supports \"squared\", \"0-1\", and \"KL\".
+        h0_params will be overwritten by current hn_params 
+        before updating hn_params by x
+        
+        Parameters
+        ----------
+        x : numpy.ndarray
+            It must be a `degree`-dimensional vector
+        loss : str, optional
+            Loss function underlying the Bayes risk function, by default \"squared\".
+            This function supports \"squared\" and \"0-1\".
 
-#         Returns
-#         -------
-#         Predicted_value : {float, numpy.ndarray}
-#             The predicted value under the given loss function. 
-#         """
-#         _check.float_vec(x,'x',DataFormatError)
-#         if x.shape != (self.degree,):
-#             raise(DataFormatError(f"x must be a 1-dimensional float array whose size is degree: {self.degree}."))
-#         self.calc_pred_dist()
-#         prediction = self.make_prediction(loss=loss)
-#         self.update_posterior(x[np.newaxis,:])
-#         return prediction
+        Returns
+        -------
+        Predicted_value : {float, numpy.ndarray}
+            The predicted value under the given loss function. 
+        """
+        _check.float_vec(x,'x',DataFormatError)
+        if x.shape != (self.degree,):
+            raise(DataFormatError(f"x must be a 1-dimensional float array whose size is degree: {self.degree}."))
+        self.calc_pred_dist()
+        prediction = self.make_prediction(loss=loss)
+        self.overwrite_h0_params()
+        self.update_posterior(x[np.newaxis,:])
+        return prediction
