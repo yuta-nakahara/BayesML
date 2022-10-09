@@ -105,7 +105,7 @@ class GenModel(base.Generative):
                 self.mu_vecs = np.broadcast_to(np.reshape(self.mu_vecs, (self.c_degree, 1)), (self.c_degree, self.c_num_classes))
         if lambda_mats is not None:
             message = ""
-            if lambda_mats.shape[:2] != (self.c_degree, self.c_degree)
+            if lambda_mats.shape[:2] != (self.c_degree, self.c_degree):
                 message += "lambda_mats.shape[:2] must coincide with (self.c_degree, self.c_degree):"
                 +f"lambda_mats.shape[:2]={lambda_mats.shape[:2]}, (self.c_degree, self.c_degree)={(self.c_degree, self.c_degree)}"
             if len(lambda_mats) == 3:
