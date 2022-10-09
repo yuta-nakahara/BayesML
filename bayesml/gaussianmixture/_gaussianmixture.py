@@ -482,8 +482,8 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self.h0_w_mats = np.tile(np.identity(self.degree),[self.num_classes,1,1])
         self.h0_w_mats_inv = np.linalg.inv(self.h0_w_mats)
 
-        self._LN_C_H0_ALPHA = 0.0
-        self._LN_B_H0_W_NUS = np.empty(self.num_classes)
+        self._ln_c_h0_alpha = 0.0
+        self._ln_b_h0_w_nus = np.empty(self.num_classes)
         
         # hn_params
         self.hn_alpha_vec = np.empty([self.num_classes])
@@ -585,15 +585,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             self.h0_w_mats[:] = h0_w_mats
             self.h0_w_mats_inv[:] = np.linalg.inv(self.h0_w_mats)
 
-        self._LN_C_H0_ALPHA = gammaln(self.h0_alpha_vec.sum()) - gammaln(self.h0_alpha_vec).sum()
-        self._LN_B_H0_W_NUS = (
-            - self.h0_nus*np.linalg.slogdet(self.h0_w_mats)[1]
-            - self.h0_nus*self.degree*np.log(2.0)
-            - self.degree*(self.degree-1)/2.0*np.log(np.pi)
-            - np.sum(gammaln((self.h0_nus[:,np.newaxis]-np.arange(self.degree)) / 2.0),
-                     axis=1) * 2.0
-            ) / 2.0
-
+        self.calc_prior_char()
         self.reset_hn_params()
 
     def get_h0_params(self):
@@ -669,6 +661,9 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             self.hn_w_mats[:] = hn_w_mats
             self.hn_w_mats_inv[:] = np.linalg.inv(self.hn_w_mats)
 
+        self._calc_q_pi_char()
+        self._calc_q_lambda_char()
+
         self.calc_pred_dist()
 
     def get_hn_params(self):
@@ -707,6 +702,16 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
 
         self.calc_pred_dist()
     
+    def calc_prior_char(self):
+        self._ln_c_h0_alpha = gammaln(self.h0_alpha_vec.sum()) - gammaln(self.h0_alpha_vec).sum()
+        self._ln_b_h0_w_nus = (
+            - self.h0_nus*np.linalg.slogdet(self.h0_w_mats)[1]
+            - self.h0_nus*self.degree*np.log(2.0)
+            - self.degree*(self.degree-1)/2.0*np.log(np.pi)
+            - np.sum(gammaln((self.h0_nus[:,np.newaxis]-np.arange(self.degree)) / 2.0),
+                     axis=1) * 2.0
+            ) / 2.0
+
     def overwrite_h0_params(self):
         """Overwrite the initial values of the hyperparameters of the posterior distribution by the learned values.
         
@@ -720,7 +725,8 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self.h0_w_mats[:] = self.hn_w_mats
         self.h0_w_mats_inv = np.linalg.inv(self.h0_w_mats)
 
-        self.calc_pred_dist()
+        self.calc_prior_char()
+        self.reset_hn_params()
 
     def calc_vl(self):
         # E[ln p(X|Z,mu,Lambda)]
@@ -740,7 +746,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self._vl_p_z = (self.ns * self._e_ln_pi_vec).sum()
 
         # E[ln p(pi)]
-        self._vl_p_pi = self._LN_C_H0_ALPHA + ((self.h0_alpha_vec - 1) * self._e_ln_pi_vec).sum()
+        self._vl_p_pi = self._ln_c_h0_alpha + ((self.h0_alpha_vec - 1) * self._e_ln_pi_vec).sum()
 
         # E[ln p(mu,Lambda)]
         self._vl_p_mu_lambda = np.sum(
@@ -749,7 +755,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             - self.h0_kappas * ((self.hn_m_vecs - self.h0_m_vecs)[:,np.newaxis,:]
                                 @ self._e_lambda_mats
                                 @ (self.hn_m_vecs - self.h0_m_vecs)[:,:,np.newaxis])[:,0,0]
-            + 2.0 * self._LN_B_H0_W_NUS
+            + 2.0 * self._ln_b_h0_w_nus
             + (self.h0_nus - self.degree) * self._e_ln_lambda_dets
             - np.sum(self.h0_w_mats_inv * self._e_lambda_mats,axis=(1,2))
             ) / 2.0
@@ -838,7 +844,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self._calc_n_x_bar_s(x)
 
     def _init_subsampling(self,x):
-        _size = int(np.sqrt(x.shape[0])) + 1
+        _size = int(np.sqrt(x.shape[0]))
         for k in range(self.num_classes):
             _subsample = self.rng.choice(x,size=_size,replace=False,axis=0,shuffle=False)
             self.hn_m_vecs[k] = _subsample.sum(axis=0) / _size
@@ -850,7 +856,14 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self._calc_q_pi_char()
         self._calc_q_lambda_char()
 
-    def update_posterior(self,x,max_itr=100,num_init=10,tolerance=1.0E-8,init_type='subsampling'):
+    def update_posterior(
+            self,
+            x,
+            max_itr=100,
+            num_init=10,
+            tolerance=1.0E-8,
+            init_type='subsampling'
+            ):
         """Update the hyperparameters of the posterior distribution using traning data.
 
         Parameters
@@ -863,9 +876,14 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             number of initializations, by default 10
         tolerance : float, optional
             convergence croterion of variational lower bound, by default 1.0E-8
+        init_type : str, optional
+            type of initialization, by default 'subsampling'
+            * 'subsampling': for each latent class, extract a subsample whose size is int(np.sqrt(x.shape[0])).
+              and use its mean and covariance matrix as an initial values of hn_m_vecs and hn_lambda_mats.
+            * 'random_responsibility': randomly assign responsibility to r_vecs
         """
         _check.float_vecs(x,'x',DataFormatError)
-        if self.degree > 1 and x.shape[-1] != self.degree:
+        if x.shape[-1] != self.degree:
             raise(DataFormatError(
                 "x.shape[-1] must be self.degree: "
                 + f"x.shape[-1]={x.shape[-1]}, self.degree={self.degree}"))
@@ -929,7 +947,6 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self._calc_q_pi_char()
         self._calc_q_lambda_char()
         self._update_q_z(x)
-
 
     def estimate_params(self,loss="squared"):
         """Estimate the parameter of the stochastic data generative model under the given criterion.
@@ -1135,7 +1152,15 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             raise(CriteriaError(f"loss={loss} is unsupported. "
                                 +"This function supports \"squared\" and \"0-1\"."))
 
-    def pred_and_update(self,x,loss="squared"):
+    def pred_and_update(
+            self,
+            x,
+            loss="squared",
+            max_itr=100,
+            num_init=10,
+            tolerance=1.0E-8,
+            init_type='random_responsibility'
+            ):
         """Predict a new data point and update the posterior sequentially.
 
         h0_params will be overwritten by current hn_params 
@@ -1148,6 +1173,17 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         loss : str, optional
             Loss function underlying the Bayes risk function, by default \"squared\".
             This function supports \"squared\" and \"0-1\".
+        max_itr : int, optional
+            maximum number of iterations, by default 100
+        num_init : int, optional
+            number of initializations, by default 10
+        tolerance : float, optional
+            convergence croterion of variational lower bound, by default 1.0E-8
+        init_type : str, optional
+            type of initialization, by default 'random_responsibility'
+            * 'random_responsibility': randomly assign responsibility to r_vecs
+            * 'subsampling': for each latent class, extract a subsample whose size is int(np.sqrt(x.shape[0])).
+              and use its mean and covariance matrix as an initial values of hn_m_vecs and hn_lambda_mats.
 
         Returns
         -------
@@ -1160,5 +1196,98 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self.calc_pred_dist()
         prediction = self.make_prediction(loss=loss)
         self.overwrite_h0_params()
-        self.update_posterior(x[np.newaxis,:])
+        self.update_posterior(
+            x[np.newaxis,:],
+            max_itr=max_itr,
+            num_init=num_init,
+            tolerance=tolerance,
+            init_type=init_type
+            )
         return prediction
+
+    def estimate_latent_vars(self,x,loss="0-1"):
+        """Estimate latent variables corresponding to `x` under the given criterion.
+
+        Note that the criterion is independently applied to each data point.
+
+        Parameters
+        ----------
+        loss : str, optional
+            Loss function underlying the Bayes risk function, by default \"0-1\".
+            This function supports \"squared\", \"0-1\", and \"KL\".
+
+        Returns
+        -------
+        Estimates : numpy.ndarray
+            The estimated values under the given loss function. 
+            If the loss function is \"KL\", the posterior distribution will be returned 
+            as a numpy.ndarray whose elements consist of occurence probabilities.
+        """
+        _check.float_vecs(x,'x',DataFormatError)
+        if x.shape[-1] != self.degree:
+            raise(DataFormatError(
+                "x.shape[-1] must be self.degree: "
+                + f"x.shape[-1]={x.shape[-1]}, self.degree={self.degree}"))
+        x = x.reshape(-1,self.degree)
+        self._ln_rho = np.empty([x.shape[0],self.num_classes])
+        self.r_vecs = np.empty([x.shape[0],self.num_classes])
+        self._update_q_z(x)
+
+        if loss == "squared":
+            return self.r_vecs
+        elif loss == "0-1":
+            return np.identity(self.num_classes,dtype=int)[np.argmax(self.r_vecs,axis=1)]
+        elif loss == "KL":
+            return self.r_vecs
+        else:
+            raise(CriteriaError(f"loss={loss} is unsupported. "
+                                +"This function supports \"squared\", \"0-1\", and \"KL\"."))
+
+    def estimate_latent_vars_and_update(
+            self,
+            x,
+            loss="0-1",
+            max_itr=100,
+            num_init=10,
+            tolerance=1.0E-8,
+            init_type='subsampling'
+            ):
+        """Estimate latent variables and update the posterior sequentially.
+
+        h0_params will be overwritten by current hn_params 
+        before updating hn_params by x
+        
+        Parameters
+        ----------
+        x : numpy.ndarray
+            It must be a `degree`-dimensional vector
+        loss : str, optional
+            Loss function underlying the Bayes risk function, by default \"0-1\".
+            This function supports \"squared\" and \"0-1\".
+        max_itr : int, optional
+            maximum number of iterations, by default 100
+        num_init : int, optional
+            number of initializations, by default 10
+        tolerance : float, optional
+            convergence croterion of variational lower bound, by default 1.0E-8
+        init_type : str, optional
+            type of initialization, by default 'subsampling'
+            * 'subsampling': for each latent class, extract a subsample whose size is int(np.sqrt(x.shape[0])).
+              and use its mean and covariance matrix as an initial values of hn_m_vecs and hn_lambda_mats.
+            * 'random_responsibility': randomly assign responsibility to r_vecs
+
+        Returns
+        -------
+        Predicted_value : numpy.ndarray
+            The estimated values under the given loss function. 
+        """
+        z_hat = self.estimate_latent_vars(x,loss=loss)
+        self.overwrite_h0_params()
+        self.update_posterior(
+            x,
+            max_itr=max_itr,
+            num_init=num_init,
+            tolerance=tolerance,
+            init_type=init_type
+            )
+        return z_hat

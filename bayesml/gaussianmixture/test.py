@@ -3,20 +3,17 @@ import numpy as np
 from matplotlib import pyplot as plt
 from time import time
 
-# gen_model = gaussianmixture.GenModel(
-#     num_classes=2,
-#     degree=1,
-#     mu_vecs=np.array([[-2],[2]]),
-#     )
-# gen_model.save_sample('GMM_sample',sample_size=1000)
+gen_model = gaussianmixture.GenModel(
+    num_classes=2,
+    degree=2,
+    mu_vecs=np.array([[-2,-2],[2,2]]),
+    )
+x,z = gen_model.gen_sample(sample_size=100)
+print(x.shape)
 
-x = np.load('GMM_sample.npz')['x']
-learn_model = gaussianmixture.LearnModel(num_classes=4, degree=1,seed=123)
-
-start = time()
-learn_model.update_posterior(x)
-end = time()
-print(end-start)
-print(learn_model.hn_m_vecs)
-
-# learn_model.visualize_posterior()
+learn_model = gaussianmixture.LearnModel(num_classes=10, degree=2, h0_alpha_vec=10)
+for i in range(100):
+    learn_model.pred_and_update(x[i])
+    plt.scatter(x[:i+1,0],x[:i+1,1])
+    plt.show()
+    learn_model.visualize_posterior()
