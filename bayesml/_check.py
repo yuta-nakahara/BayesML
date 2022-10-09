@@ -213,19 +213,20 @@ def onehot_vecs(val,val_name,exception_class):
             return val
     raise(exception_class(val_name + " must be a numpy.ndarray whose dtype is int and whose last axis constitutes one-hot vectors."))
 
-def value_consistency(value_dict: dict, exception_class):
+def dim_consistency(value_dict: dict, exception_class):
     check_value_dict = {}
     for key in value_dict:
-        if value_dict[key] is not None and value_dict[key] not in list(check_value_dict.values()):
+        if value_dict[key] is not None and value_dict[key] not in check_value_dict.values():
             check_value_dict[key] = value_dict[key]
     if len(check_value_dict) == 0:
-        message = f"Please set at least one value for the following variables: {value_dict.keys()}"
+        return None
     elif len(check_value_dict) > 1:
         message = f"The following values must be the same: {list(value_dict.keys())}. "
         message += f"The following values are different: {list(check_value_dict.keys())}. "
-        print("===== Error =====")
+        # print("===== Error =====")
         for key in check_value_dict:
-            print(f"{key} = {check_value_dict[key]}")
+            # print(f"{key} = {check_value_dict[key]}")
+            message += f"\n {key} = {check_value_dict[key]}"
     else:
-        return value_dict[list(check_value_dict.keys())[0]]
+        return list(check_value_dict.values())[0]
     raise(exception_class(message))

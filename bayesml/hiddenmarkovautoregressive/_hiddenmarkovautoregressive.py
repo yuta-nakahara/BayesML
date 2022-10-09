@@ -61,15 +61,11 @@ class GenModel(base.Generative):
         self, 
         *, 
         # [stochastic data generative model]
-        n: int = None, 
         degree: int = None, 
         K: int = None, 
-        z_vec: np.ndarray = None, 
         pi_vec: np.ndarray = None, 
         A_mat: np.ndarray = None, 
-        x_n_vec: np.ndarray = None, 
         theta_vecs: np.ndarray = None, 
-        x_n: float = 1, 
         taus: np.ndarray = None, 
         # [prior distribution]
         h_mu_vec: np.ndarray = None, 
@@ -81,14 +77,10 @@ class GenModel(base.Generative):
     ):
         # [Check values]
         # ===== for stochastic data generative model =====
-        self.n = None if n is None else _check.pos_int(n, "n", ParameterFormatError)
         self.degree = None if degree is None else _check.pos_int(degree, "degree", ParameterFormatError)
         self.K = None if K is None else _check.pos_int(K, "K", ParameterFormatError)
-        self.x_n = None if x_n is None else _check.float_(x_n, "x_n", ParameterFormatError)
-        self.z_vec = None if z_vec is None else _check.onehot_vec(z_vec, "z_vec", ParameterFormatError)
         self.pi_vec = None if pi_vec is None else _check.nonneg_float_vec(pi_vec, "pi_vec", ParameterFormatError)
         self.A_mat = None if A_mat is None else _check.float_vec_sum_1(A_mat, "A_matrix", ParameterFormatError, ndim=2, sum_axis=0)
-        self.x_n_vec = None if x_n_vec is None else _check.float_vec(x_n_vec, "x_n_vec", ParameterFormatError)
         self.theta_vecs = None if theta_vecs is None else _check.float_vecs(theta_vecs, "theta_matrix", ParameterFormatError)
         self.taus = None if taus is None else _check.floats(taus, "taus", ParameterFormatError)
         # ===== for prior distribution =====
@@ -124,7 +116,7 @@ class GenModel(base.Generative):
             "K": consistency_value_dict_K
         }
         for key in consistency_values_dict_all:
-            value = _check.value_consistency(consistency_values_dict_all[key], ParameterFormatError)
+            value = _check.dim_consistency(consistency_values_dict_all[key], ParameterFormatError)
             exec(f"self.{key} = {value}")
 
         # [Check values and set default values]
@@ -208,7 +200,7 @@ class GenModel(base.Generative):
             "K": consistency_value_dict_K
         }
         for key in consistency_values_dict_all:
-            value = _check.value_consistency(consistency_values_dict_all[key], ParameterFormatError)
+            value = _check.dim_consistency(consistency_values_dict_all[key], ParameterFormatError)
             if eval(f"self.{key} != {value}"):
                 raise(ParameterFormatError(
                     f"The following values must be the same: {list(consistency_values_dict_all[key].keys())}"
@@ -246,19 +238,37 @@ class GenModel(base.Generative):
             "h_zeta_vecs": self.h_zeta_vecs
         }
 
+    def set_params(
+        self, 
+        z_vec: np.ndarray = None, 
+        pi_vec: np.ndarray = None, 
+        A_mat: np.ndarray = None, 
+        x_n_vec: np.ndarray = None, 
+        theta_vecs: np.ndarray = None, 
+        x_n: float = 1, 
+        taus: np.ndarray = None, 
+    ):
+        """Set the parameter of the sthocastic data generative model.
+
+        Parameters
+        ----------
+        theta_vec : numpy ndarray, optional
+            a vector of real numbers, by default [0.0, 0.0, ... , 0.0]
+        tau : float, optional
+            a positive real number, by default 1.0
+        """
+        pass
+
+    def get_params(self):
+        pass
+
     def gen_params(self):
         pass
 
     def gen_sample(self):
         pass
 
-    def get_params(self):
-        pass
-
     def save_sample(self):
-        pass
-
-    def set_params(self):
         pass
 
     def visualize_model(self):
