@@ -3,7 +3,7 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.special import gammaln
+from scipy.special import gammaln, digamma
 
 from .. import base
 from .._exceptions import (ParameterFormatError, DataFormatError)
@@ -27,7 +27,7 @@ class GenModel(base.Generative):
     h_alpha_vec : numpy.ndarray, optional
         A vector of positive real numbers, by default [1/2, 1/2, ... , 1/2].
     h_beta_vecs : numpy.ndarray, optional
-        positive real vectors, by default [[1/2, 1/2, ... , 1/2]]*K.
+        vectors of positive real numbers, by default [[1/2, 1/2, ... , 1/2]]*K.
     seed : {None, int}, optional
         A seed to initialize numpy.random.default_rng(),
         by default None.
@@ -68,7 +68,7 @@ class GenModel(base.Generative):
         h_alpha_vec : numpy.ndarray, optional
             A vector of positive real numbers.
         h_beta_vecs : numpy.ndarray, optional
-            positive real vectors.
+            vectors of positive real numbers.
         """
 
         if h_alpha_vec is not None:
@@ -105,9 +105,9 @@ class GenModel(base.Generative):
         Returns
         -------
         h_params : dict of {str:numpy.ndarray}
-            ``{"h_alpha_vec": self.h_alpha_vec, "h_beta_vec": self.h_beta_vecs}``
+            ``{"h_alpha_vec": self.h_alpha_vec, "h_beta_vecs": self.h_beta_vecs}``
         """
-        return {"h_alpha_vec": self.h_alpha_vec, "h_beta_vec": self.h_beta_vecs}
+        return {"h_alpha_vec": self.h_alpha_vec, "h_beta_vecs": self.h_beta_vecs}
 
     def set_params(self, pi_vec=None, theta_vecs=None):
         """Set the parameter of the sthocastic data generative model.
@@ -291,7 +291,7 @@ class LearnModel(base.Posterior, base.PredictiveMixin):
     h0_alpha_vec : numpy.ndarray, optional
         A vector of positive real numbers, by default [1/2, 1/2, ... , 1/2].
     h0_beta_vecs : numpy.ndarray, optional
-        positive real vectors, by default [[1/2, 1/2, ... , 1/2]]*K.
+        vectors of positive real numbers, by default [[1/2, 1/2, ... , 1/2]]*K.
     seed : {None, int}, optional
         A seed to initialize numpy.random.default_rng(), by default None.
 
@@ -300,9 +300,15 @@ class LearnModel(base.Posterior, base.PredictiveMixin):
     hn_alpha_vec : numpy.ndarray
         A vector of positive real numbers.
     hn_beta_vecs : numpy.ndarray
-        positive real vectors.
+        vectors of positive real numbers.
+    e_ln_pi_vec : numpy.ndarray
+        A real vector.
+    e_ln_theta_vecs : numpy.ndarray
+        vectors of real numbers.
+    ln_rho : numpy.ndarray
+        vectors of real numbers.
     r_vecs : numpy.ndarray
-        vectors of real numbers. The sum of its elenemts is 1.
+        vectors of positive real numbers. The sum of its elenemts is 1.
     ns : numpy.ndarray
         A vector of positive real numbers.
     s_mats : numpy.ndarray
@@ -324,17 +330,22 @@ class LearnModel(base.Posterior, base.PredictiveMixin):
         self.h0_alpha_vec = np.ones([self.c_num_classes]) / 2.0
         self.h0_beta_vecs = np.ones([self.c_num_classes, self.c_degree]) / 2.0
 
-        self.LN_C_H0_ALPHA = None
-        self.LN_C_H0_BETA = None
+        self.LN_C_H0_ALPHA = 0.0
+        self.LN_C_H0_BETA = 0.0
 
         # hn_params
         self.hn_alpha_vec = np.empty([self.c_num_classes])
         self.hn_beta_vecs = np.empty([self.c_num_classes, self.c_degree])
 
+        self.e_ln_pi_vec = np.empty([self.c_num_classes])
+        self.e_ln_theta_vecs = np.empty([self.c_num_classes, self.c_degree])
+
+        self.ln_rho = None
         self.r_vecs = None
         self.ns = np.empty([self.c_num_classes])
         self.s_mats = np.empty([self.c_num_classes, self.c_degree])
 
+        # p_params
         self.p_pi_vec = np.empty([self.c_num_classes])
         self.p_theta_vecs = np.empty([self.c_num_classes, self.c_degree])
 
@@ -348,7 +359,7 @@ class LearnModel(base.Posterior, base.PredictiveMixin):
         h0_alpha_vec : numpy.ndarra, optional
             A vector of positive real numbers.
         h0_beta_vecs : numpy.ndarray, optional
-            positive real vectors.
+            vectors of positive real numbers.
         """
 
         if h0_alpha_vec is not None:
@@ -397,12 +408,15 @@ class LearnModel(base.Posterior, base.PredictiveMixin):
 
     def set_hn_params(self, hn_alpha_vec=None, hn_beta_vecs=None):
         """Set updated values of the hyperparameter of the posterior distribution.
+
+        Note that the parameters of the predictive distribution are also calculated from them.
+
         Parameters
         ----------
         hn_alpha_vec : numpy.ndarray, optional
             A vector of positive real numbers.
         hn_beta_vecs : numpy.ndarray, optional
-            positive real vectors.
+            vectors of positive real numbers.
         """
 
         if hn_alpha_vec is not None:
@@ -411,6 +425,7 @@ class LearnModel(base.Posterior, base.PredictiveMixin):
                 raise (ParameterFormatError(
                     "hn_alpha_vec.shape[0] must coincide with c_num_classes: " +
                     f"hn_alpha_vec.shape[0]={hn_alpha_vec.shape[0]}, c_num_classes={self.c_num_classes}"))
+
             self.hn_alpha_vec[:] = hn_alpha_vec
 
         if hn_beta_vecs is not None:
@@ -428,6 +443,8 @@ class LearnModel(base.Posterior, base.PredictiveMixin):
                 raise ParameterFormatError("The number of dimensions of hn_beta_vecs must be 2.")
 
             self.hn_beta_vecs[:] = hn_beta_vecs
+
+        self.calc_pred_dist()
 
     def get_hn_params(self):
         """Get the hyperparameters of the posterior distribution.
@@ -449,11 +466,31 @@ class LearnModel(base.Posterior, base.PredictiveMixin):
         self.hn_alpha_vec[:] = self.h0_alpha_vec
         self.hn_beta_vecs[:] = self.h0_beta_vecs
 
+        self.e_ln_pi_vec[:] = digamma(self.hn_alpha_vec) - digamma(self.hn_alpha_vec.sum())
+        self.e_ln_theta_vecs[:] = digamma(self.hn_beta_vecs) - digamma(self.hn_beta_vecs.sum(axis=1))
+
+        self.calc_pred_dist()
+
     def overwrite_h0_params(self):
-        return super().overwrite_h0_params()
+        """Overwrite the initial values of the hyperparameters of the posterior distribution by the learned values.
+
+        They are overwitten by `self.hn_alpha_vec` and `self.hn_beta_vecs`.
+        Note that the parameters of the predictive distribution are also calculated from them.
+        """
+        self.h0_alpha_vec[:] = self.hn_alpha_vec
+        self.h0_beta_vecs[:] = self.hn_beta_vecs
+
+        self.calc_pred_dist()
 
     def get_p_params(self):
-        return super().get_p_params()
+        """Get the parameters of the predictive distribution.
+        Returns
+        -------
+        p_params : dict of {str: numpy.ndarray}
+            * ``"p_pi_vec"`` : The value of ``self.p_pi_vec``
+            * ``"p_theta_vecs"`` : The value of ``self.p_theta_vecs``
+        """
+        return {"p_pi_vec": self.p_pi_vec, "p_theta_vecs": self.p_theta_vecs}
 
     def save_h0_params(self, filename):
         return super().save_h0_params(filename)
