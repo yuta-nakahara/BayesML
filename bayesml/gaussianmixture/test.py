@@ -1,5 +1,8 @@
 from bayesml import gaussianmixture
 import numpy as np
 
-model = gaussianmixture.LearnModel(num_classes=3, degree=2, h0_w_mats=np.identity(2)*2)
-print(model.calc_vl())
+model = gaussianmixture.LearnModel(num_classes=5, degree=3)
+
+x = np.random.rand(10,3)
+
+model.update_posterior(x,num_init=3)
