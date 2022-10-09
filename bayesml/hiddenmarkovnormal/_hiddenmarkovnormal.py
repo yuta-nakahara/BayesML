@@ -1,6 +1,7 @@
 # Code Author
 # Yuta Nakahara <yuta.nakahara@aoni.waseda.jp>
 # Jun Nishikawa <jun.b.nishikawa@gmail.com>
+from email import message
 import warnings
 import numpy as np
 from scipy.stats import multivariate_normal as ss_multivariate_normal
@@ -61,18 +62,64 @@ class GenModel(base.Generative):
             mu_vecs=None,
             lambda_mats=None
             ):
-        # Noneでない入力について，以下をチェックする．
-        # * それ単体として，モデルの仮定を満たすか（符号，行列の正定値性など）
-        # * 配列のサイズなどがconstants（c_で始まる変数）と整合しているか．ただし，ブロードキャスト可能なものは認める
-        # 例
-        # if h0_m_vecs is not None:
-        #     _check.float_vecs(h0_m_vecs,'h0_m_vecs',ParameterFormatError)
-        #     if h0_m_vecs.shape[-1] != self.degree:
-        #         raise(ParameterFormatError(
-        #             "h0_m_vecs.shape[-1] must coincide with self.degree:"
-        #             +f"h0_m_vecs.shape[-1]={h0_m_vecs.shape[-1]}, self.degree={self.degree}"))
-        #     self.h0_m_vecs[:] = h0_m_vecs
-        pass
+        """Set the parameter of the sthocastic data generative model.
+
+        Parameters
+        ----------
+        pi_vec : numpy.ndarray
+            a real vector in :math:`[0, 1]^K`. The sum of its elements must be 1.
+        a_mat : numpy.ndarray
+            a real matrix in :math:`[0, 1]^{KxK}`. The sum of each column elements must be 1.
+        mu_vecs : numpy.ndarray
+            vectors of real numbers
+        lambda_mats : numpy.ndarray
+            positive definite symetric matrices
+        """
+
+        # [Dimension value consistency]
+        if pi_vec is not None:
+            if pi_vec.shape[0] != self.c_num_classes:
+                raise(ParameterFormatError(
+                    "pi_vec.shape[0] must coincide with self.c_num_classes:"
+                    +f"pi_vec.shape[0]={pi_vec.shape[0]}, self.c_num_classes={self.c_num_classes}"))
+            self.pi_vec = _check.float_vec_sum_1(pi_vec, "pi_vec", ParameterFormatError)
+        if a_mat is not None:
+            if a_mat.shape[0] != self.c_num_classes or a_mat.shape[1] != self.c_num_classes:
+                raise(ParameterFormatError(
+                    "a_mat.shape[0] and a_mat.shape[1] must coincide with self.c_num_classes:"
+                    +f"a_mat.shape[0]={a_mat.shape[0]}, a_mat.shape[1]={a_mat.shape[1]}, self.c_num_classes={self.c_num_classes}"))
+            self.a_mat = _check.float_vec_sum_1(a_mat, "a_mat", ParameterFormatError, ndim=2, sum_axis=1)
+        if mu_vecs is not None:
+            message = ""
+            if mu_vecs.shape[0] != self.c_degree:
+                message += "mu_vecs.shape[0] must coincide with self.c_degree:"
+                +f"mu_vecs.shape[0]={mu_vecs.shape[0]}, self.c_degree={self.c_degree}"
+            if len(mu_vecs) == 2:
+                if mu_vecs.shape[1] != self.c_num_classes:
+                    message += "mu_vecs.shape[1] must coincide with self.c_num_classes:"
+                    +f"mu_vecs.shape[1]={mu_vecs.shape[1]}, self.c_num_classes={self.c_num_classes}"
+            if message != "":
+                raise(ParameterFormatError(message))
+            self.mu_vecs = _check.float_vecs(mu_vecs, "mu_vecs", ParameterFormatError)
+            if len(mu_vecs) == 1:
+                self.mu_vecs = np.broadcast_to(np.reshape(self.mu_vecs, (self.c_degree, 1)), (self.c_degree, self.c_num_classes))
+        if lambda_mats is not None:
+            message = ""
+            if lambda_mats.shape[:2] != (self.c_degree, self.c_degree)
+                message += "lambda_mats.shape[:2] must coincide with (self.c_degree, self.c_degree):"
+                +f"lambda_mats.shape[:2]={lambda_mats.shape[:2]}, (self.c_degree, self.c_degree)={(self.c_degree, self.c_degree)}"
+            if len(lambda_mats) == 3:
+                if lambda_mats.shape[2] != self.c_num_classes:
+                    message += "lambda_mats.shape[2] must coincide with self.c_num_classes:"
+                    +f"lambda_mats.shape[2]={lambda_mats.shape[2]}, self.c_num_classes={self.c_num_classes}"
+            if message != "":
+                raise(ParameterFormatError(message))
+            self.lambda_mats = _check.float_vecs(lambda_mats, "lambda_mats", ParameterFormatError)
+            if len(self.lambda_mats) == 2:
+                self.lambda_mats = np.broadcast_to(
+                    np.reshape(self.lambda_mats, (self.c_degree,self.c_degree,1)), 
+                    (self.c_degree,self.c_degree,self.c_num_classes)
+                )
 
     def set_h_params(
             self,
