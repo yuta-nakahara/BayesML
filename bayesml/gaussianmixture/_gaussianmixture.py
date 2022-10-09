@@ -411,15 +411,9 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
     Parameters
     ----------
     num_classes : int
-        a positive integer. Default is None, in which case 
-        a value consistent with ``pi_vec``, ``mu_vecs``, 
-        ``lambda_mats``, and ``h_alpha_vec`` is used.
-        If all of them are not given, num_classes is assumed to be 2.
+        a positive integer
     degree : int
-        a positive integer. Default is None, in which case 
-        a value consistent with ``mu_vecs``, ``lambda_mats``, 
-        ``h_m_vec``, ``h_w_mat``, and ``h_nu` is used. 
-        If all of them are not given, degree is assumed to be 1.
+        a positive integer
     h0_alpha_vec : numpy.ndarray, optional
         a vector of positive real numbers, by default [1/2, 1/2, ... , 1/2]
     h0_m_vecs : numpy.ndarray, optional
@@ -488,8 +482,8 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self.h0_w_mats = np.tile(np.identity(self.degree),[self.num_classes,1,1])
         self.h0_w_mats_inv = np.linalg.inv(self.h0_w_mats)
 
-        self.LN_C_H0_ALPHA = 0.0
-        self.LN_B_H0_W_NUS = np.empty(self.num_classes)
+        self._LN_C_H0_ALPHA = 0.0
+        self._LN_B_H0_W_NUS = np.empty(self.num_classes)
         
         # hn_params
         self.hn_alpha_vec = np.empty([self.num_classes])
@@ -499,12 +493,12 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self.hn_w_mats = np.empty([self.num_classes,self.degree,self.degree])
         self.hn_w_mats_inv = np.empty([self.num_classes,self.degree,self.degree])
 
-        self.ln_rho = None
+        self._ln_rho = None
         self.r_vecs = None
-        self.e_lambda_mats = np.empty([self.num_classes,self.degree,self.degree])
-        self.e_ln_lambda_dets = np.empty(self.num_classes)
-        self.ln_b_hn_w_nus = np.empty(self.num_classes)
-        self.e_ln_pi_vec = np.empty(self.num_classes)
+        self._e_lambda_mats = np.empty([self.num_classes,self.degree,self.degree])
+        self._e_ln_lambda_dets = np.empty(self.num_classes)
+        self._ln_b_hn_w_nus = np.empty(self.num_classes)
+        self._e_ln_pi_vec = np.empty(self.num_classes)
 
         # statistics
         self.x_bar_vecs = np.empty([self.num_classes,self.degree])
@@ -513,13 +507,13 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
 
         # variational lower bound
         self.vl = 0.0
-        self.vl_p_x = 0.0
-        self.vl_p_z = 0.0
-        self.vl_p_pi = 0.0
-        self.vl_p_mu_lambda = 0.0
-        self.vl_q_z = 0.0
-        self.vl_q_pi = 0.0
-        self.vl_q_mu_lambda = 0.0
+        self._vl_p_x = 0.0
+        self._vl_p_z = 0.0
+        self._vl_p_pi = 0.0
+        self._vl_p_mu_lambda = 0.0
+        self._vl_q_z = 0.0
+        self._vl_q_pi = 0.0
+        self._vl_q_mu_lambda = 0.0
 
         # p_params
         self.p_pi_vec = np.empty([self.num_classes])
@@ -591,8 +585,8 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             self.h0_w_mats[:] = h0_w_mats
             self.h0_w_mats_inv[:] = np.linalg.inv(self.h0_w_mats)
 
-        self.LN_C_H0_ALPHA = gammaln(self.h0_alpha_vec.sum()) - gammaln(self.h0_alpha_vec).sum()
-        self.LN_B_H0_W_NUS = (
+        self._LN_C_H0_ALPHA = gammaln(self.h0_alpha_vec.sum()) - gammaln(self.h0_alpha_vec).sum()
+        self._LN_B_H0_W_NUS = (
             - self.h0_nus*np.linalg.slogdet(self.h0_w_mats)[1]
             - self.h0_nus*self.degree*np.log(2.0)
             - self.degree*(self.degree-1)/2.0*np.log(np.pi)
@@ -708,20 +702,8 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self.hn_w_mats[:] = self.h0_w_mats
         self.hn_w_mats_inv = np.linalg.inv(self.hn_w_mats)
 
-        self.e_lambda_mats[:] = self.hn_nus[:,np.newaxis,np.newaxis] * self.hn_w_mats
-        self.e_ln_lambda_dets[:] = (
-            np.sum(digamma((self.hn_nus[:,np.newaxis]-np.arange(self.degree)) / 2.0),axis=1)
-            + self.degree*np.log(2.0)
-            - np.linalg.slogdet(self.hn_w_mats_inv)[1]
-            )
-        self.e_ln_pi_vec[:] = digamma(self.hn_alpha_vec) - digamma(self.hn_alpha_vec.sum())
-        self.ln_b_hn_w_nus[:] = (
-            self.hn_nus*np.linalg.slogdet(self.hn_w_mats_inv)[1]
-            - self.hn_nus*self.degree*np.log(2.0)
-            - self.degree*(self.degree-1)/2.0*np.log(np.pi)
-            - np.sum(gammaln((self.hn_nus[:,np.newaxis]-np.arange(self.degree)) / 2.0),
-                     axis=1) * 2.0
-            ) / 2.0
+        self._calc_q_pi_char()
+        self._calc_q_lambda_char()
 
         self.calc_pred_dist()
     
@@ -742,12 +724,12 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
 
     def calc_vl(self):
         # E[ln p(X|Z,mu,Lambda)]
-        self.vl_p_x = np.sum(
+        self._vl_p_x = np.sum(
             self.ns
-            * (self.e_ln_lambda_dets - self.degree / self.hn_kappas
-               - (self.s_mats * self.e_lambda_mats).sum(axis=(1,2))
+            * (self._e_ln_lambda_dets - self.degree / self.hn_kappas
+               - (self.s_mats * self._e_lambda_mats).sum(axis=(1,2))
                - ((self.x_bar_vecs - self.hn_m_vecs)[:,np.newaxis,:]
-                  @ self.e_lambda_mats
+                  @ self._e_lambda_mats
                   @ (self.x_bar_vecs - self.hn_m_vecs)[:,:,np.newaxis]
                   )[:,0,0]
                - self.degree * np.log(2*np.pi)
@@ -755,55 +737,46 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             ) / 2.0
 
         # E[ln p(Z|pi)]
-        self.vl_p_z = (self.ns * self.e_ln_pi_vec).sum()
+        self._vl_p_z = (self.ns * self._e_ln_pi_vec).sum()
 
         # E[ln p(pi)]
-        self.vl_p_pi = self.LN_C_H0_ALPHA + ((self.h0_alpha_vec - 1) * self.e_ln_pi_vec).sum()
+        self._vl_p_pi = self._LN_C_H0_ALPHA + ((self.h0_alpha_vec - 1) * self._e_ln_pi_vec).sum()
 
         # E[ln p(mu,Lambda)]
-        self.vl_p_mu_lambda = np.sum(
+        self._vl_p_mu_lambda = np.sum(
             self.degree * (np.log(self.h0_kappas) - np.log(2*np.pi)
                            - self.h0_kappas/self.hn_kappas)
             - self.h0_kappas * ((self.hn_m_vecs - self.h0_m_vecs)[:,np.newaxis,:]
-                                @ self.e_lambda_mats
+                                @ self._e_lambda_mats
                                 @ (self.hn_m_vecs - self.h0_m_vecs)[:,:,np.newaxis])[:,0,0]
-            + 2.0 * self.LN_B_H0_W_NUS
-            + (self.h0_nus - self.degree) * self.e_ln_lambda_dets
-            - np.sum(self.h0_w_mats_inv * self.e_lambda_mats,axis=(1,2))
+            + 2.0 * self._LN_B_H0_W_NUS
+            + (self.h0_nus - self.degree) * self._e_ln_lambda_dets
+            - np.sum(self.h0_w_mats_inv * self._e_lambda_mats,axis=(1,2))
             ) / 2.0
 
         # E[ln q(Z|pi)]
-        self.vl_q_z = -np.sum(xlogy(self.r_vecs,self.r_vecs))
+        self._vl_q_z = -np.sum(xlogy(self.r_vecs,self.r_vecs))
 
         # E[ln q(pi)]
-        self.vl_q_pi = ss_dirichlet.entropy(self.hn_alpha_vec)
+        self._vl_q_pi = ss_dirichlet.entropy(self.hn_alpha_vec)
 
         # E[ln q(mu,Lambda)]
-        self.vl_q_mu_lambda =  np.sum(
+        self._vl_q_mu_lambda =  np.sum(
             + self.degree * (1.0 + np.log(2.0*np.pi) - np.log(self.hn_kappas))
-            - self.ln_b_hn_w_nus * 2.0
-            - (self.hn_nus-self.degree)*self.e_ln_lambda_dets
+            - self._ln_b_hn_w_nus * 2.0
+            - (self.hn_nus-self.degree)*self._e_ln_lambda_dets
             + self.hn_nus * self.degree
             ) / 2.0
 
-        # print(self.vl_p_x,
-        #       self.vl_p_z,
-        #       self.vl_p_pi,
-        #       self.vl_p_mu_lambda,
-        #       self.vl_q_z,
-        #       self.vl_q_pi,
-        #       self.vl_q_mu_lambda,
-        #       )
+        self.vl = (self._vl_p_x
+                   + self._vl_p_z
+                   + self._vl_p_pi
+                   + self._vl_p_mu_lambda
+                   + self._vl_q_z
+                   + self._vl_q_pi
+                   + self._vl_q_mu_lambda)
 
-        self.vl = (self.vl_p_x
-                   + self.vl_p_z
-                   + self.vl_p_pi
-                   + self.vl_p_mu_lambda
-                   + self.vl_q_z
-                   + self.vl_q_pi
-                   + self.vl_q_mu_lambda)
-
-    def _calc_statistics(self,x):
+    def _calc_n_x_bar_s(self,x):
         self.ns[:] = self.r_vecs.sum(axis=0)
         self.x_bar_vecs[:] = (self.r_vecs[:,:,np.newaxis] * x[:,np.newaxis,:]).sum(axis=0) / self.ns[:,np.newaxis]
         self.s_mats[:] = np.sum(self.r_vecs[:,:,np.newaxis,np.newaxis]
@@ -811,12 +784,29 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                                    @ (x[:,np.newaxis,:] - self.x_bar_vecs)[:,:,np.newaxis,:]),
                                 axis=0) / self.ns[:,np.newaxis,np.newaxis]
 
-    def _init_q_z(self):
+    def _init_random_responsibility(self,x):
         self.r_vecs[:] = self.rng.dirichlet(np.ones(self.num_classes),self.r_vecs.shape[0])
+        self._calc_n_x_bar_s(x)
+
+    def _calc_q_pi_char(self):
+        self._e_ln_pi_vec[:] = digamma(self.hn_alpha_vec) - digamma(self.hn_alpha_vec.sum())
 
     def _update_q_pi(self):
         self.hn_alpha_vec[:] = self.h0_alpha_vec + self.ns
-        self.e_ln_pi_vec[:] = digamma(self.hn_alpha_vec) - digamma(self.hn_alpha_vec.sum())
+        self._calc_q_pi_char()
+
+    def _calc_q_lambda_char(self):
+        self._e_lambda_mats[:] = self.hn_nus[:,np.newaxis,np.newaxis] * self.hn_w_mats
+        self._e_ln_lambda_dets[:] = (np.sum(digamma((self.hn_nus[:,np.newaxis]-np.arange(self.degree)) / 2.0),axis=1)
+                            + self.degree*np.log(2.0)
+                            - np.linalg.slogdet(self.hn_w_mats_inv)[1])
+        self._ln_b_hn_w_nus[:] = (
+            self.hn_nus*np.linalg.slogdet(self.hn_w_mats_inv)[1]
+            - self.hn_nus*self.degree*np.log(2.0)
+            - self.degree*(self.degree-1)/2.0*np.log(np.pi)
+            - np.sum(gammaln((self.hn_nus[:,np.newaxis]-np.arange(self.degree)) / 2.0),
+                     axis=1) * 2.0
+            ) / 2.0
 
     def _update_q_mu_lambda(self):
         self.hn_kappas[:] = self.h0_kappas + self.ns
@@ -830,34 +820,37 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                                       @ (self.x_bar_vecs - self.h0_m_vecs)[:,np.newaxis,:])
                                  )
         self.hn_w_mats[:] = np.linalg.inv(self.hn_w_mats_inv)
-        self.e_lambda_mats[:] = self.hn_nus[:,np.newaxis,np.newaxis] * self.hn_w_mats
-        self.e_ln_lambda_dets[:] = (np.sum(digamma((self.hn_nus[:,np.newaxis]-np.arange(self.degree)) / 2.0),axis=1)
-                            + self.degree*np.log(2.0)
-                            - np.linalg.slogdet(self.hn_w_mats_inv)[1])
-        self.ln_b_hn_w_nus[:] = (
-            self.hn_nus*np.linalg.slogdet(self.hn_w_mats_inv)[1]
-            - self.hn_nus*self.degree*np.log(2.0)
-            - self.degree*(self.degree-1)/2.0*np.log(np.pi)
-            - np.sum(gammaln((self.hn_nus[:,np.newaxis]-np.arange(self.degree)) / 2.0),
-                     axis=1) * 2.0
-            ) / 2.0
+        self._calc_q_lambda_char()
 
     def _update_q_z(self,x):
-        self.ln_rho[:] = (self.e_ln_pi_vec
-                          + (self.e_ln_lambda_dets
+        self._ln_rho[:] = (self._e_ln_pi_vec
+                          + (self._e_ln_lambda_dets
                              - self.degree * np.log(2*np.pi)
                              - self.degree / self.hn_kappas
                              - ((x[:,np.newaxis,:]-self.hn_m_vecs)[:,:,np.newaxis,:]
-                                @ self.e_lambda_mats
+                                @ self._e_lambda_mats
                                 @ (x[:,np.newaxis,:]-self.hn_m_vecs)[:,:,:,np.newaxis]
                                 )[:,:,0,0]
                              ) / 2.0
                           )
-        self.r_vecs[:] = np.exp(self.ln_rho - logsumexp(self.ln_rho,axis=1,keepdims=True))
-        # self.r_vecs[:] = np.exp(self.ln_rho - self.ln_rho.max(axis=1,keepdims=True))
-        # self.r_vecs[:] /= self.r_vecs.sum(axis=1,keepdims=True)
+        self.r_vecs[:] = np.exp(self._ln_rho - self._ln_rho.max(axis=1,keepdims=True))
+        self.r_vecs[:] /= self.r_vecs.sum(axis=1,keepdims=True)
+        self._calc_n_x_bar_s(x)
 
-    def update_posterior(self,x,max_itr=100,num_init=10,tolerance=1.0E-8):
+    def _init_subsampling(self,x):
+        _size = int(np.sqrt(x.shape[0])) + 1
+        for k in range(self.num_classes):
+            _subsample = self.rng.choice(x,size=_size,replace=False,axis=0,shuffle=False)
+            self.hn_m_vecs[k] = _subsample.sum(axis=0) / _size
+            self.hn_w_mats[k] = ((_subsample - self.hn_m_vecs[k]).T
+                                 @ (_subsample - self.hn_m_vecs[k])
+                                 / _size / self.hn_nus[k]
+                                 + np.identity(self.degree) * 1.0E-5) # avoid singular matrix
+            self.hn_w_mats_inv[k] = np.linalg.inv(self.hn_w_mats[k])
+        self._calc_q_pi_char()
+        self._calc_q_lambda_char()
+
+    def update_posterior(self,x,max_itr=100,num_init=10,tolerance=1.0E-8,init_type='subsampling'):
         """Update the hyperparameters of the posterior distribution using traning data.
 
         Parameters
@@ -877,7 +870,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                 "x.shape[-1] must be self.degree: "
                 + f"x.shape[-1]={x.shape[-1]}, self.degree={self.degree}"))
         x = x.reshape(-1,self.degree)
-        self.ln_rho = np.empty([x.shape[0],self.num_classes])
+        self._ln_rho = np.empty([x.shape[0],self.num_classes])
         self.r_vecs = np.empty([x.shape[0],self.num_classes])
 
         tmp_vl = 0.0
@@ -888,21 +881,30 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         tmp_w_mats = np.copy(self.hn_w_mats)
         tmp_w_mats_inv = np.copy(self.hn_w_mats_inv)
 
+        convergence_flag = True
         for i in range(num_init):
-            self._init_q_z()
-            self._calc_statistics(x)
+            if init_type == 'subsampling':
+                self._init_subsampling(x)
+                self._update_q_z(x)
+            elif init_type == 'random_responsibility':
+                self._init_random_responsibility(x)
+            else:
+                raise(ValueError(
+                    f'init_type={init_type} is unsupported. '
+                    + 'This function supports only '
+                    + '"subsampling" and "random_responsibility"'))
             self.calc_vl()
             print(f'\r{i}. VL: {self.vl}',end='')
             for t in range(max_itr):
                 vl_before = self.vl
-
                 self._update_q_mu_lambda()
                 self._update_q_pi()
                 self._update_q_z(x)
-                self._calc_statistics(x)
                 self.calc_vl()
-                print(f'\r{i}. VL: {self.vl}',end='')
+                print(f'\r{i}. VL: {self.vl} t={t} ',end='')
                 if np.abs((self.vl-vl_before)/vl_before) < tolerance:
+                    convergence_flag = False
+                    print(f'(converged)',end='')
                     break
             if i==0 or self.vl > tmp_vl:
                 print('*')
@@ -915,138 +917,171 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                 tmp_w_mats_inv[:] = self.hn_w_mats_inv
             else:
                 print('')
+        if convergence_flag:
+            warnings.warn("Algorithm has not converged even once.",ResultWarning)
         
         self.hn_alpha_vec[:] = tmp_alpha_vec
         self.hn_m_vecs[:] = tmp_m_vecs
         self.hn_kappas[:] = tmp_kappas
         self.hn_nus[:] = tmp_nus
         self.hn_w_mats[:] = tmp_w_mats
-        self.hn_w_mats_inv[:] = tmp_w_mats_inv        
+        self.hn_w_mats_inv[:] = tmp_w_mats_inv
+        self._calc_q_pi_char()
+        self._calc_q_lambda_char()
+        self._update_q_z(x)
+
 
     def estimate_params(self,loss="squared"):
-        pass
-#         """Estimate the parameter of the stochastic data generative model under the given criterion.
+        """Estimate the parameter of the stochastic data generative model under the given criterion.
 
-#         Note that the criterion is applied to estimating ``mu_vec`` and ``lambda_mat`` independently.
-#         Therefore, a tuple of the student's t-distribution and the wishart distribution will be returned when loss=\"KL\"
+        Note that the criterion is applied to estimating 
+        ``pi_vec``, ``mu_vecs`` and ``lambda_mats`` independently.
+        Therefore, a tuple of the dirichlet distribution, 
+        the student's t-distributions and 
+        the wishart distributions will be returned when loss=\"KL\"
 
-#         Parameters
-#         ----------
-#         loss : str, optional
-#             Loss function underlying the Bayes risk function, by default \"squared\".
-#             This function supports \"squared\", \"0-1\", and \"KL\".
+        Parameters
+        ----------
+        loss : str, optional
+            Loss function underlying the Bayes risk function, by default \"squared\".
+            This function supports \"squared\", \"0-1\", and \"KL\".
 
-#         Returns
-#         -------
-#         Estimates : tuple of {numpy ndarray, float, None, or rv_frozen}
-#             * ``mu_vec_hat`` : the estimate for mu_vec
-#             * ``lambda_mat_hat`` : the estimate for lambda_mat
-#             The estimated values under the given loss function. If it is not exist, `None` will be returned.
-#             If the loss function is \"KL\", the posterior distribution itself will be returned
-#             as rv_frozen object of scipy.stats.
+        Returns
+        -------
+        Estimates : a tuple of {numpy ndarray, float, None, or rv_frozen}
+            * ``pi_vec_hat`` : the estimate for pi_vec
+            * ``mu_vecs_hat`` : the estimate for mu_vecs
+            * ``lambda_mats_hat`` : the estimate for lambda_mats
+            The estimated values under the given loss function. 
+            If it is not exist, `np.nan` will be returned.
+            If the loss function is \"KL\", the posterior distribution itself 
+            will be returned as rv_frozen object of scipy.stats.
 
-#         See Also
-#         --------
-#         scipy.stats.rv_continuous
-#         scipy.stats.rv_discrete
-#         """
+        See Also
+        --------
+        scipy.stats.rv_continuous
+        scipy.stats.rv_discrete
+        """
 
-#         if loss == "squared":
-#             return self.hn_m_vec, self.hn_nu * self.hn_w_mat
-#         elif loss == "0-1":
-#             if self.hn_nu >= self.degree + 1:
-#                 return self.hn_m_vec, (self.hn_nu - self.degree - 1) * self.hn_w_mat
-#             else:
-#                 warnings.warn("MAP estimate of lambda_mat doesn't exist for the current hn_nu.",ResultWarning)
-#                 return self.hn_m_vec, None
-#         elif loss == "KL":
-#             return (ss_multivariate_t(loc=self.hn_m_vec,
-#                                         shape=self.hn_w_mat_inv / self.hn_kappa / (self.hn_nu - self.degree + 1),
-#                                         df=self.hn_nu - self.degree + 1),
-#                     ss_wishart(df=self.hn_nu,scale=self.hn_w_mat))
-#         else:
-#             raise(CriteriaError("Unsupported loss function! "
-#                                 +"This function supports \"squared\", \"0-1\", and \"KL\"."))
+        if loss == "squared":
+            return self.hn_alpha_vec/self.hn_alpha_vec.sum(), self.hn_m_vecs, self._e_lambda_mats
+        elif loss == "0-1":
+            pi_vec_hat = np.empty(self.num_classes)
+            if np.all(self.hn_alpha_vec > 1):
+                pi_vec_hat[:] = (self.hn_alpha_vec - 1) / (np.sum(self.hn_alpha_vec) - self.degree)
+            else:
+                warnings.warn("MAP estimate of lambda_mat doesn't exist for the current hn_alpha_vec.",ResultWarning)
+                pi_vec_hat[:] = np.nan
+
+            lambda_mats_hat = np.empty([self.num_classes,self.degree,self.degree])
+            for k in range(self.num_classes):
+                if self.hn_nus[k] >= self.degree + 1:
+                    lambda_mats_hat[k] = (self.hn_nus[k] - self.degree - 1) * self.hn_w_mats[k]
+                else:
+                    warnings.warn(f"MAP estimate of lambda_mat doesn't exist for the current hn_nus[{k}].",ResultWarning)
+                    lambda_mats_hat[k] = np.nan
+            return pi_vec_hat, self.hn_m_vecs, lambda_mats_hat
+        elif loss == "KL":
+            mu_vec_pdfs = []
+            lambda_mat_pdfs = []
+            for k in range(self.num_classes):
+                mu_vec_pdfs.append(ss_multivariate_t(loc=self.hn_m_vecs[k],
+                                                 shape=self.hn_w_mats_inv[k] / self.hn_kappas[k] / (self.hn_nus[k] - self.degree + 1),
+                                                 df=self.hn_nus[k] - self.degree + 1))
+                lambda_mat_pdfs.append(ss_wishart(df=self.hn_nus[k],scale=self.hn_w_mats[k]))
+            return (ss_dirichlet(self.hn_alpha_vec),
+                    mu_vec_pdfs,
+                    lambda_mat_pdfs)
+        else:
+            raise(CriteriaError(f"loss={loss} is unsupported. "
+                                +"This function supports \"squared\", \"0-1\", and \"KL\"."))
     
     def visualize_posterior(self):
-        pass
-#         """Visualize the posterior distribution for the parameter.
+        """Visualize the posterior distribution for the parameter.
         
-#         Examples
-#         --------
-#         >>> from bayesml import multivariate_normal
-#         >>> gen_model = multivariate_normal.GenModel()
-#         >>> x = gen_model.gen_sample(100)
-#         >>> learn_model = multivariate_normal.LearnModel()
-#         >>> learn_model.update_posterior(x)
-#         >>> learn_model.visualize_posterior()
-#         hn_m_vec:
-#         [-0.06924909  0.08126454]
-#         hn_kappa:
-#         101.0
-#         hn_nu:
-#         102.0
-#         hn_w_mat:
-#         [[ 0.00983415 -0.00059828]
-#         [-0.00059828  0.00741698]]
-#         E[lambda_mat]=
-#         [[ 1.0030838  -0.06102455]
-#         [-0.06102455  0.7565315 ]]
+        Examples
+        --------
+        >>> from bayesml import gaussianmixture
+        >>> gen_model = gaussianmixture.GenModel(
+        >>>     num_classes=2,
+        >>>     degree=1,
+        >>>     mu_vecs=np.array([[-2],[2]]),
+        >>>     )
+        >>> x,z = gen_model.gen_sample(100)
+        >>> learn_model = gaussianmixture.LearnModel(num_classes=2, degree=1)
+        >>> learn_model.update_posterior(x)
+        >>> learn_model.visualize_posterior()
+        hn_m_vecs:
+        [[ 2.09365933]
+        [-1.97862429]]
+        hn_kappas:
+        [47.68878373 54.31121627]
+        hn_nus:
+        [47.68878373 54.31121627]
+        hn_w_mats:
+        [[[0.02226992]]
 
-#         .. image:: ./images/multivariate_normal_posterior.png
-#         """
-#         print("hn_m_vec:")
-#         print(f"{self.hn_m_vec}")
-#         print("hn_kappa:")
-#         print(f"{self.hn_kappa}")
-#         print("hn_nu:")
-#         print(f"{self.hn_nu}")
-#         print("hn_w_mat:")
-#         print(f"{self.hn_w_mat}")
-#         print("E[lambda_mat]=")
-#         print(f"{self.hn_nu * self.hn_w_mat}")
-#         mu_vec_pdf, w_mat_pdf = self.estimate_params(loss="KL")
-#         if self.degree == 1:
-#             fig, axes = plt.subplots(1,2)
-#             # for mu_vec
-#             x = np.linspace(self.hn_m_vec[0]-4.0*np.sqrt((self.hn_w_mat_inv / self.hn_kappa / self.hn_nu)[0,0]),
-#                             self.hn_m_vec[0]+4.0*np.sqrt((self.hn_w_mat_inv / self.hn_kappa / self.hn_nu)[0,0]),
-#                             100)
-#             axes[0].plot(x,mu_vec_pdf.pdf(x))
-#             axes[0].set_xlabel("mu_vec")
-#             axes[0].set_ylabel("Density")
-#             # for lambda_mat
-#             x = np.linspace(max(1.0e-8,self.hn_nu*self.hn_w_mat)-4.0*np.sqrt(self.hn_nu/2.0)*(2.0*self.hn_w_mat),
-#                             self.hn_nu*self.hn_w_mat+4.0*np.sqrt(self.hn_nu/2.0)*(2.0*self.hn_w_mat),
-#                             100)
-#             print(self.hn_w_mat)
-#             axes[1].plot(x[:,0,0],w_mat_pdf.pdf(x[:,0,0]))
-#             axes[1].set_xlabel("w_mat")
-#             axes[1].set_ylabel("Density")
+        [[0.01575793]]]
+        E[lambda_mats]=
+        [[[1.06202546]]
 
-#             fig.tight_layout()
-#             plt.show()
+        [[0.85583258]]]
 
-#         elif self.degree == 2:
-#             fig, axes = plt.subplots()
-#             x = np.linspace(self.hn_m_vec[0]-3.0*np.sqrt((self.hn_w_mat_inv / self.hn_kappa / self.hn_nu)[0,0]),
-#                             self.hn_m_vec[0]+3.0*np.sqrt((self.hn_w_mat_inv / self.hn_kappa / self.hn_nu)[0,0]),
-#                             100)
-#             y = np.linspace(self.hn_m_vec[1]-3.0*np.sqrt((self.hn_w_mat_inv / self.hn_kappa / self.hn_nu)[1,1]),
-#                             self.hn_m_vec[1]+3.0*np.sqrt((self.hn_w_mat_inv / self.hn_kappa / self.hn_nu)[1,1]),
-#                             100)
-#             xx, yy = np.meshgrid(x,y)
-#             grid = np.empty((100,100,2))
-#             grid[:,:,0] = xx
-#             grid[:,:,1] = yy
-#             axes.contourf(xx,yy,mu_vec_pdf.pdf(grid),cmap='Blues')
-#             axes.plot(self.hn_m_vec[0],self.hn_m_vec[1],marker="x",color='red')
-#             axes.set_xlabel("mu_vec[0]")
-#             axes.set_ylabel("mu_vec[1]")
-#             plt.show()
+        .. image:: ./images/gaussianmixture_posterior.png
+        """
+        print("hn_m_vecs:")
+        print(f"{self.hn_m_vecs}")
+        print("hn_kappas:")
+        print(f"{self.hn_kappas}")
+        print("hn_nus:")
+        print(f"{self.hn_nus}")
+        print("hn_w_mats:")
+        print(f"{self.hn_w_mats}")
+        print("E[lambda_mats]=")
+        print(f"{self._e_lambda_mats}")
+        _, mu_vec_pdfs, lambda_mat_pdfs = self.estimate_params(loss="KL")
+        if self.degree == 1:
+            fig, axes = plt.subplots(1,2)
+            axes[0].set_xlabel("mu_vecs")
+            axes[0].set_ylabel("Density")
+            axes[1].set_xlabel("lambda_mats")
+            axes[1].set_ylabel("Log density")
+            for k in range(self.num_classes):
+                # for mu_vecs
+                x = np.linspace(self.hn_m_vecs[k,0]-4.0*np.sqrt((self.hn_w_mats_inv[k] / self.hn_kappas[k] / self.hn_nus[k])[0,0]),
+                                self.hn_m_vecs[k,0]+4.0*np.sqrt((self.hn_w_mats_inv[k] / self.hn_kappas[k] / self.hn_nus[k])[0,0]),
+                                100)
+                axes[0].plot(x,mu_vec_pdfs[k].pdf(x))
+                # for lambda_mats
+                x = np.linspace(max(1.0e-8,self.hn_nus[k]*self.hn_w_mats[k]-4.0*np.sqrt(self.hn_nus[k]/2.0)*(2.0*self.hn_w_mats[k])),
+                                self.hn_nus[k]*self.hn_w_mats[k]+4.0*np.sqrt(self.hn_nus[k]/2.0)*(2.0*self.hn_w_mats[k]),
+                                500)
+                axes[1].plot(x[:,0,0],lambda_mat_pdfs[k].logpdf(x[:,0,0]))
 
-#         else:
-#             raise(ParameterFormatError("if degree > 2, it is impossible to visualize the model by this function."))
+            fig.tight_layout()
+            plt.show()
+
+        elif self.degree == 2:
+            fig, axes = plt.subplots()
+            for k in range(self.num_classes):
+                x = np.linspace(self.hn_m_vecs[k,0]-3.0*np.sqrt((self.hn_w_mats_inv[k] / self.hn_kappas[k] / self.hn_nus[k])[0,0]),
+                                self.hn_m_vecs[k,0]+3.0*np.sqrt((self.hn_w_mats_inv[k] / self.hn_kappas[k] / self.hn_nus[k])[0,0]),
+                                100)
+                y = np.linspace(self.hn_m_vecs[k,1]-3.0*np.sqrt((self.hn_w_mats_inv[k] / self.hn_kappas[k] / self.hn_nus[k])[1,1]),
+                                self.hn_m_vecs[k,1]+3.0*np.sqrt((self.hn_w_mats_inv[k] / self.hn_kappas[k] / self.hn_nus[k])[1,1]),
+                                100)
+                xx, yy = np.meshgrid(x,y)
+                grid = np.empty((100,100,2))
+                grid[:,:,0] = xx
+                grid[:,:,1] = yy
+                axes.contour(xx,yy,mu_vec_pdfs[k].pdf(grid),cmap='Blues',alpha=self.hn_alpha_vec[k]/self.hn_alpha_vec.sum())
+                axes.plot(self.hn_m_vecs[k,0],self.hn_m_vecs[k,1],marker="x",color='red')
+            axes.set_xlabel("mu_vec[0]")
+            axes.set_ylabel("mu_vec[1]")
+            plt.show()
+
+        else:
+            raise(ParameterFormatError("if degree > 2, it is impossible to visualize the model by this function."))
         
     def get_p_params(self):
         """Get the parameters of the predictive distribution.
