@@ -79,9 +79,9 @@ $$
 \begin{align}
     N_k^{(t)} &= \sum_{i=1}^n r_{i,k}^{(t)}, \\
     \bar{\boldsymbol{x}}_k^{(t)} &= \frac{1}{N_k^{(t)}} \sum_{i=1}^n r_{i,k}^{(t)} \boldsymbol{x}_i, \\
-    \boldsymbol{m}_{n,k}^{(t+1)} &= \frac{\kappa_0\boldsymbol{\mu}_0 + N_k^{(t)} \bar{\boldsymbol{x}}_k^{(t)}}{\kappa_0 + N_k^{(t)}}, \\
+    \boldsymbol{m}_{n,k}^{(t+1)} &= \frac{\kappa_0\boldsymbol{m}_0 + N_k^{(t)} \bar{\boldsymbol{x}}_k^{(t)}}{\kappa_0 + N_k^{(t)}}, \\
     \kappa_{n,k}^{(t+1)} &= \kappa_0 + N_k^{(t)}, \\
-    (\boldsymbol{W}_{n,k}^{(t+1)})^{-1} &= \boldsymbol{W}_0^{-1} + \sum_{i=1}^{n} r_{i,k}^{(t)} (\boldsymbol{x}_i-\bar{\boldsymbol{x}}_k^{(t)})(\boldsymbol{x}_i-\bar{\boldsymbol{x}}_k^{(t)})^\top + \frac{\kappa_0 N_k^{(t)}}{\kappa_0 + N_k^{(t)}}(\bar{\boldsymbol{x}}_k^{(t)}-\boldsymbol{\mu}_0)(\bar{\boldsymbol{x}}_k^{(t)}-\boldsymbol{\mu}_0)^\top, \\
+    (\boldsymbol{W}_{n,k}^{(t+1)})^{-1} &= \boldsymbol{W}_0^{-1} + \sum_{i=1}^{n} r_{i,k}^{(t)} (\boldsymbol{x}_i-\bar{\boldsymbol{x}}_k^{(t)})(\boldsymbol{x}_i-\bar{\boldsymbol{x}}_k^{(t)})^\top + \frac{\kappa_0 N_k^{(t)}}{\kappa_0 + N_k^{(t)}}(\bar{\boldsymbol{x}}_k^{(t)}-\boldsymbol{m}_0)(\bar{\boldsymbol{x}}_k^{(t)}-\boldsymbol{m}_0)^\top, \\
     \nu_{n,k}^{(t+1)} &= \nu_0 + N_k^{(t)},\\
     \alpha_{n,k}^{(t+1)} &= \alpha_{0,k} + N_k^{(t)}, \\
     \ln \rho_{i,k}^{(t+1)} &= \psi (\alpha_{n,k}^{(t+1)}) - \psi ( {\textstyle \sum_{k=1}^K \alpha_{n,k}^{(t+1)}} ) \notag \\

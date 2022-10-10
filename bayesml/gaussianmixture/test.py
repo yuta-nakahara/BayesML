@@ -1,9 +1,16 @@
 from bayesml import gaussianmixture
 import numpy as np
+from matplotlib import pyplot as plt
+from time import time
 
-# model = gaussianmixture.GenModel(pi_vec=np.array([0.444,0.444,0.112]),
-#                                  mu_vecs=np.array([[-2.8],[-0.8],[2]]),
-#                                  lambda_mats=np.array([[[6.25]],[[6.25]],[[100]]]))
-model = gaussianmixture.GenModel(mu_vecs=np.array([[2,2],[-2,-2]]))
-# model.gen_params()
-model.visualize_model()
+gen_model = gaussianmixture.GenModel(
+    num_classes=2,
+    degree=2,
+    mu_vecs=np.array([[-2,-2],[2,2]]),
+    )
+x,z = gen_model.gen_sample(sample_size=100)
+print(x.shape)
+
+learn_model = gaussianmixture.LearnModel(num_classes=10, degree=2)
+learn_model.update_posterior(x)
+learn_model.visualize_posterior()
