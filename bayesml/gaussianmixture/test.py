@@ -11,9 +11,6 @@ gen_model = gaussianmixture.GenModel(
 x,z = gen_model.gen_sample(sample_size=100)
 print(x.shape)
 
-learn_model = gaussianmixture.LearnModel(num_classes=10, degree=2, h0_alpha_vec=10)
-for i in range(100):
-    learn_model.pred_and_update(x[i])
-    plt.scatter(x[:i+1,0],x[:i+1,1])
-    plt.show()
-    learn_model.visualize_posterior()
+learn_model = gaussianmixture.LearnModel(num_classes=10, degree=2)
+learn_model.update_posterior(x)
+learn_model.visualize_posterior()
