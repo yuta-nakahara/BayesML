@@ -178,6 +178,14 @@ def float_vecs(val,val_name,exception_class):
             return val
     raise(exception_class(val_name + " must be a numpy.ndarray whose ndim >= 1."))
 
+def pos_float_vecs(val,val_name,exception_class):
+    if type(val) is np.ndarray:
+        if np.issubdtype(val.dtype,np.integer) and val.ndim >= 1 and np.all(val>0):
+            return val.astype(float)
+        if np.issubdtype(val.dtype,np.floating) and val.ndim >= 1 and np.all(val>0.0):
+            return val
+    raise(exception_class(val_name + " must be a 1-dimensional numpy.ndarray. Its values must be positive (not including 0)"))
+
 def float_vec_sum_1(val,val_name,exception_class,ndim=1,sum_axis=0):
     if type(val) is np.ndarray:
         sum_val = np.sum(val, axis=sum_axis)

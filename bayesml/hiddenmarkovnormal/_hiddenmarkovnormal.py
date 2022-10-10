@@ -82,24 +82,24 @@ class GenModel(base.Generative):
         tmp_mu_vecs = None if mu_vecs is None else _check.float_vecs(mu_vecs, "mu_vecs", ParameterFormatError)
         tmp_lambda_mats = None if lambda_mats is None else _check.float_vecs(lambda_mats, "lambda_mats", ParameterFormatError)
 
-        # [Dimension value consistency]
+        # [Dimension consistency]
         if tmp_pi_vec is not None:
             _check.shape_consistency(
-                val=pi_vec, val_name="pi_vec", 
+                val=tmp_pi_vec, val_name="pi_vec", 
                 correct=[(self.c_num_classes,)], correct_name="(self.c_num_classes,)", 
                 exception_class=ParameterFormatError
             )
             self.pi_vec[:] = tmp_pi_vec
         if tmp_a_mat is not None:
             _check.shape_consistency(
-                val=a_mat.shape, val_name="a_mat", 
+                val=tmp_a_mat, val_name="a_mat", 
                 correct=[(self.c_num_classes, self.c_num_classes)], correct_name="(self.c_num_classes, self.c_num_classes)", 
                 exception_class=ParameterFormatError
             )
             self.a_mat[:] = tmp_a_mat
         if tmp_mu_vecs is not None:
             _check.shape_consistency(
-                val=mu_vecs.shape, val_name="mu_vecs", 
+                val=tmp_mu_vecs, val_name="mu_vecs", 
                 correct=[(self.c_degree,), (self.c_num_classes, self.c_degree)], 
                 correct_name="(self.c_degree,), (self.c_num_classes, self.c_degree)", 
                 exception_class=ParameterFormatError
@@ -107,7 +107,7 @@ class GenModel(base.Generative):
             self.mu_vecs[:] = tmp_mu_vecs
         if tmp_lambda_mats is not None:
             _check.shape_consistency(
-                val=lambda_mats.shape, val_name="lambda_mats", 
+                val=tmp_lambda_mats, val_name="lambda_mats", 
                 correct=[(self.c_degree,self.c_degree), (self.c_num_classes,self.c_degree,self.c_degree)], 
                 correct_name="(self.c_degree,self.c_degree), (self.c_num_classes,self.c_degree,self.c_degree)", 
                 exception_class=ParameterFormatError
@@ -135,6 +135,49 @@ class GenModel(base.Generative):
         #             +f"h0_m_vecs.shape[-1]={h0_m_vecs.shape[-1]}, self.degree={self.degree}"))
         #     self.h0_m_vecs[:] = h0_m_vecs
         pass
+
+        # [Check values]
+        tmp_h_m_vecs = None if h_m_vecs is None else _check.float_vecs(h_m_vecs, "h_m_vecs", ParameterFormatError)
+        tmp_h_kappas = None if h_kappas is None else np.array(_check.pos_floats(h_kappas, "h_kappas", ParameterFormatError))
+        tmp_h_nus = None if h_nus is None else np.array(_check.floats(h_nus, "h_nus", ParameterFormatError))
+        tmp_h_w_mats = None if h_w_mats is None else _check.pos_float_vecs(h_w_mats, "h_w_mats", ParameterFormatError)
+        tmp_h_eta_vec = None if h_eta_vec is None else _check.pos_float_vec(h_eta_vec, "h_eta_vec", ParameterFormatError)
+        tmp_h_zeta_vecs = None if h_zeta_vecs is None else _check.pos_float_vecs(h_zeta_vecs, "h_zeta_vecs", ParameterFormatError)
+
+        # [Dimension consistency]
+        if tmp_h_m_vecs is not None:
+            _check.shape_consistency(
+                val=tmp_h_m_vecs, val_name="h_m_vecs", 
+                correct=[(self.c_num_classes,self.c_degree), (self.c_degree,)], 
+                correct_name="(self.c_num_classes,self.c_degree), (self.c_degree,)", 
+                exception_class=ParameterFormatError
+            )
+            self.h_m_vecs[:] = tmp_h_m_vecs
+        if tmp_h_kappas is not None:
+            _check.shape_consistency(
+                val=tmp_h_kappas, val_name="h_kappas", 
+                correct=[(self.c_num_classes,), ()], correct_name="(self.c_num_classes,), ()", 
+                exception_class=ParameterFormatError
+            )
+            self.h_kappas[:] = tmp_h_kappas
+        if tmp_h_nus is not None:
+            if not np.all(tmp_h_nus > self.c_degree - 1):
+                raise(ParameterFormatError("The all values in h_nus must be greater than self.c_degree."))
+            _check.shape_consistency(
+                val=tmp_h_nus, val_name="h_nus", 
+                correct=[(self.c_num_classes,), ()], 
+                correct_name="(self.c_num_classes,), ()", 
+                exception_class=ParameterFormatError
+            )
+            self.h_nus[:] = tmp_h_nus
+        if tmp_h_w_mats is not None:
+            _check.shape_consistency(
+                val=tmp_h_w_mats.shape, val_name="h_w_mats", 
+                correct=[(self.c_num_classes,self.c_degree,self.c_degree), (self.c_degree,self.c_degree)], 
+                correct_name="(self.c_num_classes,self.c_degree,self.c_degree), (self.c_degree,self.c_degree)", 
+                exception_class=ParameterFormatError
+            )
+            self.h_w_mats[:] = tmp_h_w_mats
 
     def get_params(self):
         # paramsを辞書として返す関数．
