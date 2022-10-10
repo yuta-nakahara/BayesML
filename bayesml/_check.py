@@ -239,3 +239,10 @@ def dim_consistency(value_dict: dict, exception_class):
     else:
         return list(check_value_dict.values())[0]
     raise(exception_class(message))
+
+def shape_consistency(val, val_name, correct, correct_name, exception_class):
+    if val.shape not in correct:
+        message = f"{val_name}.shape must coincide with {correct_name}:"
+        +f"{val_name}.shape={val.shape}, {correct_name}={correct}"
+        raise(exception_class(message))
+

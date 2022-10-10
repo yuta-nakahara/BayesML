@@ -76,50 +76,43 @@ class GenModel(base.Generative):
             positive definite symetric matrices
         """
 
+        # [Check values]
+        tmp_pi_vec = None if pi_vec is None else _check.float_vec_sum_1(pi_vec, "pi_vec", ParameterFormatError)
+        tmp_a_mat = None if a_mat is None else _check.float_vec_sum_1(a_mat, "a_mat", ParameterFormatError, ndim=2, sum_axis=1)
+        tmp_mu_vecs = None if mu_vecs is None else _check.float_vecs(mu_vecs, "mu_vecs", ParameterFormatError)
+        tmp_lambda_mats = None if lambda_mats is None else _check.float_vecs(lambda_mats, "lambda_mats", ParameterFormatError)
+
         # [Dimension value consistency]
-        if pi_vec is not None:
-            if pi_vec.shape[0] != self.c_num_classes:
-                raise(ParameterFormatError(
-                    "pi_vec.shape[0] must coincide with self.c_num_classes:"
-                    +f"pi_vec.shape[0]={pi_vec.shape[0]}, self.c_num_classes={self.c_num_classes}"))
-            self.pi_vec = _check.float_vec_sum_1(pi_vec, "pi_vec", ParameterFormatError)
-        if a_mat is not None:
-            if a_mat.shape[0] != self.c_num_classes or a_mat.shape[1] != self.c_num_classes:
-                raise(ParameterFormatError(
-                    "a_mat.shape[0] and a_mat.shape[1] must coincide with self.c_num_classes:"
-                    +f"a_mat.shape[0]={a_mat.shape[0]}, a_mat.shape[1]={a_mat.shape[1]}, self.c_num_classes={self.c_num_classes}"))
-            self.a_mat = _check.float_vec_sum_1(a_mat, "a_mat", ParameterFormatError, ndim=2, sum_axis=1)
-        if mu_vecs is not None:
-            message = ""
-            if mu_vecs.shape[0] != self.c_degree:
-                message += "mu_vecs.shape[0] must coincide with self.c_degree:"
-                +f"mu_vecs.shape[0]={mu_vecs.shape[0]}, self.c_degree={self.c_degree}"
-            if len(mu_vecs) == 2:
-                if mu_vecs.shape[1] != self.c_num_classes:
-                    message += "mu_vecs.shape[1] must coincide with self.c_num_classes:"
-                    +f"mu_vecs.shape[1]={mu_vecs.shape[1]}, self.c_num_classes={self.c_num_classes}"
-            if message != "":
-                raise(ParameterFormatError(message))
-            self.mu_vecs = _check.float_vecs(mu_vecs, "mu_vecs", ParameterFormatError)
-            if len(mu_vecs) == 1:
-                self.mu_vecs = np.broadcast_to(np.reshape(self.mu_vecs, (self.c_degree, 1)), (self.c_degree, self.c_num_classes))
-        if lambda_mats is not None:
-            message = ""
-            if lambda_mats.shape[:2] != (self.c_degree, self.c_degree):
-                message += "lambda_mats.shape[:2] must coincide with (self.c_degree, self.c_degree):"
-                +f"lambda_mats.shape[:2]={lambda_mats.shape[:2]}, (self.c_degree, self.c_degree)={(self.c_degree, self.c_degree)}"
-            if len(lambda_mats) == 3:
-                if lambda_mats.shape[2] != self.c_num_classes:
-                    message += "lambda_mats.shape[2] must coincide with self.c_num_classes:"
-                    +f"lambda_mats.shape[2]={lambda_mats.shape[2]}, self.c_num_classes={self.c_num_classes}"
-            if message != "":
-                raise(ParameterFormatError(message))
-            self.lambda_mats = _check.float_vecs(lambda_mats, "lambda_mats", ParameterFormatError)
-            if len(self.lambda_mats) == 2:
-                self.lambda_mats = np.broadcast_to(
-                    np.reshape(self.lambda_mats, (self.c_degree,self.c_degree,1)), 
-                    (self.c_degree,self.c_degree,self.c_num_classes)
-                )
+        if tmp_pi_vec is not None:
+            _check.shape_consistency(
+                val=pi_vec, val_name="pi_vec", 
+                correct=[(self.c_num_classes,)], correct_name="(self.c_num_classes,)", 
+                exception_class=ParameterFormatError
+            )
+            self.pi_vec[:] = tmp_pi_vec
+        if tmp_a_mat is not None:
+            _check.shape_consistency(
+                val=a_mat.shape, val_name="a_mat", 
+                correct=[(self.c_num_classes, self.c_num_classes)], correct_name="(self.c_num_classes, self.c_num_classes)", 
+                exception_class=ParameterFormatError
+            )
+            self.a_mat[:] = tmp_a_mat
+        if tmp_mu_vecs is not None:
+            _check.shape_consistency(
+                val=mu_vecs.shape, val_name="mu_vecs", 
+                correct=[(self.c_degree,), (self.c_num_classes, self.c_degree)], 
+                correct_name="(self.c_degree,), (self.c_num_classes, self.c_degree)", 
+                exception_class=ParameterFormatError
+            )
+            self.mu_vecs[:] = tmp_mu_vecs
+        if tmp_lambda_mats is not None:
+            _check.shape_consistency(
+                val=lambda_mats.shape, val_name="lambda_mats", 
+                correct=[(self.c_degree,self.c_degree), (self.c_num_classes,self.c_degree,self.c_degree)], 
+                correct_name="(self.c_degree,self.c_degree), (self.c_num_classes,self.c_degree,self.c_degree)", 
+                exception_class=ParameterFormatError
+            )
+            self.lambda_mats[:] = tmp_lambda_mats
 
     def set_h_params(
             self,
