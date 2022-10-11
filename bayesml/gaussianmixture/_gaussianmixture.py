@@ -67,7 +67,7 @@ class GenModel(base.Generative):
         # params
         self.pi_vec = np.ones(self.c_num_classes) / self.c_num_classes
         self.mu_vecs = np.zeros([self.c_num_classes,self.c_degree])
-        self.lambda_mats = np.tile(np.identity(self.c_degree),[self.c_num_classes,self.c_degree,self.c_degree])
+        self.lambda_mats = np.tile(np.identity(self.c_degree),[self.c_num_classes,1,1])
 
         # h_params
         self.h_alpha_vec = np.ones(self.c_num_classes) / 2        
