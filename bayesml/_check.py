@@ -2,6 +2,7 @@
 # Yuta Nakahara <yuta.nakahara@aoni.waseda.jp>
 # Yuji Iikubo <yuji-iikubo.8@fuji.waseda.jp>
 # Yasushi Esaki <esakiful@gmail.com>
+# Jun Nishikawa <jun.b.nishikawa@gmail.com>
 import numpy as np
 
 _EPSILON = np.sqrt(np.finfo(np.float64).eps)
@@ -230,27 +231,8 @@ def onehot_vecs(val,val_name,exception_class):
             return val
     raise(exception_class(val_name + " must be a numpy.ndarray whose dtype is int and whose last axis constitutes one-hot vectors."))
 
-def dim_consistency(value_dict: dict, exception_class):
-    check_value_dict = {}
-    for key in value_dict:
-        if value_dict[key] is not None and value_dict[key] not in check_value_dict.values():
-            check_value_dict[key] = value_dict[key]
-    if len(check_value_dict) == 0:
-        return None
-    elif len(check_value_dict) > 1:
-        message = f"The following values must be the same: {list(value_dict.keys())}. "
-        message += f"The following values are different: {list(check_value_dict.keys())}. "
-        # print("===== Error =====")
-        for key in check_value_dict:
-            # print(f"{key} = {check_value_dict[key]}")
-            message += f"\n {key} = {check_value_dict[key]}"
-    else:
-        return list(check_value_dict.values())[0]
-    raise(exception_class(message))
-
-def shape_consistency(val, val_name, correct, correct_name, exception_class):
-    if val.shape not in correct:
-        message = f"{val_name}.shape must coincide with {correct_name}:"
-        +f"{val_name}.shape={val.shape}, {correct_name}={correct}"
+def shape_consistency(val: int, val_name: str, correct: int, correct_name: str, exception_class):
+    if val != correct:
+        message = (f"{val_name} must coincide with {correct_name}: "
+                   + f"{val_name} = {val}, {correct_name} = {correct}")
         raise(exception_class(message))
-
