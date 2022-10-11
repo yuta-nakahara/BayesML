@@ -120,8 +120,8 @@ class GenModel(base.Generative):
             _check.float_vecs(h_m_vecs,'h_m_vecs',ParameterFormatError)
             if h_m_vecs.shape[-1] != self.c_degree:
                 raise(ParameterFormatError(
-                    "h_m_vecs.shape[-1] must coincide with self.c_degree:"
-                    +f"h_m_vecs.shape[-1]={h_m_vecs.shape[-1]}, self.c_degree={self.c_degree}"))
+                    "h_m_vecs.shape[-1] must coincide with self.c_degree: "
+                    +f"h_m_vecs.shape[-1] = {h_m_vecs.shape[-1]}, self.c_degree = {self.c_degree}"))
             self.h_m_vecs[:] = h_m_vecs
 
         if h_kappas is not None:
@@ -132,16 +132,16 @@ class GenModel(base.Generative):
             _check.pos_floats(h_nus,'h_nus',ParameterFormatError)
             if np.any(h_nus <= self.c_degree - 1):
                 raise(ParameterFormatError(
-                    "c_degree must be smaller than h_nus + 1"
-                    + f"self.c_degree={self.c_degree}, h_nus={h_nus}"))
+                    "All the values of h_nus must be greater than self.c_degree - 1: "
+                    + f"self.c_degree = {self.c_degree}, h_nus = {h_nus}"))
             self.h_nus[:] = h_nus
 
         if h_w_mats is not None:
             _check.pos_def_sym_mats(h_w_mats,'h_w_mats',ParameterFormatError)
             if h_w_mats.shape[-1] != self.c_degree:
                 raise(ParameterFormatError(
-                    "h_w_mats.shape[-1] and h_w_mats.shape[-2] must coincide with self.c_degree:"
-                    +f"h_w_mats.shape[-1]={h_w_mats.shape[-1]}, h_w_mats.shape[-2]={h_w_mats.shape[-2]}, self.c_degree={self.c_degree}"))
+                    "h_w_mats.shape[-1] and h_w_mats.shape[-2] must coincide with self.c_degree: "
+                    +f"h_w_mats.shape[-1] and h_w_mats.shape[-2] = {h_w_mats.shape[-1]}, self.c_degree = {self.c_degree}"))
             self.h_w_mats[:] = h_w_mats
 
     def get_h_params(self):
@@ -191,14 +191,18 @@ class GenModel(base.Generative):
         """
         if pi_vec is not None:
             _check.float_vec_sum_1(pi_vec,'pi_vec',ParameterFormatError)
+            if pi_vec.shape[0] != self.c_num_classes:
+                raise(ParameterFormatError(
+                    "pi_vec.shape[0] must coincide with self.c_num_classes: "
+                    +f"pi_vec.shape[0] = {pi_vec.shape[0]}, self.c_num_classes = {self.c_num_classes}"))
             self.pi_vec[:] = pi_vec
 
         if mu_vecs is not None:
             _check.float_vecs(mu_vecs,'mu_vecs',ParameterFormatError)
             if mu_vecs.shape[-1] != self.c_degree:
                 raise(ParameterFormatError(
-                    "mu_vecs.shape[-1] must coincide with self.c_degree:"
-                    +f"mu_vecs.shape[-1]={mu_vecs.shape[-1]}, self.c_degree={self.c_degree}"))
+                    "mu_vecs.shape[-1] must coincide with self.c_degree: "
+                    +f"mu_vecs.shape[-1] = {mu_vecs.shape[-1]}, self.c_degree = {self.c_degree}"))
             self.mu_vecs[:] = mu_vecs
 
         if lambda_mats is not None:
@@ -206,7 +210,7 @@ class GenModel(base.Generative):
             if lambda_mats.shape[-1] != self.c_degree:
                 raise(ParameterFormatError(
                     "lambda_mats.shape[-1] and lambda_mats.shape[-2] must coincide with self.c_degree:"
-                    +f"lambda_mats.shape[-1]={lambda_mats.shape[-1]}, lambda_mats.shape[-2]={lambda_mats.shape[-2]}, self.c_degree={self.c_degree}"))
+                    +f"lambda_mats.shape[-1] and lambda_mats.shape[-2] = {lambda_mats.shape[-1]}, self.c_degree = {self.c_degree}"))
             self.lambda_mats[:] = lambda_mats
 
     def get_params(self):
@@ -504,8 +508,8 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             _check.float_vecs(h0_m_vecs,'h0_m_vecs',ParameterFormatError)
             if h0_m_vecs.shape[-1] != self.c_degree:
                 raise(ParameterFormatError(
-                    "h0_m_vecs.shape[-1] must coincide with self.c_degree:"
-                    +f"h0_m_vecs.shape[-1]={h0_m_vecs.shape[-1]}, self.c_degree={self.c_degree}"))
+                    "h0_m_vecs.shape[-1] must coincide with self.c_degree: "
+                    +f"h0_m_vecs.shape[-1] = {h0_m_vecs.shape[-1]}, self.c_degree = {self.c_degree}"))
             self.h0_m_vecs[:] = h0_m_vecs
 
         if h0_kappas is not None:
@@ -516,15 +520,16 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             _check.pos_floats(h0_nus,'h0_nus',ParameterFormatError)
             if np.any(h0_nus <= self.c_degree - 1):
                 raise(ParameterFormatError(
-                    "c_degree must be smaller than h0_nus + 1"))
+                    "All the values of h0_nus must be greater than self.c_degree - 1: "
+                    + f"self.c_degree = {self.c_degree}, h0_nus = {h0_nus}"))
             self.h0_nus[:] = h0_nus
 
         if h0_w_mats is not None:
             _check.pos_def_sym_mats(h0_w_mats,'h0_w_mats',ParameterFormatError)
             if h0_w_mats.shape[-1] != self.c_degree:
                 raise(ParameterFormatError(
-                    "h0_w_mats.shape[-1] and h0_w_mats.shape[-2] must coincide with self.c_degree:"
-                    +f"h0_w_mats.shape[-1]={h0_w_mats.shape[-1]}, h0_w_mats.shape[-2]={h0_w_mats.shape[-2]}, self.c_degree={self.c_degree}"))
+                    "h0_w_mats.shape[-1] and h0_w_mats.shape[-2] must coincide with self.c_degree: "
+                    +f"h0_w_mats.shape[-1] and h0_w_mats.shape[-2] = {h0_w_mats.shape[-1]}, self.c_degree = {self.c_degree}"))
             self.h0_w_mats[:] = h0_w_mats
             self.h0_w_mats_inv[:] = np.linalg.inv(self.h0_w_mats)
 
@@ -580,8 +585,8 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             _check.float_vecs(hn_m_vecs,'hn_m_vecs',ParameterFormatError)
             if hn_m_vecs.shape[-1] != self.c_degree:
                 raise(ParameterFormatError(
-                    "hn_m_vecs.shape[-1] must coincide with self.c_degree:"
-                    +f"hn_m_vecs.shape[-1]={hn_m_vecs.shape[-1]}, self.c_degree={self.c_degree}"))
+                    "hn_m_vecs.shape[-1] must coincide with self.c_degree: "
+                    +f"hn_m_vecs.shape[-1] = {hn_m_vecs.shape[-1]}, self.c_degree = {self.c_degree}"))
             self.hn_m_vecs[:] = hn_m_vecs
 
         if hn_kappas is not None:
@@ -592,15 +597,16 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             _check.pos_floats(hn_nus,'hn_nus',ParameterFormatError)
             if np.any(hn_nus <= self.c_degree - 1):
                 raise(ParameterFormatError(
-                    "c_degree must be smaller than hn_nus + 1"))
+                    "All the values of hn_nus must be greater than self.c_degree - 1: "
+                    + f"self.c_degree = {self.c_degree}, hn_nus = {hn_nus}"))
             self.hn_nus[:] = hn_nus
 
         if hn_w_mats is not None:
             _check.pos_def_sym_mats(hn_w_mats,'hn_w_mats',ParameterFormatError)
             if hn_w_mats.shape[-1] != self.c_degree:
                 raise(ParameterFormatError(
-                    "hn_w_mats.shape[-1] and hn_w_mats.shape[-2] must coincide with self.c_degree:"
-                    +f"hn_w_mats.shape[-1]={hn_w_mats.shape[-1]}, hn_w_mats.shape[-2]={hn_w_mats.shape[-2]}, self.c_degree={self.c_degree}"))
+                    "hn_w_mats.shape[-1] and hn_w_mats.shape[-2] must coincide with self.c_degree: "
+                    +f"hn_w_mats.shape[-1] and hn_w_mats.shape[-2] = {hn_w_mats.shape[-1]}, self.c_degree = {self.c_degree}"))
             self.hn_w_mats[:] = hn_w_mats
             self.hn_w_mats_inv[:] = np.linalg.inv(self.hn_w_mats)
 
