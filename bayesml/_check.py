@@ -218,6 +218,6 @@ def onehot_vecs(val,val_name,exception_class):
 
 def shape_consistency(val: int, val_name: str, correct: int, correct_name: str, exception_class):
     if val != correct:
-        message = (f"{val_name} must coincide with {correct_name}:"
-                   + f"{val_name}={val}, {correct_name}={correct}")
+        message = (f"{val_name} must coincide with {correct_name}: "
+                   + f"{val_name} = {val}, {correct_name} = {correct}")
         raise(exception_class(message))
