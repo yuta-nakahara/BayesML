@@ -41,60 +41,53 @@ class GenModel(base.Generative):
             self,
             w_vec=None,
             ):
-        # Noneでない入力について，以下をチェックする．
-        # * それ単体として，モデルの仮定を満たすか（符号，行列の正定値性など）
-        # * 配列のサイズなどがconstants（c_で始まる変数）と整合しているか．ただし，ブロードキャスト可能なものは認める
-        # 例
-        # if h0_m_vecs is not None:
-        #     _check.float_vecs(h0_m_vecs,'h0_m_vecs',ParameterFormatError)
-        #     if h0_m_vecs.shape[-1] != self.degree:
-        #         raise(ParameterFormatError(
-        #             "h0_m_vecs.shape[-1] must coincide with self.degree:"
-        #             +f"h0_m_vecs.shape[-1]={h0_m_vecs.shape[-1]}, self.degree={self.degree}"))
-        #     self.h0_m_vecs[:] = h0_m_vecs
-        pass
+        if w_vec is not None:
+            _check.float_vec(w_vec,'w_vec',ParameterFormatError)
+            _check.shape_consistency(
+                w_vec.shape[0],'w_vec.shape[0]',
+                self.c_degree,'self.c_degree',
+                ParameterFormatError
+                )
+            self.w_vec[:] = w_vec
 
     def set_h_params(
             self,
             h_mu_vec=None,
             h_lambda_mat=None,
             ):
-        # Noneでない入力について，以下をチェックする．
-        # * それ単体として，モデルの仮定を満たすか（符号，行列の正定値性など）
-        # * 配列のサイズなどがconstants（c_で始まる変数）と整合しているか．ただし，ブロードキャスト可能なものは認める
-        # 例
-        # if h0_m_vecs is not None:
-        #     _check.float_vecs(h0_m_vecs,'h0_m_vecs',ParameterFormatError)
-        #     if h0_m_vecs.shape[-1] != self.degree:
-        #         raise(ParameterFormatError(
-        #             "h0_m_vecs.shape[-1] must coincide with self.degree:"
-        #             +f"h0_m_vecs.shape[-1]={h0_m_vecs.shape[-1]}, self.degree={self.degree}"))
-        #     self.h0_m_vecs[:] = h0_m_vecs
-        pass
+        if h_mu_vec is not None:
+            _check.float_vec(h_mu_vec,'h_mu_vec',ParameterFormatError)
+            _check.shape_consistency(
+                h_mu_vec.shape[0],'h_mu_vec.shape[0]',
+                self.c_degree,'self.c_degree',
+                ParameterFormatError
+                )
+            self.h_mu_vec[:] = h_mu_vec
+        
+        if h_lambda_mat is not None:
+            _check.pos_def_sym_mat(h_lambda_mat,'h_lambda_mat',ParameterFormatError)
+            _check.shape_consistency(
+                h_lambda_mat.shape[0],'h_lambda_mat.shape[0] and h_lambda_mat.shape[1]',
+                self.c_degree,'self.c_degree',
+                ParameterFormatError
+                )
+            self.h_lambda_mat[:] = h_lambda_mat
 
     def get_params(self):
-        # paramsを辞書として返す関数．
-        # 要素の順番はset_paramsの引数の順にそろえる．
-        pass
+        return {'w_vec':self.w_vec}
 
     def get_h_params(self):
-        # h_paramsを辞書として返す関数．
-        # 要素の順番はset_h_paramsの引数の順にそろえる．
-        pass
+        return {'h_mu_vec':self.h_mu_vec,'h_lambda_mat':self.h_lambda_mat}
 
-    # まだ実装しなくてよい
     def gen_params(self):
         pass
 
-    # まだ実装しなくてよい
     def gen_sample(self):
         pass
     
-    # まだ実装しなくてよい
     def save_sample(self):
         pass
     
-    # まだ実装しなくてよい
     def visualize_model(self):
         pass
 
@@ -134,97 +127,80 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             h0_mu_vec=None,
             h0_lambda_mat=None,
             ):
-        # Noneでない入力について，以下をチェックする．
-        # * それ単体として，モデルの仮定を満たすか（符号，行列の正定値性など）
-        # * 配列のサイズなどがconstants（c_で始まる変数）と整合しているか．ただし，ブロードキャスト可能なものは認める
-        # 例
-        # if h0_m_vecs is not None:
-        #     _check.float_vecs(h0_m_vecs,'h0_m_vecs',ParameterFormatError)
-        #     if h0_m_vecs.shape[-1] != self.degree:
-        #         raise(ParameterFormatError(
-        #             "h0_m_vecs.shape[-1] must coincide with self.degree:"
-        #             +f"h0_m_vecs.shape[-1]={h0_m_vecs.shape[-1]}, self.degree={self.degree}"))
-        #     self.h0_m_vecs[:] = h0_m_vecs
-
-        # 最後にreset_hn_params()を呼ぶようにする
+        if h0_mu_vec is not None:
+            _check.float_vec(h0_mu_vec,'h0_mu_vec',ParameterFormatError)
+            _check.shape_consistency(
+                h0_mu_vec.shape[0],'h0_mu_vec.shape[0]',
+                self.c_degree,'self.c_degree',
+                ParameterFormatError
+                )
+            self.h0_mu_vec[:] = h0_mu_vec
+        
+        if h0_lambda_mat is not None:
+            _check.pos_def_sym_mat(h0_lambda_mat,'h0_lambda_mat',ParameterFormatError)
+            _check.shape_consistency(
+                h0_lambda_mat.shape[0],'h0_lambda_mat.shape[0] and h0_lambda_mat.shape[1]',
+                self.c_degree,'self.c_degree',
+                ParameterFormatError
+                )
+            self.h0_lambda_mat[:] = h0_lambda_mat
+        
         self.reset_hn_params()
 
     def get_h0_params(self):
-        # h0_paramsを辞書として返す関数．
-        # 要素の順番はset_h_paramsの引数の順にそろえる．
-        pass
+        return {'h0_mu_vec':self.h0_mu_vec,'h0_lambda_mat':self.h0_lambda_mat}
     
     def set_hn_params(
             self,
             hn_mu_vec=None,
             hn_lambda_mat=None,
             ):
-        # Noneでない入力について，以下をチェックする．
-        # * それ単体として，モデルの仮定を満たすか（符号，行列の正定値性など）
-        # * 配列のサイズなどがconstants（c_で始まる変数）と整合しているか．ただし，ブロードキャスト可能なものは認める
-        # 例
-        # if h0_m_vecs is not None:
-        #     _check.float_vecs(h0_m_vecs,'h0_m_vecs',ParameterFormatError)
-        #     if h0_m_vecs.shape[-1] != self.degree:
-        #         raise(ParameterFormatError(
-        #             "h0_m_vecs.shape[-1] must coincide with self.degree:"
-        #             +f"h0_m_vecs.shape[-1]={h0_m_vecs.shape[-1]}, self.degree={self.degree}"))
-        #     self.h0_m_vecs[:] = h0_m_vecs
+        if hn_mu_vec is not None:
+            _check.float_vec(hn_mu_vec,'hn_mu_vec',ParameterFormatError)
+            _check.shape_consistency(
+                hn_mu_vec.shape[0],'hn_mu_vec.shape[0]',
+                self.c_degree,'self.c_degree',
+                ParameterFormatError
+                )
+            self.hn_mu_vec[:] = hn_mu_vec
+        
+        if hn_lambda_mat is not None:
+            _check.pos_def_sym_mat(hn_lambda_mat,'hn_lambda_mat',ParameterFormatError)
+            _check.shape_consistency(
+                hn_lambda_mat.shape[0],'hn_lambda_mat.shape[0] and hn_lambda_mat.shape[1]',
+                self.c_degree,'self.c_degree',
+                ParameterFormatError
+                )
+            self.hn_lambda_mat[:] = hn_lambda_mat
 
-        # 最後にcalc_pred_dist()を呼ぶようにする
         self.calc_pred_dist()
 
     def get_hn_params(self):
-        # hn_paramsを辞書として返す関数．
-        # 要素の順番はset_h_paramsの引数の順にそろえる．
-        pass
+        return {'hn_mu_vec':self.hn_mu_vec,'hn_lambda_mat':self.hn_lambda_mat}
     
     def reset_hn_params(self):
-        # h0_paramsの値をhn_paramsの値にそのままコピーする
-        # 配列サイズを揃えてあるので，簡単に書けるはず．
-        # 例
-        # self.hn_alpha_vec[:] = self.h0_alpha_vec
-        # self.hn_m_vecs[:] = self.h0_m_vecs
-        # self.hn_kappas[:] = self.h0_kappas
-
-        # 最後にcalc_pred_distを呼ぶ．
-        self.calc_pred_dist()
+        self.set_hn_params(self.h0_mu_vec,self.h0_lambda_mat)
     
     def overwrite_h0_params(self):
-        # hn_paramsの値をh0_paramsの値にそのままコピーする
-        # 配列サイズを揃えてあるので，簡単に書けるはず．
-        # 例
-        # self.h0_alpha_vec[:] = self.hn_alpha_vec
-        # self.h0_m_vecs[:] = self.hn_m_vecs
-        # self.h0_kappas[:] = self.hn_kappas
+        self.set_h0_params(self.hn_mu_vec,self.hn_lambda_mat)
 
-        # 最後にcalc_pred_distを呼ぶ．
-        self.calc_pred_dist()
-
-    # まだ実装しなくてよい
     def update_posterior():
         pass
 
-    # まだ実装しなくてよい
     def estimate_params(self,loss="squared"):
         pass
 
-    # まだ実装しなくてよい    
     def visualize_posterior(self):
         pass
         
     def get_p_params(self):
-        # p_paramsを辞書として返す関数．
-        pass
+        return {'p_sigma_squared':self.p_sigma_squared,'p_mu':self.p_mu}
 
-    # まだ実装しなくてよい    
     def calc_pred_dist(self):
         pass
 
-    # まだ実装しなくてよい    
     def make_prediction(self,loss="squared"):
         pass
 
-    # まだ実装しなくてよい    
     def pred_and_update(self,x,loss="squared"):
         pass
