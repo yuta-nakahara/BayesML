@@ -25,12 +25,12 @@ class GenModel(base.Generative):
             a_mat=None,
             mu_vecs=None,
             lambda_mats=None,
+            h_eta_vec=None,
+            h_zeta_vecs=None,
             h_m_vecs=None,
             h_kappas=None,
             h_nus=None,
             h_w_mats=None,
-            h_eta_vec=None,
-            h_zeta_vecs=None,
             seed=None
             ):
         # constants
@@ -52,8 +52,19 @@ class GenModel(base.Generative):
         self.h_nus = np.ones(self.c_num_classes) * self.c_degree
         self.h_w_mats = np.tile(np.identity(self.c_degree),[self.c_num_classes,1,1])
 
-        self.set_params(pi_vec,a_mat,mu_vecs,lambda_mats)
-        self.set_h_params(h_eta_vec,h_zeta_vecs,h_m_vecs,h_kappas,h_nus,h_w_mats)
+        self.set_params(
+            pi_vec,
+            a_mat,
+            mu_vecs,
+            lambda_mats)
+
+        self.set_h_params(
+            h_eta_vec,
+            h_zeta_vecs,
+            h_m_vecs,
+            h_kappas,
+            h_nus,
+            h_w_mats)
 
     def set_params(
             self,
@@ -160,14 +171,18 @@ class GenModel(base.Generative):
             self.h_w_mats[:] = h_w_mats
 
     def get_params(self):
-        # paramsを辞書として返す関数．
-        # 要素の順番はset_paramsの引数の順にそろえる．
-        pass
+        return {'pi_vec':self.pi_vec,
+                'a_mat':self.a_mat,
+                'mu_vecs':self.mu_vecs,
+                'lambda_mats': self.lambda_mats}
 
     def get_h_params(self):
-        # h_paramsを辞書として返す関数．
-        # 要素の順番はset_h_paramsの引数の順にそろえる．
-        pass
+        return {'h_eta_vec':self.h_eta_vec,
+                'h_zeta_vecs':self.h_zeta_vecs,
+                'h_m_vecs':self.h_m_vecs,
+                'h_kappas':self.h_kappas,
+                'h_nus':self.h_nus,
+                'h_w_mats':self.h_w_mats}
 
     # まだ実装しなくてよい
     def gen_params(self):
