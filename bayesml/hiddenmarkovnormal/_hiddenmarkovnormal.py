@@ -98,8 +98,8 @@ class GenModel(base.Generative):
         if a_mat is not None:
             _check.float_vecs_sum_1(a_mat, "a_mat", ParameterFormatError)
             _check.shape_consistency(
-                a_mat.shape[-1], "a_mat.shape[-1]", 
-                self.c_num_classes, "self.c_num_classes", 
+                a_mat.shape[-1],"a_mat.shape[-1]", 
+                self.c_num_classes,"self.c_num_classes", 
                 ParameterFormatError
                 )
             self.a_mat[:] = a_mat
@@ -184,19 +184,15 @@ class GenModel(base.Generative):
                 'h_nus':self.h_nus,
                 'h_w_mats':self.h_w_mats}
 
-    # まだ実装しなくてよい
     def gen_params(self):
         pass
 
-    # まだ実装しなくてよい
     def gen_sample(self):
         pass
     
-    # まだ実装しなくてよい
     def save_sample(self):
         pass
     
-    # まだ実装しなくてよい
     def visualize_model(self):
         pass
 
@@ -207,12 +203,12 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             c_num_classes,
             c_degree,
             *,
+            h0_eta_vec=None,
+            h0_zeta_vecs=None,
             h0_m_vecs=None,
             h0_kappas=None,
             h0_nus=None,
             h0_w_mats=None,
-            h0_eta_vec=None,
-            h0_zeta_vecs=None,
             seed = None
             ):
         # constants
@@ -221,22 +217,22 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self.rng = np.random.default_rng(seed)
 
         # h0_params
+        self.h0_eta_vec = np.ones(self.c_num_classes) / 2.0
+        self.h0_zeta_vecs = np.ones([self.c_num_classes,self.c_num_classes]) / 2.0
         self.h0_m_vecs = np.zeros([self.c_num_classes,self.c_degree])
         self.h0_kappas = np.ones([self.c_num_classes])
         self.h0_nus = np.ones(self.c_num_classes) * self.c_degree
         self.h0_w_mats = np.tile(np.identity(self.c_degree),[self.c_num_classes,1,1])
         self.h0_w_mats_inv = np.linalg.inv(self.h0_w_mats)
-        self.h0_eta_vec = np.ones(self.c_num_classes) / 2.0
-        self.h0_zeta_vecs = np.ones([self.c_num_classes,self.c_num_classes]) / 2.0
 
         # hn_params
+        self.hn_eta_vec = np.empty(self.c_num_classes)
+        self.hn_zeta_vecs = np.empty([self.c_num_classes,self.c_num_classes])
         self.hn_m_vecs = np.empty([self.c_num_classes,self.c_degree])
         self.hn_kappas = np.empty([self.c_num_classes])
         self.hn_nus = np.empty(self.c_num_classes)
         self.hn_w_mats = np.empty([self.c_num_classes,self.c_degree,self.c_degree])
         self.hn_w_mats_inv = np.empty([self.c_num_classes,self.c_degree,self.c_degree])
-        self.hn_eta_vec = np.empty(self.c_num_classes)
-        self.hn_zeta_vecs = np.empty([self.c_num_classes,self.c_num_classes])
 
         # p_params
         self.p_mu_vecs = np.empty([self.c_num_classes,self.c_degree])
@@ -245,118 +241,158 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self.p_lambda_mats_inv = np.empty([self.c_num_classes,self.c_degree,self.c_degree])
         
         self.set_h0_params(
+            h0_eta_vec,
+            h0_zeta_vecs,
             h0_m_vecs,
             h0_kappas,
             h0_nus,
             h0_w_mats,
-            h0_eta_vec,
-            h0_zeta_vecs,
         )
 
     def set_h0_params(
             self,
+            h0_eta_vec = None,
+            h0_zeta_vecs = None,
             h0_m_vecs = None,
             h0_kappas = None,
             h0_nus = None,
             h0_w_mats = None,
-            h0_eta_vec = None,
-            h0_zeta_vecs = None,
             ):
-        # Noneでない入力について，以下をチェックする．
-        # * それ単体として，モデルの仮定を満たすか（符号，行列の正定値性など）
-        # * 配列のサイズなどがconstants（c_で始まる変数）と整合しているか．ただし，ブロードキャスト可能なものは認める
-        # 例
-        # if h0_m_vecs is not None:
-        #     _check.float_vecs(h0_m_vecs,'h0_m_vecs',ParameterFormatError)
-        #     if h0_m_vecs.shape[-1] != self.degree:
-        #         raise(ParameterFormatError(
-        #             "h0_m_vecs.shape[-1] must coincide with self.degree:"
-        #             +f"h0_m_vecs.shape[-1]={h0_m_vecs.shape[-1]}, self.degree={self.degree}"))
-        #     self.h0_m_vecs[:] = h0_m_vecs
+        if h0_eta_vec is not None:
+            _check.pos_floats(h0_eta_vec,'h0_eta_vec',ParameterFormatError)
+            self.h0_eta_vec[:] = h0_eta_vec
 
-        # 最後にreset_hn_params()を呼ぶようにする
+        if h0_zeta_vecs is not None:
+            _check.pos_floats(h0_zeta_vecs, 'h0_zeta_vecs', ParameterFormatError)
+            self.h0_zeta_vecs[:] = h0_zeta_vecs
+
+        if h0_m_vecs is not None:
+            _check.float_vecs(h0_m_vecs, "h0_m_vecs", ParameterFormatError)
+            _check.shape_consistency(
+                h0_m_vecs.shape[-1],"h0_m_vecs.shape[-1]", 
+                self.c_degree,"self.c_degree", 
+                ParameterFormatError
+                )
+            self.h0_m_vecs[:] = h0_m_vecs
+
+        if h0_kappas is not None:
+            _check.pos_floats(h0_kappas, "h0_kappas", ParameterFormatError)
+            self.h0_kappas[:] = h0_kappas
+
+        if h0_nus is not None:
+            _check.floats(h0_nus, "h0_nus", ParameterFormatError)
+            if np.all(h0_nus <= self.c_degree - 1):
+                raise(ParameterFormatError(
+                    "All the values in h0_nus must be greater than self.c_degree - 1: "
+                    + f"self.c_degree = {self.c_degree}, h0_nus = {h0_nus}"))
+            self.h0_nus[:] = h0_nus
+
+        if h0_w_mats is not None:
+            _check.pos_def_sym_mats(h0_w_mats,'h0_w_mats',ParameterFormatError)
+            _check.shape_consistency(
+                h0_w_mats.shape[-1],"h0_w_mats.shape[-1] and h0_w_mats.shape[-2]", 
+                self.c_degree,"self.c_degree", 
+                ParameterFormatError
+                )
+            self.h0_w_mats[:] = h0_w_mats
+        
+        self.h0_w_mats_inv[:] = np.linalg.inv(self.h0_w_mats)
+
         self.reset_hn_params()
 
     def get_h0_params(self):
-        # h0_paramsを辞書として返す関数．
-        # 要素の順番はset_h_paramsの引数の順にそろえる．
-        pass
+        return {'h0_eta_vec':self.h0_eta_vec,
+                'h0_zeta_vecs':self.h0_zeta_vecs,
+                'h0_m_vecs':self.h0_m_vecs,
+                'h0_kappas':self.h0_kappas,
+                'h0_nus':self.h0_nus,
+                'h0_w_mats':self.h0_w_mats}
     
     def set_hn_params(
             self,
+            hn_eta_vec = None,
+            hn_zeta_vecs = None,
             hn_m_vecs = None,
             hn_kappas = None,
             hn_nus = None,
             hn_w_mats = None,
-            hn_eta_vec = None,
-            hn_zeta_vecs = None,
             ):
-        # Noneでない入力について，以下をチェックする．
-        # * それ単体として，モデルの仮定を満たすか（符号，行列の正定値性など）
-        # * 配列のサイズなどがconstants（c_で始まる変数）と整合しているか．ただし，ブロードキャスト可能なものは認める
-        # 例
-        # if h0_m_vecs is not None:
-        #     _check.float_vecs(h0_m_vecs,'h0_m_vecs',ParameterFormatError)
-        #     if h0_m_vecs.shape[-1] != self.degree:
-        #         raise(ParameterFormatError(
-        #             "h0_m_vecs.shape[-1] must coincide with self.degree:"
-        #             +f"h0_m_vecs.shape[-1]={h0_m_vecs.shape[-1]}, self.degree={self.degree}"))
-        #     self.h0_m_vecs[:] = h0_m_vecs
+        if hn_eta_vec is not None:
+            _check.pos_floats(hn_eta_vec,'hn_eta_vec',ParameterFormatError)
+            self.hn_eta_vec[:] = hn_eta_vec
 
-        # 最後にcalc_pred_dist()を呼ぶようにする
+        if hn_zeta_vecs is not None:
+            _check.pos_floats(hn_zeta_vecs, 'hn_zeta_vecs', ParameterFormatError)
+            self.hn_zeta_vecs[:] = hn_zeta_vecs
+
+        if hn_m_vecs is not None:
+            _check.float_vecs(hn_m_vecs, "hn_m_vecs", ParameterFormatError)
+            _check.shape_consistency(
+                hn_m_vecs.shape[-1],"hn_m_vecs.shape[-1]", 
+                self.c_degree,"self.c_degree", 
+                ParameterFormatError
+                )
+            self.hn_m_vecs[:] = hn_m_vecs
+
+        if hn_kappas is not None:
+            _check.pos_floats(hn_kappas, "hn_kappas", ParameterFormatError)
+            self.hn_kappas[:] = hn_kappas
+
+        if hn_nus is not None:
+            _check.floats(hn_nus, "hn_nus", ParameterFormatError)
+            if np.all(hn_nus <= self.c_degree - 1):
+                raise(ParameterFormatError(
+                    "All the values in hn_nus must be greater than self.c_degree - 1: "
+                    + f"self.c_degree = {self.c_degree}, hn_nus = {hn_nus}"))
+            self.hn_nus[:] = hn_nus
+
+        if hn_w_mats is not None:
+            _check.pos_def_sym_mats(hn_w_mats,'hn_w_mats',ParameterFormatError)
+            _check.shape_consistency(
+                hn_w_mats.shape[-1],"hn_w_mats.shape[-1] and hn_w_mats.shape[-2]", 
+                self.c_degree,"self.c_degree", 
+                ParameterFormatError
+                )
+            self.hn_w_mats[:] = hn_w_mats
+        
+        self.hn_w_mats_inv[:] = np.linalg.inv(self.hn_w_mats)
+
         self.calc_pred_dist()
 
     def get_hn_params(self):
-        # hn_paramsを辞書として返す関数．
-        # 要素の順番はset_h_paramsの引数の順にそろえる．
-        pass
+        return {'hn_eta_vec':self.hn_eta_vec,
+                'hn_zeta_vecs':self.hn_zeta_vecs,
+                'hn_m_vecs':self.hn_m_vecs,
+                'hn_kappas':self.hn_kappas,
+                'hn_nus':self.hn_nus,
+                'hn_w_mats':self.hn_w_mats}
     
     def reset_hn_params(self):
-        # h0_paramsの値をhn_paramsの値にそのままコピーする
-        # 配列サイズを揃えてあるので，簡単に書けるはず．
-        # 例
-        # self.hn_alpha_vec[:] = self.h0_alpha_vec
-        # self.hn_m_vecs[:] = self.h0_m_vecs
-        # self.hn_kappas[:] = self.h0_kappas
-
-        # 最後にcalc_pred_distを呼ぶ．
-        self.calc_pred_dist()
+        self.set_hn_params(*self.get_h0_params().values())
     
     def overwrite_h0_params(self):
-        # hn_paramsの値をh0_paramsの値にそのままコピーする
-        # 配列サイズを揃えてあるので，簡単に書けるはず．
-        # 例
-        # self.h0_alpha_vec[:] = self.hn_alpha_vec
-        # self.h0_m_vecs[:] = self.hn_m_vecs
-        # self.h0_kappas[:] = self.hn_kappas
+        self.set_h0_params(*self.get_hn_params().values())
 
-        # 最後にcalc_pred_distを呼ぶ．
-        self.calc_pred_dist()
-
-    # まだ実装しなくてよい
     def update_posterior():
         pass
 
-    # まだ実装しなくてよい
     def estimate_params(self,loss="squared"):
         pass
 
-    # まだ実装しなくてよい    
     def visualize_posterior(self):
         pass
         
     def get_p_params(self):
-        # p_paramsを辞書として返す関数．
-        pass
+        return {'p_mu_vecs':self.p_mu_vecs,
+                'p_nus':self.p_nus,
+                'p_lambda_mats':self.p_lambda_mats,
+                'p_lambda_mats_inv':self.p_lambda_mats_inv}
 
-    # まだ実装しなくてよい    
     def calc_pred_dist(self):
         pass
 
-    # まだ実装しなくてよい    
     def make_prediction(self,loss="squared"):
         pass
 
-    # まだ実装しなくてよい    
     def pred_and_update(self,x,loss="squared"):
         pass
