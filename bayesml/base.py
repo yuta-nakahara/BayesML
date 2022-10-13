@@ -257,13 +257,21 @@ class Posterior(metaclass=ABCMeta):
             +'or ``LearnModel.save_hn_params()``.')
             )
 
-    @abstractmethod
     def reset_hn_params(self):
-        pass
-
-    @abstractmethod
+        """Reset the hyperparameters of the posterior distribution to their initial values.
+        
+        They are reset to the output of `self.get_h0_params()`.
+        Note that the parameters of the predictive distribution are also calculated from them.
+        """
+        self.set_hn_params(*self.get_h0_params().values())
+    
     def overwrite_h0_params(self):
-        pass
+        """Overwrite the initial values of the hyperparameters of the posterior distribution by the learned values.
+        
+        They are overwitten by the output of `self.get_hn_params()`.
+        Note that the parameters of the predictive distribution are also calculated from them.
+        """
+        self.set_h0_params(*self.get_hn_params().values())
 
     @abstractmethod
     def update_posterior(self):

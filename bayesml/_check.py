@@ -1,6 +1,8 @@
 # Code Author
 # Yuta Nakahara <yuta.nakahara@aoni.waseda.jp>
 # Yuji Iikubo <yuji-iikubo.8@fuji.waseda.jp>
+# Yasushi Esaki <esakiful@gmail.com>
+# Jun Nishikawa <jun.b.nishikawa@gmail.com>
 import numpy as np
 
 _EPSILON = np.sqrt(np.finfo(np.float64).eps)
@@ -50,6 +52,12 @@ def nonneg_int_vec(val,val_name,exception_class):
         if np.issubdtype(val.dtype,np.integer) and val.ndim == 1 and np.all(val>=0):
             return val
     raise(exception_class(val_name + " must be a 1-dimensional numpy.ndarray whose dtype is int. Its values must be non-negative (including 0)."))
+
+def nonneg_float_vec(val,val_name,exception_class):
+    if type(val) is np.ndarray:
+        if np.issubdtype(val.dtype,np.floating) and val.ndim == 1 and np.all(val>=0):
+            return val
+    raise(exception_class(val_name + " must be a 1-dimensional numpy.ndarray whose dtype is float. Its values must be non-negative (including 0)."))
 
 def int_of_01(val,val_name,exception_class):
     if np.issubdtype(type(val),np.integer):
@@ -171,13 +179,30 @@ def float_vecs(val,val_name,exception_class):
             return val
     raise(exception_class(val_name + " must be a numpy.ndarray whose ndim >= 1."))
 
-def float_vec_sum_1(val,val_name,exception_class):
+def pos_float_vecs(val,val_name,exception_class):
     if type(val) is np.ndarray:
-        if np.issubdtype(val.dtype,np.integer) and val.ndim == 1 and abs(val.sum() - 1.) <= _EPSILON:
+        if np.issubdtype(val.dtype,np.integer) and val.ndim >= 1 and np.all(val>0):
             return val.astype(float)
-        if np.issubdtype(val.dtype,np.floating) and val.ndim == 1 and abs(val.sum() - 1.) <= _EPSILON:
+        if np.issubdtype(val.dtype,np.floating) and val.ndim >= 1 and np.all(val>0.0):
             return val
-    raise(exception_class(val_name + " must be a 1-dimensional numpy.ndarray, and the sum of its elements must equal to 1."))
+    raise(exception_class(val_name + " must be a 1-dimensional numpy.ndarray. Its values must be positive (not including 0)"))
+
+def float_vec_sum_1(val,val_name,exception_class,ndim=1,sum_axis=0):
+    if type(val) is np.ndarray:
+        sum_val = np.sum(val, axis=sum_axis)
+        if np.issubdtype(val.dtype,np.integer) and val.ndim == ndim and abs(sum_val.sum() - np.prod(sum_val.shape)) <= _EPSILON:
+            return val.astype(float)
+        if np.issubdtype(val.dtype,np.floating) and val.ndim == ndim and abs(sum_val.sum() - np.prod(sum_val.shape)) <= _EPSILON:
+            return val
+    raise(exception_class(val_name + f" must be a {ndim}-dimensional numpy.ndarray, and the sum of its elements must equal to 1."))
+
+def float_vecs_sum_1(val,val_name,exception_class):
+    if type(val) is np.ndarray:
+        if np.issubdtype(val.dtype,np.integer) and val.ndim >= 1 and np.all(np.abs(np.sum(val, axis=-1) - 1.) <= _EPSILON):
+            return val.astype(float)
+        if np.issubdtype(val.dtype,np.floating) and val.ndim >= 1 and np.all(np.abs(np.sum(val, axis=-1) - 1.) <= _EPSILON):
+            return val
+    raise(exception_class(val_name + " must be a numpy.ndarray whose ndim >= 1, and the sum along the last dimension must equal to 1."))
 
 def int_(val,val_name,exception_class):   
     if np.issubdtype(type(val),np.integer):
@@ -205,3 +230,9 @@ def onehot_vecs(val,val_name,exception_class):
         if np.issubdtype(val.dtype,np.integer) and val.ndim >= 1 and np.all(val >= 0) and np.all(val.sum(axis=-1)==1):
             return val
     raise(exception_class(val_name + " must be a numpy.ndarray whose dtype is int and whose last axis constitutes one-hot vectors."))
+
+def shape_consistency(val: int, val_name: str, correct: int, correct_name: str, exception_class):
+    if val != correct:
+        message = (f"{val_name} must coincide with {correct_name}: "
+                   + f"{val_name} = {val}, {correct_name} = {correct}")
+        raise(exception_class(message))
