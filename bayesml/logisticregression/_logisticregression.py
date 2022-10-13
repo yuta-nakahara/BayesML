@@ -178,12 +178,6 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
     def get_hn_params(self):
         return {'hn_mu_vec':self.hn_mu_vec,'hn_lambda_mat':self.hn_lambda_mat}
     
-    def reset_hn_params(self):
-        self.set_hn_params(self.h0_mu_vec,self.h0_lambda_mat)
-    
-    def overwrite_h0_params(self):
-        self.set_h0_params(self.hn_mu_vec,self.hn_lambda_mat)
-
     def update_posterior():
         pass
 
