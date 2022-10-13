@@ -632,25 +632,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                 "hn_kappas":self.hn_kappas,
                 "hn_nus":self.hn_nus,
                 "hn_w_mats":self.hn_w_mats}
-    
-    def reset_hn_params(self):
-        """Reset the hyperparameters of the posterior distribution to their initial values.
         
-        They are reset to `self.h0_alpha_vec`, `self.h0_m_vecs`, `self.h0_kappas`, `self.h0_nus` and `self.h0_w_mats`.
-        Note that the parameters of the predictive distribution are also calculated from them.
-        """
-        self.hn_alpha_vec[:] = self.h0_alpha_vec
-        self.hn_m_vecs[:] = self.h0_m_vecs
-        self.hn_kappas[:] = self.h0_kappas
-        self.hn_nus[:] = self.h0_nus
-        self.hn_w_mats[:] = self.h0_w_mats
-        self.hn_w_mats_inv = np.linalg.inv(self.hn_w_mats)
-
-        self._calc_q_pi_char()
-        self._calc_q_lambda_char()
-
-        self.calc_pred_dist()
-    
     def calc_prior_char(self):
         self._ln_c_h0_alpha = gammaln(self.h0_alpha_vec.sum()) - gammaln(self.h0_alpha_vec).sum()
         self._ln_b_h0_w_nus = (
@@ -660,22 +642,6 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             - np.sum(gammaln((self.h0_nus[:,np.newaxis]-np.arange(self.c_degree)) / 2.0),
                      axis=1) * 2.0
             ) / 2.0
-
-    def overwrite_h0_params(self):
-        """Overwrite the initial values of the hyperparameters of the posterior distribution by the learned values.
-        
-        They are overwitten by `self.hn_alpha_vec`, `self.hn_m_vecs`, `self.hn_kappas`, `self.hn_nus` and `self.hn_w_mats`.
-        Note that the parameters of the predictive distribution are also calculated from them.
-        """
-        self.h0_alpha_vec[:] = self.hn_alpha_vec
-        self.h0_m_vecs[:] = self.hn_m_vecs
-        self.h0_kappas[:] = self.hn_kappas
-        self.h0_nus[:] = self.hn_nus
-        self.h0_w_mats[:] = self.hn_w_mats
-        self.h0_w_mats_inv = np.linalg.inv(self.h0_w_mats)
-
-        self.calc_prior_char()
-        self.reset_hn_params()
 
     def calc_vl(self):
         # E[ln p(X|Z,mu,Lambda)]
