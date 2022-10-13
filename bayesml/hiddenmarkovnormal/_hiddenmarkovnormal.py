@@ -367,12 +367,6 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                 'hn_nus':self.hn_nus,
                 'hn_w_mats':self.hn_w_mats}
     
-    def reset_hn_params(self):
-        self.set_hn_params(*self.get_h0_params().values())
-    
-    def overwrite_h0_params(self):
-        self.set_h0_params(*self.get_hn_params().values())
-
     def update_posterior():
         pass
 
