@@ -379,8 +379,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
     def get_p_params(self):
         return {'p_mu_vecs':self.p_mu_vecs,
                 'p_nus':self.p_nus,
-                'p_lambda_mats':self.p_lambda_mats,
-                'p_lambda_mats_inv':self.p_lambda_mats_inv}
+                'p_lambda_mats':self.p_lambda_mats}
 
     def calc_pred_dist(self):
         pass
