@@ -207,7 +207,7 @@ class GenModel(base.Generative):
             _check.pos_def_sym_mats(h_lambda_mats,'h_lambda_mats',ParameterFormatError)
             _check.shape_consistency(
                 h_lambda_mats.shape[-1],'h_lambda_mats.shape[-1] and h_lambda_mats.shape[-2]',
-                self.c_degree+1,'self.c_degree + 1',
+                self.c_degree + 1,'self.c_degree + 1',
                 ParameterFormatError
                 )
             self.h_lambda_mats[:] = h_lambda_mats
@@ -325,3 +325,180 @@ class GenModel(base.Generative):
     def visualize_model(self):
         pass
 
+class LearnModel(base.Posterior,base.PredictiveMixin):
+    def __init__(
+            self,
+            c_num_classes,
+            c_degree,
+            *, 
+            h0_eta_vec=None,
+            h0_zeta_vecs=None,
+            h0_mu_vecs=None,
+            h0_lambda_mats=None,
+            h0_alphas=None,
+            h0_betas=None,
+            seed=None,
+            ):
+        # constants
+        self.c_num_classes = _check.pos_int(c_num_classes,'c_num_classes',ParameterFormatError)
+        self.c_degree = _check.pos_int(c_degree,'c_degree',ParameterFormatError)
+        self.rng = np.random.default_rng(seed)
+
+        # h0_params
+        self.h0_eta_vec = np.ones(self.c_num_classes) / 2.0
+        self.h0_zeta_vecs = np.ones([self.c_num_classes,self.c_num_classes]) / 2.0
+        self.h0_mu_vecs = np.zeros([self.c_num_classes,self.c_degree+1])
+        self.h0_lambda_mats = np.tile(np.identity(self.c_degree+1),[self.c_num_classes,1,1])
+        self.h0_alphas = np.ones(self.c_num_classes)
+        self.h0_betas = np.ones(self.c_num_classes)
+
+        # hn_params
+        self.hn_eta_vec = np.empty(self.c_num_classes)
+        self.hn_zeta_vecs = np.empty([self.c_num_classes,self.c_num_classes])
+        self.hn_mu_vecs = np.empty([self.c_num_classes,self.c_degree+1])
+        self.hn_lambda_mats = np.empty([self.c_num_classes,self.c_degree+1,self.c_degree+1])
+        self.hn_alphas = np.empty(self.c_num_classes)
+        self.hn_betas = np.empty(self.c_num_classes)
+
+        # p_params
+        self.p_ms = np.empty(self.c_num_classes)
+        self.p_lambdas = np.empty(self.c_num_classes)
+        self.p_nus = np.empty(self.c_num_classes)
+
+        self.set_h0_params(
+            h0_eta_vec,
+            h0_zeta_vecs,
+            h0_mu_vecs,
+            h0_lambda_mats,
+            h0_alphas,
+            h0_betas,
+        )
+
+    def set_h0_params(
+            self, 
+            h0_eta_vec=None,
+            h0_zeta_vecs=None,
+            h0_mu_vecs=None,
+            h0_lambda_mats=None,
+            h0_alphas=None,
+            h0_betas=None,
+            ):
+        if h0_eta_vec is not None:
+            _check.pos_floats(h0_eta_vec,'h0_eta_vec',ParameterFormatError)
+            self.h0_eta_vec[:] = h0_eta_vec
+
+        if h0_zeta_vecs is not None:
+            _check.pos_floats(h0_zeta_vecs, 'h0_zeta_vecs', ParameterFormatError)
+            self.h0_zeta_vecs[:] = h0_zeta_vecs
+
+        if h0_mu_vecs is not None:
+            _check.float_vecs(h0_mu_vecs,'h0_mu_vecs',ParameterFormatError)
+            _check.shape_consistency(
+                h0_mu_vecs.shape[-1],'h0_mu_vecs.shape[-1]',
+                self.c_degree + 1,'self.c_degree + 1',
+                ParameterFormatError
+                )
+            self.h0_mu_vecs[:] = h0_mu_vecs
+
+        if h0_lambda_mats is not None:
+            _check.pos_def_sym_mats(h0_lambda_mats,'h0_lambda_mats',ParameterFormatError)
+            _check.shape_consistency(
+                h0_lambda_mats.shape[-1],'h0_lambda_mats.shape[-1] and h0_lambda_mats.shape[-2]',
+                self.c_degree + 1,'self.c_degree + 1',
+                ParameterFormatError
+                )
+            self.h0_lambda_mats[:] = h0_lambda_mats
+
+        if h0_alphas is not None:
+            _check.pos_floats(h0_alphas,'h0_alphas',ParameterFormatError)
+            self.h0_alphas[:] = h0_alphas
+
+        if h0_betas is not None:
+            _check.pos_floats(h0_betas,'h0_betas',ParameterFormatError)
+            self.h0_betas[:] = h0_betas
+
+        self.reset_hn_params()
+
+    def set_hn_params(
+            self, 
+            hn_eta_vec=None,
+            hn_zeta_vecs=None,
+            hn_mu_vecs=None,
+            hn_lambda_mats=None,
+            hn_alphas=None,
+            hn_betas=None,
+            ):
+        if hn_eta_vec is not None:
+            _check.pos_floats(hn_eta_vec,'hn_eta_vec',ParameterFormatError)
+            self.hn_eta_vec[:] = hn_eta_vec
+
+        if hn_zeta_vecs is not None:
+            _check.pos_floats(hn_zeta_vecs, 'hn_zeta_vecs', ParameterFormatError)
+            self.hn_zeta_vecs[:] = hn_zeta_vecs
+
+        if hn_mu_vecs is not None:
+            _check.float_vecs(hn_mu_vecs,'hn_mu_vecs',ParameterFormatError)
+            _check.shape_consistency(
+                hn_mu_vecs.shape[-1],'hn_mu_vecs.shape[-1]',
+                self.c_degree + 1,'self.c_degree + 1',
+                ParameterFormatError
+                )
+            self.hn_mu_vecs[:] = hn_mu_vecs
+
+        if hn_lambda_mats is not None:
+            _check.pos_def_sym_mats(hn_lambda_mats,'hn_lambda_mats',ParameterFormatError)
+            _check.shape_consistency(
+                hn_lambda_mats.shape[-1],'hn_lambda_mats.shape[-1] and hn_lambda_mats.shape[-2]',
+                self.c_degree + 1,'self.c_degree + 1',
+                ParameterFormatError
+                )
+            self.hn_lambda_mats[:] = hn_lambda_mats
+
+        if hn_alphas is not None:
+            _check.pos_floats(hn_alphas,'hn_alphas',ParameterFormatError)
+            self.hn_alphas[:] = hn_alphas
+
+        if hn_betas is not None:
+            _check.pos_floats(hn_betas,'hn_betas',ParameterFormatError)
+            self.hn_betas[:] = hn_betas
+
+        self.calc_pred_dist()
+
+    def get_h0_params(self):
+        return {'h0_eta_vec':self.h0_eta_vec,
+                'h0_zeta_vecs':self.h0_zeta_vecs,
+                'h0_mu_vecs':self.h0_mu_vecs,
+                'h0_lambda_mats':self.h0_lambda_mats,
+                'h0_alphas':self.h0_alphas,
+                'h0_betas':self.h0_betas}
+
+    def get_hn_params(self):
+        return {'hn_eta_vec':self.hn_eta_vec,
+                'hn_zeta_vecs':self.hn_zeta_vecs,
+                'hn_mu_vecs':self.hn_mu_vecs,
+                'hn_lambda_mats':self.hn_lambda_mats,
+                'hn_alphas':self.hn_alphas,
+                'hn_betas':self.hn_betas}
+
+    def update_posterior():
+        pass
+
+    def estimate_params(self,loss="squared"):
+        pass
+
+    def visualize_posterior(self):
+        pass
+        
+    def get_p_params(self):
+        return {'p_ms':self.p_ms,
+                'p_lambdas':self.p_lambdas,
+                'p_nus':self.p_nus}
+
+    def calc_pred_dist(self):
+        pass
+
+    def make_prediction(self,loss="squared"):
+        pass
+
+    def pred_and_update(self,x,loss="squared"):
+        pass

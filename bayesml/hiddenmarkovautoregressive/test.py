@@ -1,7 +1,7 @@
 from bayesml import hiddenmarkovautoregressive
 import numpy as np
 
-gen_model = hiddenmarkovautoregressive.GenModel(
-    3,1,h_betas=2)
+learn_model = hiddenmarkovautoregressive.LearnModel(
+    3,1)
 
-print(gen_model.get_h_params())
+print(learn_model.get_hn_params())

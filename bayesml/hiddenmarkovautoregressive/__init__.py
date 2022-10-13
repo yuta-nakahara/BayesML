@@ -3,7 +3,6 @@
 # Jun Nishikawa <Jun.B.Nishikawa@gmail.com>
 
 from ._hiddenmarkovautoregressive import GenModel
-# from ._hiddenmarkovautoregressive import LearnModel
+from ._hiddenmarkovautoregressive import LearnModel
 
-# __all__ = ["GenModel","LearnModel"]
-__all__ = ["GenModel"]
+__all__ = ["GenModel","LearnModel"]
