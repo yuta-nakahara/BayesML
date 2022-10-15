@@ -22,12 +22,16 @@ class GenModel(base.Generative):
         A real vector in :math:`[0, 1]^K`, by default [1/K, 1/K, ... , 1/K].
         The sum of its elements must be 1.
     theta_vecs : numpy ndarray, optional
-        real vectors in :math:`[0, 1]^{K \times d}`, by default [[1/d, 1/d, ... , 1/d]]*K.
-        The sum of each row must be 1.
-    h_alpha_vec : numpy.ndarray, optional
+        Real vectors in :math:`[0, 1]^{K \times d}` or a real vector in :math:`[0, 1]^d`,
+        by default [[1/d, 1/d, ... , 1/d]]*K.
+        The sum along the last dimension must be 1.
+        If the number of dimensions is 1, it will be broadcasted.
+    h_alpha_vec : float or numpy.ndarray, optional
         A vector of positive real numbers, by default [1/2, 1/2, ... , 1/2].
-    h_beta_vecs : numpy.ndarray, optional
-        vectors of positive real numbers, by default [[1/2, 1/2, ... , 1/2]]*K.
+        If scaler is input, it will be broadcasted.
+    h_beta_vecs : float or numpy.ndarray, optional
+        Vectors of positive real numbers, by default [[1/2, 1/2, ... , 1/2]]*K.
+        If scaler or `c_degree` dimensional ndarray is input, it will be broadcasted.
     seed : {None, int}, optional
         A seed to initialize numpy.random.default_rng(),
         by default None.
@@ -48,7 +52,7 @@ class GenModel(base.Generative):
         # constants
         self.c_degree = _check.pos_int(c_degree, 'c_degree', ParameterFormatError)
         self.c_num_classes = _check.pos_int(c_num_classes, 'c_num_classes', ParameterFormatError)
-        self.c_rng = np.random.default_rng(seed)
+        self.rng = np.random.default_rng(seed)
 
         # params
         self.pi_vec = np.ones(self.c_num_classes) / self.c_num_classes
@@ -65,39 +69,20 @@ class GenModel(base.Generative):
         """Set the hyperparameters of the prior distribution.
         Parameters
         ----------
-        h_alpha_vec : numpy.ndarray, optional
-            A vector of positive real numbers.
-        h_beta_vecs : numpy.ndarray, optional
-            vectors of positive real numbers.
+        h_alpha_vec : float or numpy.ndarray, optional
+            A vector of positive real numbers, by default None.
+            If scaler is input, it will be broadcasted.
+        h_beta_vecs : float or numpy.ndarray, optional
+            Vectors of positive real numbers, by default None.
+            If scaler or `c_degree` dimensional ndarray is input, it will be broadcasted.
         """
 
         if h_alpha_vec is not None:
             _check.pos_floats(h_alpha_vec, 'h_alpha_vec', ParameterFormatError)
-            if h_alpha_vec.shape[0] != self.c_num_classes:
-                raise (ParameterFormatError(
-                    "h_alpha_vec.shape[0] must coincide with c_num_classes: " +
-                    f"h_alpha_vec.shape[0]={h_alpha_vec.shape[0]}, c_num_classes={self.c_num_classes}"))
             self.h_alpha_vec[:] = h_alpha_vec
 
         if h_beta_vecs is not None:
             _check.pos_floats(h_beta_vecs, 'h_beta_vecs', ParameterFormatError)
-            if h_beta_vecs.ndim == 1:
-                if h_beta_vecs.shape[0] != self.c_degree:
-                    raise (
-                        ParameterFormatError("h_beta_vecs.shape[0] must coincide with c_degree: " +
-                                             f"h_beta_vecs.shape[0]={h_beta_vecs.shape[0]}, c_degree={self.c_degree}"))
-            elif h_beta_vecs.ndim == 2:
-                if h_beta_vecs.shape[0] != self.c_num_classes:
-                    raise (ParameterFormatError(
-                        "h_beta_vecs.shape[0] must coincide with c_num_classes: " +
-                        f"h_beta_vecs.shape[0]={h_beta_vecs.shape[0]}, c_num_classes={self.c_num_classes}"))
-                elif h_beta_vecs.shape[1] != self.c_degree:
-                    raise (
-                        ParameterFormatError("h_beta_vecs.shape[1] must coincide with c_degree: " +
-                                             f"h_beta_vecs.shape[1]={h_beta_vecs.shape[1]}, c_degree={self.c_degree}"))
-            else:
-                raise ParameterFormatError("The number of dimensions of h_beta_vecs must be 1 or 2.")
-
             self.h_beta_vecs[:] = h_beta_vecs
 
     def get_h_params(self):
@@ -114,34 +99,27 @@ class GenModel(base.Generative):
         Parameters
         ----------
         pi_vec : numpy.ndarray, optional
-            A real vector in :math:`[0, 1]^K`.
+            A real vector in :math:`[0, 1]^K`, by default None.
             The sum of its elements must be 1.
         theta_vecs : numpy.ndarray, optional
-            A real matrix in :math:`[0, 1]^{K \times d}`.
-            The sum of each row must be 1.
+            Real vectors in :math:`[0, 1]^{K \times d}` or a real vector in :math:`[0, 1]^d`, by default None.
+            The sum along the last dimension must be 1.
+            If the number of dimensions is 1, it will be broadcasted.
         """
 
         if pi_vec is not None:
             _check.float_vec_sum_1(pi_vec, 'pi_vec', ParameterFormatError)
             if pi_vec.shape[0] != self.c_num_classes:
-                raise (ParameterFormatError("pi_vec.shape[0] must coincide with c_num_classes: " +
-                                            f"pi_vec.shape[0]={pi_vec.shape[0]}, c_num_classes={self.c_num_classes}"))
+                raise (
+                    ParameterFormatError("pi_vec.shape[0] must coincide with c_num_classes: " +
+                                         f"pi_vec.shape[0] = {pi_vec.shape[0]}, c_num_classes = {self.c_num_classes}"))
             self.pi_vec[:] = pi_vec
 
         if theta_vecs is not None:
             _check.float_vecs_sum_1(theta_vecs, 'theta_vecs', ParameterFormatError)
-            if theta_vecs.ndim == 2:
-                if theta_vecs.shape[0] != self.c_num_classes:
-                    raise (ParameterFormatError(
-                        "theta_vecs.shape[0] must coincide with c_num_classes: " +
-                        f"theta_vecs.shape[0]={theta_vecs.shape[0]}, c_num_classes={self.c_num_classes}"))
-                elif theta_vecs.shape[1] != self.c_degree:
-                    raise (
-                        ParameterFormatError("theta_vecs.shape[1] must coincide with c_degree: " +
-                                             f"theta_vecs.shape[1]={theta_vecs.shape[1]}, c_degree={self.c_degree}"))
-            else:
-                raise ParameterFormatError("The number of dimensions of theta_vecs must be 2.")
-
+            if theta_vecs.shape[-1] != self.c_degree:
+                raise (ParameterFormatError("theta_vecs.shape[-1] must coincide with c_degree: " +
+                                            f"theta_vecs.shape[-1]={theta_vecs.shape[-1]}, c_degree={self.c_degree}"))
             self.theta_vecs[:] = theta_vecs
 
     def get_params(self):
@@ -288,10 +266,12 @@ class LearnModel(base.Posterior, base.PredictiveMixin):
         A positive integer.
     c_degree : int
         A positive integer.
-    h0_alpha_vec : numpy.ndarray, optional
+    h0_alpha_vec : float or numpy.ndarray, optional
         A vector of positive real numbers, by default [1/2, 1/2, ... , 1/2].
-    h0_beta_vecs : numpy.ndarray, optional
-        vectors of positive real numbers, by default [[1/2, 1/2, ... , 1/2]]*K.
+        If scaler is input, it will be broadcasted.
+    h0_beta_vecs : float or numpy.ndarray, optional
+        Vectors of positive real numbers, by default [[1/2, 1/2, ... , 1/2]]*K.
+        If scaler or `c_degree` dimensional ndarray is input, it will be broadcasted.
     seed : {None, int}, optional
         A seed to initialize numpy.random.default_rng(), by default None.
 
@@ -300,15 +280,15 @@ class LearnModel(base.Posterior, base.PredictiveMixin):
     hn_alpha_vec : numpy.ndarray
         A vector of positive real numbers.
     hn_beta_vecs : numpy.ndarray
-        vectors of positive real numbers.
+        Vectors of positive real numbers.
     e_ln_pi_vec : numpy.ndarray
         A real vector.
     e_ln_theta_vecs : numpy.ndarray
-        vectors of real numbers.
+        Vectors of real numbers.
     ln_rho : numpy.ndarray
-        vectors of real numbers.
+        Vectors of real numbers.
     r_vecs : numpy.ndarray
-        vectors of positive real numbers. The sum of its elenemts is 1.
+        Vectors of positive real numbers. The sum of its elenemts is 1.
     ns : numpy.ndarray
         A vector of positive real numbers.
     s_mats : numpy.ndarray
@@ -316,7 +296,7 @@ class LearnModel(base.Posterior, base.PredictiveMixin):
     p_pi_vec : numpy.ndarray
         A real vector in :math:`[0, 1]^K`.
     p_theta_vecs : numpy.ndarray
-        real vectors in :math:`[0, 1]^{K \times d}`.
+        Real vectors in :math:`[0, 1]^{K \times d}`.
     """
 
     def __init__(self, *, c_num_classes, c_degree, h0_alpha_vec=None, h0_beta_vecs=None, seed=None):
@@ -324,7 +304,7 @@ class LearnModel(base.Posterior, base.PredictiveMixin):
         # constants
         self.c_degree = _check.pos_int(c_degree, 'c_degree', ParameterFormatError)
         self.c_num_classes = _check.pos_int(c_num_classes, 'c_num_classes', ParameterFormatError)
-        self.c_rng = np.random.default_rng(seed)
+        self.rng = np.random.default_rng(seed)
 
         # h0_params
         self.h0_alpha_vec = np.ones([self.c_num_classes]) / 2.0
@@ -356,39 +336,20 @@ class LearnModel(base.Posterior, base.PredictiveMixin):
 
         Parameters
         ----------
-        h0_alpha_vec : numpy.ndarra, optional
-            A vector of positive real numbers.
-        h0_beta_vecs : numpy.ndarray, optional
-            vectors of positive real numbers.
+        h0_alpha_vec : float or numpy.ndarray, optional
+            A vector of positive real numbers, by default None.
+            If scaler is input, it will be broadcasted.
+        h0_beta_vecs : float or numpy.ndarray, optional
+            Vectors of positive real numbers, by default None.
+            If scaler or `c_degree` dimensional ndarray is input, it will be broadcasted.
         """
 
         if h0_alpha_vec is not None:
             _check.pos_floats(h0_alpha_vec, 'h0_alpha_vec', ParameterFormatError)
-            if h0_alpha_vec.shape[0] != self.c_num_classes:
-                raise (ParameterFormatError(
-                    "h0_alpha_vec.shape[0] must coincide with c_num_classes: " +
-                    f"h0_alpha_vec.shape[0]={h0_alpha_vec.shape[0]}, c_num_classes={self.c_num_classes}"))
             self.h0_alpha_vec[:] = h0_alpha_vec
 
         if h0_beta_vecs is not None:
             _check.pos_floats(h0_beta_vecs, 'h0_beta_vecs', ParameterFormatError)
-            if h0_beta_vecs.ndim == 1:
-                if h0_beta_vecs.shape[0] != self.c_degree:
-                    raise (ParameterFormatError(
-                        "h0_beta_vecs.shape[0] must coincide with c_degree: " +
-                        f"h0_beta_vecs.shape[0]={h0_beta_vecs.shape[0]}, c_degree={self.c_degree}"))
-            elif h0_beta_vecs.ndim == 2:
-                if h0_beta_vecs.shape[0] != self.c_num_classes:
-                    raise (ParameterFormatError(
-                        "h0_beta_vecs.shape[0] must coincide with c_num_classes: " +
-                        f"h0_beta_vecs.shape[0]={h0_beta_vecs.shape[0]}, c_num_classes={self.c_num_classes}"))
-                elif h0_beta_vecs.shape[1] != self.c_degree:
-                    raise (ParameterFormatError(
-                        "h0_beta_vecs.shape[1] must coincide with c_degree: " +
-                        f"h0_beta_vecs.shape[1]={h0_beta_vecs.shape[1]}, c_degree={self.c_degree}"))
-            else:
-                raise ParameterFormatError("The number of dimensions of h0_beta_vecs must be 1 or 2.")
-
             self.h0_beta_vecs[:] = h0_beta_vecs
 
         self.LN_C_H0_ALPHA = gammaln(self.h0_alpha_vec.sum()) - gammaln(self.h0_alpha_vec).sum()
@@ -413,35 +374,20 @@ class LearnModel(base.Posterior, base.PredictiveMixin):
 
         Parameters
         ----------
-        hn_alpha_vec : numpy.ndarray, optional
-            A vector of positive real numbers.
-        hn_beta_vecs : numpy.ndarray, optional
-            vectors of positive real numbers.
+        hn_alpha_vec : float or numpy.ndarray, optional
+            A vector of positive real numbers, by default None.
+            If scaler is input, it will be broadcasted.
+        hn_beta_vecs : float or numpy.ndarray, optional
+            Vectors of positive real numbers, by default None.
+            If scaler or `c_degree` dimensional ndarray is input, it will be broadcasted.
         """
 
         if hn_alpha_vec is not None:
             _check.pos_floats(hn_alpha_vec, 'hn_alpha_vec', ParameterFormatError)
-            if hn_alpha_vec.shape[0] != self.c_num_classes:
-                raise (ParameterFormatError(
-                    "hn_alpha_vec.shape[0] must coincide with c_num_classes: " +
-                    f"hn_alpha_vec.shape[0]={hn_alpha_vec.shape[0]}, c_num_classes={self.c_num_classes}"))
-
             self.hn_alpha_vec[:] = hn_alpha_vec
 
         if hn_beta_vecs is not None:
             _check.pos_floats(hn_beta_vecs, 'hn_beta_vecs', ParameterFormatError)
-            if hn_beta_vecs.ndim == 2:
-                if hn_beta_vecs.shape[0] != self.c_num_classes:
-                    raise (ParameterFormatError(
-                        "hn_beta_vecs.shape[0] must coincide with c_num_classes: " +
-                        f"hn_beta_vecs.shape[0]={hn_beta_vecs.shape[0]}, c_degree={self.c_num_classes}"))
-                elif hn_beta_vecs.shape[1] != self.c_degree:
-                    raise (ParameterFormatError(
-                        "hn_beta_vecs.shape[1] must coincide with c_degree: " +
-                        f"hn_beta_vecs.shape[1]={hn_beta_vecs.shape[1]}, c_degree={self.c_degree}"))
-            else:
-                raise ParameterFormatError("The number of dimensions of hn_beta_vecs must be 2.")
-
             self.hn_beta_vecs[:] = hn_beta_vecs
 
         self.calc_pred_dist()
