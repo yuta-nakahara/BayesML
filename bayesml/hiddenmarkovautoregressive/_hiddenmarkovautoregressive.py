@@ -9,7 +9,7 @@ from math import gamma as gamma_func
 
 from .. import base
 from .. import _check
-from .._exceptions import ParameterFormatError
+from .._exceptions import ParameterFormatError, DataFormatError
 from scipy import stats
 
 class GenModel(base.Generative):
@@ -262,6 +262,69 @@ class GenModel(base.Generative):
             _check.pos_floats(taus,'taus',ParameterFormatError)
             self.taus[:] = taus
 
+    def gen_sample(self,sample_length,initial_values=None):
+        """Generate a sample from the stochastic data generative model.
+
+        Parameters
+        ----------
+        sample_length : int
+            A positive integer
+        initial_valules : numpy ndarray
+            1 dimensional float array whose size coincide with ``self.degree``.
+
+        Returns
+        -------
+        x : numpy ndarray
+            1 dimensional float array whose size is ``sammple_length``.
+        """
+        _check.pos_int(sample_length, "sample_length", DataFormatError)
+        x = np.zeros(sample_length + self.c_degree)
+        if initial_values is not None:
+            _check.float_vec(initial_values,'initial_values',DataFormatError)
+            if initial_values.shape != (self.c_degree,):
+                raise(DataFormatError("initial_values must be a 1 dimensional float array whose size coincide with ``self.degree``"))
+            x[:self.c_degree] = initial_values
+
+        # [latent variables]
+        z = np.zeros([sample_length, self.c_num_classes], dtype=int)
+        z_1_list = []
+        for i in range(len(self.pi_vec)):
+            z_1_one = np.random.choice([0,1], 1, p=[1 - self.pi_vec[i], self.pi_vec[i]])
+            z_1_list.append(z_1_one)
+        z_1 = np.concatenate(z_1_list)
+
+        _explanatory_vec = np.ones(self.c_degree+1)
+        for n in range(self.c_degree,sample_length+self.c_degree):
+            _explanatory_vec[1:] = x[n-self.c_degree:n]
+            x[n] = self.rng.normal(loc=self.theta_vecs @ _explanatory_vec, scale=1.0/np.sqrt(self.taus))
+
+        return x[self.degree:]
+
+    def save_sample(self,filename,sample_length,initial_values=None):
+        """Save the generated sample as NumPy ``.npz`` format.
+
+        It is saved as a NpzFile with keyword: \"x\".
+
+        Parameters
+        ----------
+        filename : str
+            The filename to which the sample is saved.
+            ``.npz`` will be appended if it isn't there.
+        sample_length : int
+            A positive integer
+        initial_valules : numpy ndarray
+            1 dimensional float array whose size coincide with ``self.degree``.
+        
+        See Also
+        --------
+        numpy.savez_compressed
+        """
+        import ipdb; ipdb.set_trace()
+        np.savez_compressed(filename,x=self.gen_sample(sample_length,initial_values))
+
+    def visualize_model(self):
+        pass
+
     def get_params(self):
         """Get the parameter of the sthocastic data generative model.
 
@@ -279,15 +342,6 @@ class GenModel(base.Generative):
             "theta_vecs": self.theta_vecs, 
             "taus": self.taus
         }
-
-    def gen_sample(self):
-        pass
-
-    def save_sample(self):
-        pass
-
-    def visualize_model(self):
-        pass
 
 class LearnModel(base.Posterior,base.PredictiveMixin):
     def __init__(
