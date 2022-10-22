@@ -95,6 +95,22 @@ $$
 \end{align}
 $$
 
+The forward-backward algorithm is used to calculate the approximate posterior distribution of the latent variable.
+
+$$
+q(z_n)^{(t)} = \frac{1}{\sum_{\bm{z}_{N+1}}\alpha(\bm{z}_{N+1})^{(t)}}\alpha(\bm{z}_n)^{(t)}\beta(\bm{z}_n)^{(t)}
+$$
+
+where 
+
+$$
+\begin{cases}
+\alpha(\bm{z}_n)^{(t)}&=\prod_{k=1}^{K} \{\rho_{\text{out},n,k}^{(t)}\}^{z_{1,k}}\sum_{\bm{z}_{n-1}}\left[\prod_{k=1}^{K}\prod_{j=1}^{K}\{\rho^{(t)}_{\text{trans},j,k}\}^{z_{n-1,j}z_{n,k}}\right]\alpha(\bm{z}_{n-1})^{(t)}\\
+\alpha(\bm{z}_1)^{(t)}&=\prod_{k=1}^{K}\left\{\rho_{\text{init},k}^{(t)}\rho_{\text{out},1,k}^{(t)}\right\}^{z_{1,k}}\\
+\beta(\bm{z}_n)^{(t)}&=\sum_{\bm{z}_{t+1}}\left[\prod_{k=1}^{K} \{\rho_{\text{out},n+1,k}^{(t)}\}^{z_{n+1,k}}\sum_{\bm{z}_{n+1}}\left[\prod_{k=1}^{K}\prod_{j=1}^{K}\{\rho^{(t)}_{\text{trans},j,k}\}^{z_{n,j}z_{n+1,k}}\right]\beta(\bm{z}_{n+1})^{(t)}\right]
+\end{cases}
+$$
+
 The approximate predictive distribution is as follows:
 
 * $\boldsymbol{x}_{n+1} \in \mathbb{R}^D$: a new data point
@@ -121,3 +137,4 @@ $$
     \nu_{\mathrm{p},k} &= \nu_{n,k}^{(t)} - D + 1.
 \end{align}
 $$
+
