@@ -414,7 +414,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
     xxx : float or numpy.ndarray, optional
         Real numbers, 
         by default [0.0, 0.0, ... , 0.0]
-        If a single scaler is input, it will be broadcasted.
+        If a single real number is input, it will be broadcasted.
 ```
 
 #### 非負の実数の組
@@ -423,7 +423,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
     xxx : float or numpy.ndarray, optional
         Non-negative real numbers, 
         by default [1.0, 1.0, ... , 1.0]
-        If a single scaler is input, it will be broadcasted.
+        If a single real number is input, it will be broadcasted.
 ```
 
 #### 正の実数の組
@@ -518,7 +518,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
 ```
     xxx : numpy.ndarray, optional
         Vectors of real numbers, 
-        by default zero vectors.
+        by default zero vectors
         If a single vector is input, will be broadcasted.
 ```
 
@@ -527,7 +527,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
 ```
     xxx : numpy.ndarray, optional
         Vectors of non-negative numbers, 
-        by default vectors whose elements are all 1.
+        by default vectors whose elements are all 1.0
         If a single vector is input, will be broadcasted.
 ```
 
@@ -536,7 +536,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
 ```
     xxx : numpy.ndarray, optional
         Vectors of positive numbers, 
-        by default vectors whose elements are all 1.
+        by default vectors whose elements are all 1.0
         If a single vector is input, will be broadcasted.
 ```
 
@@ -546,7 +546,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
     xxx : numpy.ndarray, optional
         Vectors of real numbers in :math:`[0, 1]`, 
         by default vectors such as [1/yyy, 1/yyy, ... , 1/yyy]
-        Sum of the elements of each vector must be 1.
+        Sum of the elements of each vector must be 1.0.
         If a single vector is input, will be broadcasted.
 ```
 
@@ -566,7 +566,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
     xxx : numpy.ndarray, optional
         A matrix of real numbers in :math:`[0, 1]`, 
         by default a matrix obtained by stacking [1/yyy, 1/yyy, ... , 1/yyy]
-        Sum of the elements of each row vector must be 1.
+        Sum of the elements of each row vector must be 1.0.
         If a single vector is input, will be broadcasted.
 ```
 
