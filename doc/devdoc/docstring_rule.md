@@ -414,7 +414,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
     xxx : float or numpy.ndarray, optional
         Real numbers, 
         by default [0.0, 0.0, ... , 0.0]
-        If a single scaler is input, it will be broadcasted.
+        If a single real number is input, it will be broadcasted.
 ```
 
 #### 非負の実数の組
@@ -423,7 +423,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
     xxx : float or numpy.ndarray, optional
         Non-negative real numbers, 
         by default [1.0, 1.0, ... , 1.0]
-        If a single scaler is input, it will be broadcasted.
+        If a single real number is input, it will be broadcasted.
 ```
 
 #### 正の実数の組
