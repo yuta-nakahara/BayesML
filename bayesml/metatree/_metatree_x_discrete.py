@@ -1,6 +1,7 @@
 # Code Author
 # Yuta Nakahara <yuta.nakahara@aoni.waseda.jp>
 # Document Author
+# Yuta Nakahara <yuta.nakahara@aoni.waseda.jp>
 # Wenbin Yu <ywb827748728@163.com>
 import warnings
 import copy
@@ -27,24 +28,24 @@ class _GenNode:
     depth : int
             a non-negetive integer :math:' >= 0'
     k_candidates : list
-            feature value which used to split node
+            feature value which can be used to split node
     h_g : float
             a positive real number  in \[0 , 1 \], by default 0.5
     k : int
             a positive integer, by default None
     sub_model : class
-            a class of generative model used by MT-Model 
+            a class of generative model assigned to leaf nodes
     """
     def __init__(self,
                  depth,
                  k_candidates,
-                 NUM_CHILDREN = 2,
+                 c_num_children = 2,
                  h_g = 0.5,
                  k = None,
                  sub_model = None
                  ):
         self.depth = depth
-        self.children = [None for i in range(NUM_CHILDREN)]  # child nodes
+        self.children = [None for i in range(c_num_children)]  # child nodes
         self.k_candidates = k_candidates
         self.h_g = h_g
         self.k = k
@@ -56,11 +57,11 @@ class GenModel(base.Generative):
 
     Parameters
     ----------
-    D_MAX : int 
+    c_d_max : int 
             a positive integer, by default 3
-    K : int
+    c_k : int
             a positive integer, by default 3
-    NUM_CHILDREN : int
+    c_num_children : int
             a positive integer, by default 2
     h_k_prob : list of float
             a list of positive real number witch in \[0 , 1 \], by default None
@@ -74,9 +75,9 @@ class GenModel(base.Generative):
     def __init__(
         self,
         *,
-        D_MAX=3,
-        K=3,
-        NUM_CHILDREN=2,
+        c_d_max=3,
+        c_k=3,
+        c_num_children=2,
         h_k_prob = None,
         h_g=0.5,
         SubModel=bernoulli.GenModel,
@@ -84,31 +85,31 @@ class GenModel(base.Generative):
         seed=None
         ):
         # 例外処理
-        if not isinstance(D_MAX, int) or D_MAX <= 0: #numpy 1次元の場合は要検討
-            raise(ParameterFormatError("D_MAX must be an int type positive number."))
-        if not isinstance(K, int) or K <= 0:
-            raise(ParameterFormatError("K must be a int type positive number."))
-        if not isinstance(NUM_CHILDREN, int) or NUM_CHILDREN <= 0:
-            raise(ParameterFormatError("NUM_CHILDREN must be a int type positive number."))
-        if h_k_prob is not None and (not isinstance(h_k_prob,list) or len(h_k_prob) != K):
-            raise(ParameterFormatError("h_k_prob must be a K-dimentional list type."))
+        if not isinstance(c_d_max, int) or c_d_max <= 0: #numpy 1次元の場合は要検討
+            raise(ParameterFormatError("c_d_max must be an int type positive number."))
+        if not isinstance(c_k, int) or c_k <= 0:
+            raise(ParameterFormatError("c_k must be a int type positive number."))
+        if not isinstance(c_num_children, int) or c_num_children <= 0:
+            raise(ParameterFormatError("c_num_children must be a int type positive number."))
+        if h_k_prob is not None and (not isinstance(h_k_prob,list) or len(h_k_prob) != c_k):
+            raise(ParameterFormatError("h_k_prob must be a c_k-dimentional list type."))
         if not isinstance(h_g, float) or h_g < 0.0 or h_g > 1.0:
             raise(ParameterFormatError("h_g must be a float type between [0.0 , 1.0]."))
         #
 
       
-        self.D_MAX = D_MAX
-        self.K = K
-        self.NUM_CHILDREN = NUM_CHILDREN
+        self.c_d_max = c_d_max
+        self.c_k = c_k
+        self.c_num_children = c_num_children
         if h_k_prob is not None:
             self.h_k_prob = h_k_prob
         else:
-            self.h_k_prob = np.ones(self.K) / self.K
+            self.h_k_prob = np.ones(self.c_k) / self.c_k
         self.h_g = h_g
         self.SubModel = SubModel
         self.sub_h_params = sub_h_params
         self.rng = np.random.default_rng(seed)
-        self.root = _GenNode(0,list(range(self.K)),self.NUM_CHILDREN,self.h_g,None,None)
+        self.root = _GenNode(0,list(range(self.c_k)),self.c_num_children,self.h_g,None,None)
 
     def _gen_params_recursion(self,node,feature_fix):
         """ generate parameters recursively
@@ -120,10 +121,10 @@ class GenModel(base.Generative):
         sub_h_params : bool
                 a bool parameter show the feature is fixed or not
         """
-        if node.depth == self.D_MAX or self.rng.random() > node.h_g:  # 葉ノード
+        if node.depth == self.c_d_max or self.rng.random() > node.h_g:  # 葉ノード
             node.sub_model = self.SubModel(**self.sub_h_params)
             node.sub_model.gen_params()
-            if node.depth == self.D_MAX:
+            if node.depth == self.c_d_max:
                 node.h_g = 0
             node.leaf = True
         else:  # 内部ノード
@@ -133,9 +134,9 @@ class GenModel(base.Generative):
             child_k_candidates = copy.copy(node.k_candidates)
             child_k_candidates.remove(node.k)
             node.leaf = False
-            for i in range(self.NUM_CHILDREN):
+            for i in range(self.c_num_children):
                 if feature_fix == False or node.children[i] is None:
-                    node.children[i] = _GenNode(node.depth+1,child_k_candidates,self.NUM_CHILDREN,self.h_g,None,None)
+                    node.children[i] = _GenNode(node.depth+1,child_k_candidates,self.c_num_children,self.h_g,None,None)
                 else:
                     node.children[i].k_candidates = child_k_candidates
                 self._gen_params_recursion(node.children[i],feature_fix)
@@ -153,7 +154,7 @@ class GenModel(base.Generative):
         if self.leaf:  # 葉ノード
             node.sub_model = self.SubModel(**self.sub_h_params)
             node.sub_model.gen_params()
-            if node.depth == self.D_MAX:
+            if node.depth == self.c_d_max:
                 node.h_g = 0
             node.leaf = True
         else:  # 内部ノード
@@ -163,9 +164,9 @@ class GenModel(base.Generative):
             child_k_candidates = copy.copy(node.k_candidates)
             child_k_candidates.remove(node.k)
             node.leaf = False
-            for i in range(self.NUM_CHILDREN):
+            for i in range(self.c_num_children):
                 if feature_fix == False or node.children[i] is None:
-                    node.children[i] = _GenNode(node.depth+1,child_k_candidates,self.NUM_CHILDREN,self.h_g,None,None)
+                    node.children[i] = _GenNode(node.depth+1,child_k_candidates,self.c_num_children,self.h_g,None,None)
                 else:
                     node.children[i].k_candidates = child_k_candidates
                 self._gen_params_recursion_tree_fix(node.children[i],feature_fix)
@@ -182,15 +183,15 @@ class GenModel(base.Generative):
         """
         if original_tree_node.leaf:  # 葉ノード
             node.sub_model = copy.deepcopy(original_tree_node.sub_model)
-            if node.depth == self.D_MAX:
+            if node.depth == self.c_d_max:
                 node.h_g = 0
             node.leaf = True
         else:
             node.k = original_tree_node.k
             child_k_candidates = copy.copy(node.k_candidates)
             child_k_candidates.remove(node.k)
-            for i in range(self.NUM_CHILDREN):
-                node.children[i] = _GenNode(node.depth+1,child_k_candidates,self.NUM_CHILDREN,self.h_g,None,None)
+            for i in range(self.c_num_children):
+                node.children[i] = _GenNode(node.depth+1,child_k_candidates,self.c_num_children,self.h_g,None,None)
                 self._set_params_recursion(node.children[i],original_tree_node.children[i])
     
     def _gen_sample_recursion(self,node,x):
@@ -242,7 +243,7 @@ class GenModel(base.Generative):
             tree_graph.edge(f'{parent_id}', f'{tmp_id}', label=f'{sibling_num}')
         
         if node.leaf != True:
-            for i in range(self.NUM_CHILDREN):
+            for i in range(self.c_num_children):
                 node_id = self._visualize_model_recursion(tree_graph,node.children[i],node_id+1,tmp_id,i,tmp_p_v*node.h_g)
         
         return node_id
@@ -253,19 +254,19 @@ class GenModel(base.Generative):
         Parameters
         ----------
         h_k_prob : list 
-            K real numbers : math:`p \in [0, 1]` 
+            c_k real numbers : math:`p \in [0, 1]` 
         h_g : float
             a real number :math:`p \in [0, 1]`
         sub_h_params :  dict of {str:float}
             a dictionary include hyper parameters for sub model 
         """
         #例外処理
-        if h_k_prob is not None and (not isinstance(h_k_prob,list) or len(h_k_prob) != K):
-            raise(ParameterFormatError("h_k_prob must be a K-dimentional list type."))
+        if h_k_prob is not None and (not isinstance(h_k_prob,list) or len(h_k_prob) != c_k):
+            raise(ParameterFormatError("h_k_prob must be a c_k-dimentional list type."))
         if h_k_prob is not None:
             self.h_k_prob = h_k_prob
         else:
-            self.h_k_prob = np.ones(self.K) / self.K
+            self.h_k_prob = np.ones(self.c_k) / self.c_k
 
         if not isinstance(h_g, float) or h_g < 0.0 or h_g > 1.0:
             raise(ParameterFormatError("h_g must be a float type between [0.0 , 1.0]."))
@@ -378,7 +379,7 @@ class GenModel(base.Generative):
         Returns
         -------
         X : numpy ndarray
-            K dimensional array whose size is ``sammple_size`` and elements are 0 or 1.
+            c_k dimensional array whose size is ``sammple_size`` and elements are 0 or 1.
         Y : numpy ndarray
             1 dimensional array whose size is ``sammple_size`` and elements are real number.
         """
@@ -387,7 +388,7 @@ class GenModel(base.Generative):
             raise(DataFormatError("sample_size must be a positive integer."))
 
         if X is None:
-            X = self.rng.choice(self.NUM_CHILDREN,(sample_size,self.K))
+            X = self.rng.choice(self.c_num_children,(sample_size,self.c_k))
         if self.SubModel == bernoulli.GenModel:
             Y = np.empty(sample_size,dtype=int)
         if self.SubModel == normal.GenModel:
@@ -479,13 +480,13 @@ class _LearnNode():
     """
     def __init__(self,
                  depth,
-                 NUM_CHILDREN = 2,
+                 c_num_children = 2,
                  hn_g = 0.5,
                  k = None,
                  sub_model = None
                  ):
         self.depth = depth
-        self.children = [None for i in range(NUM_CHILDREN)]  # child nodes
+        self.children = [None for i in range(c_num_children)]  # child nodes
         self.hn_g = hn_g
         self.k = k
         self.sub_model = sub_model
@@ -498,9 +499,9 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
     def __init__(
         self,
         *,
-        D_MAX=3,
-        K=None,
-        NUM_CHILDREN=2,
+        c_d_max=3,
+        c_k=None,
+        c_num_children=2,
         h0_k_prob_vec = None,
         h0_g=0.5,
         SubModel=bernoulli.LearnModel,
@@ -509,23 +510,23 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         h0_metatree_prob_vec=None
         ):
 
-        self.D_MAX = _check.pos_int(D_MAX,'D_MAX',ParameterFormatError)
-        self.NUM_CHILDREN = _check.pos_int(NUM_CHILDREN,'NUM_CHILDREN',ParameterFormatError)
-        if K is not None:
-            self.K = _check.pos_int(K,'K',ParameterFormatError)
+        self.c_d_max = _check.pos_int(c_d_max,'c_d_max',ParameterFormatError)
+        self.c_num_children = _check.pos_int(c_num_children,'c_num_children',ParameterFormatError)
+        if c_k is not None:
+            self.c_k = _check.pos_int(c_k,'c_k',ParameterFormatError)
             if h0_k_prob_vec is not None:
                 self.h0_k_prob_vec = _check.float_vec_sum_1(h0_k_prob_vec,'h0_k_prob_vec',ParameterFormatError)
             else:
-                self.h0_k_prob_vec = np.ones(self.K) / self.K
+                self.h0_k_prob_vec = np.ones(self.c_k) / self.c_k
         elif h0_k_prob_vec is not None:
             self.h0_k_prob_vec = _check.float_vec_sum_1(h0_k_prob_vec,'h0_k_prob_vec',ParameterFormatError)
-            self.K = self.h0_k_prob_vec.shape[0]
+            self.c_k = self.h0_k_prob_vec.shape[0]
         else:
-            self.K = 3
-            self.h0_k_prob_vec = np.ones(self.K) / self.K
-        if self.h0_k_prob_vec.shape[0] != self.K:
+            self.c_k = 3
+            self.h0_k_prob_vec = np.ones(self.c_k) / self.c_k
+        if self.h0_k_prob_vec.shape[0] != self.c_k:
             raise(ParameterFormatError(
-                "K and dimension of h0_k_prob_vec must be the same."
+                "c_k and dimension of h0_k_prob_vec must be the same."
             ))
 
         self.h0_g = _check.float_in_closed01(h0_g,'h0_g',ParameterFormatError)
@@ -542,7 +543,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             metatree_num = len(self.h0_metatree_list)
             self.h0_metatree_prob_vec = np.ones(metatree_num) / metatree_num
 
-        self._tmp_x = np.zeros(self.K,dtype=int)
+        self._tmp_x = np.zeros(self.c_k,dtype=int)
         self.reset_hn_params()
 
     def set_h0_params(self,
@@ -569,10 +570,10 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         """
         if h0_k_prob_vec is not None:
             self.h0_k_prob_vec = _check.float_vec_sum_1(h0_k_prob_vec,'h0_k_prob_vec',ParameterFormatError)
-            if self.h0_k_prob_vec.shape[0] != self.K:
+            if self.h0_k_prob_vec.shape[0] != self.c_k:
                 raise(ParameterFormatError(
-                    "K and dimension of h0_k_prob_vec must be the same. "
-                    +"If you want to change K, you should re-construct a new instance of GenModel."
+                    "c_k and dimension of h0_k_prob_vec must be the same. "
+                    +"If you want to change c_k, you should re-construct a new instance of GenModel."
                 ))
 
         if h0_g is not None:
@@ -646,10 +647,10 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         """
         if hn_k_prob_vec is not None:
             self.hn_k_prob_vec = _check.float_vec_sum_1(hn_k_prob_vec,'hn_k_prob_vec',ParameterFormatError)
-            if self.hn_k_prob_vec.shape[0] != self.K:
+            if self.hn_k_prob_vec.shape[0] != self.c_k:
                 raise(ParameterFormatError(
-                    "K and dimension of hn_k_prob_vec must be the same."
-                    +"If you want to change K, you should re-construct a new instance of GenModel."
+                    "c_k and dimension of hn_k_prob_vec must be the same."
+                    +"If you want to change c_k, you should re-construct a new instance of GenModel."
                 ))
 
         if hn_g is not None:
@@ -679,7 +680,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                     "Length of hn_metatree_list must be zero when self.hn_metatree_prob_vec is None."
                 ))
 
-        self.calc_pred_dist(np.zeros(self.K))
+        self.calc_pred_dist(np.zeros(self.c_k))
 
     def get_hn_params(self):
         """Get the hyperparameters of the posterior distribution.
@@ -712,7 +713,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self.hn_metatree_list = copy.copy(self.h0_metatree_list)
         self.hn_metatree_prob_vec = copy.copy(self.h0_metatree_prob_vec)
 
-        self.calc_pred_dist(np.zeros(self.K,dtype=int))
+        self.calc_pred_dist(np.zeros(self.c_k,dtype=int))
     
     def overwrite_h0_params(self):
         """Overwrite the initial values of the hyperparameters of the posterior distribution by the learned values.
@@ -727,19 +728,19 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self.h0_metatree_list = copy.copy(self.hn_metatree_list)
         self.h0_metatree_prob_vec = np.copy(self.hn_metatree_prob_vec)
 
-        self.calc_pred_dist(np.zeros(self.K))
+        self.calc_pred_dist(np.zeros(self.c_k))
 
     def _copy_tree_from_sklearn_tree(self,new_node, original_tree,node_id):
         if original_tree.children_left[node_id] != sklearn_tree._tree.TREE_LEAF:  # 内部ノード
             new_node.k = original_tree.feature[node_id]
             new_node.children[0] = _LearnNode(depth=new_node.depth+1,
-                                              NUM_CHILDREN=2,
+                                              c_num_children=2,
                                               hn_g=self.h0_g,
                                               k=None,
                                               sub_model=self.SubModel(**self.sub_h0_params))
             self._copy_tree_from_sklearn_tree(new_node.children[0],original_tree,original_tree.children_left[node_id])
             new_node.children[1] = _LearnNode(depth=new_node.depth+1,
-                                              NUM_CHILDREN=2,
+                                              c_num_children=2,
                                               hn_g=self.h0_g,
                                               k=None,
                                               sub_model=self.SubModel(**self.sub_h0_params))
@@ -783,7 +784,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         if node1.leaf == True and node2.leaf == True:
             return True
         elif node1.k == node2.k:
-            for i in range(self.NUM_CHILDREN):
+            for i in range(self.c_num_children):
                 if self._compare_metatree_recursion(node1.children[i],node2.children[i]) == False:
                     return False
             return True
@@ -821,12 +822,12 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             Each element is a root node of metatree.
         metatree_prob_vec : numpy ndarray
         """
-        if self.NUM_CHILDREN != 2:
-            raise(ParameterFormatError("MTRF is supported only when NUM_CHILDREN == 2."))
+        if self.c_num_children != 2:
+            raise(ParameterFormatError("MTRF is supported only when c_num_children == 2."))
         if self.SubModel == bernoulli.LearnModel:
-            randomforest = RandomForestClassifier(n_estimators=n_estimators,max_depth=self.D_MAX)
+            randomforest = RandomForestClassifier(n_estimators=n_estimators,max_depth=self.c_d_max)
         if self.SubModel == normal.LearnModel:
-            randomforest = RandomForestRegressor(n_estimators=n_estimators,max_depth=self.D_MAX)
+            randomforest = RandomForestRegressor(n_estimators=n_estimators,max_depth=self.c_d_max)
         randomforest.fit(x,y)
         tmp_metatree_list = [_LearnNode(0,2,self.h0_g,None,self.SubModel(**self.sub_h0_params)) for i in range(n_estimators)]
         tmp_metatree_prob_vec = np.ones(n_estimators) / n_estimators
@@ -882,10 +883,10 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             optional parameters of algorithms, by default {}
         """
         _check.int_vecs(x,'x',DataFormatError)
-        if x.shape[-1] != self.K:
-            raise(DataFormatError(f"x.shape[-1] must equal to K:{self.K}"))
-        if x.max() >= self.NUM_CHILDREN:
-            raise(DataFormatError(f"x.max() must smaller than NUM_CHILDREN:{self.NUM_CHILDREN}"))
+        if x.shape[-1] != self.c_k:
+            raise(DataFormatError(f"x.shape[-1] must equal to c_k:{self.c_k}"))
+        if x.max() >= self.c_num_children:
+            raise(DataFormatError(f"x.max() must smaller than c_num_children:{self.c_num_children}"))
 
         if self.SubModel == bernoulli.LearnModel: # acceptable data type of y depends on SubModel
             _check.ints_of_01(y,'y',DataFormatError)
@@ -896,7 +897,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         elif x.shape[:-1] != ():
             raise(DataFormatError(f"If y is a scaler, x.shape[:-1] must be the empty tuple ()."))
 
-        x = x.reshape(-1,self.K)
+        x = x.reshape(-1,self.c_k)
         y = np.ravel(y)
 
         if alg_type == 'MTRF':
@@ -905,14 +906,14 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             self.hn_metatree_list, self.hn_metatree_prob_vec = self._given_MT(x,y)
 
     def _map_recursion_add_nodes(self,node):
-        if node.depth == self.D_MAX:  # 葉ノード
+        if node.depth == self.c_d_max:  # 葉ノード
             node.hn_g = 0.0
             node.leaf = True
             node.map_leaf = True
         else:  # 内部ノード
-            for i in range(self.NUM_CHILDREN):
+            for i in range(self.c_num_children):
                 node.children[i] = _LearnNode(depth=node.depth+1,
-                                              NUM_CHILDREN=self.NUM_CHILDREN,
+                                              c_num_children=self.c_num_children,
                                               hn_g=self.h0_g,
                                               k=None,
                                               sub_model=self.SubModel(**self.sub_h0_params))
@@ -920,19 +921,19 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
 
     def _map_recursion(self,node):
         if node.leaf:
-            if node.depth == self.D_MAX:
+            if node.depth == self.c_d_max:
                 node.map_leaf = True
                 return 1.0
-            elif 1.0 - node.hn_g > node.hn_g * self.h0_g ** (self.K ** (self.D_MAX - node.depth)-2):
+            elif 1.0 - node.hn_g > node.hn_g * self.h0_g ** (self.c_k ** (self.c_d_max - node.depth)-2):
                 node.map_leaf = True
                 return 1.0 - node.hn_g
             else:
                 self._map_recursion_add_nodes(node)
-                return node.hn_g * self.h0_g ** (self.K ** (self.D_MAX - node.depth)-2)
+                return node.hn_g * self.h0_g ** (self.c_k ** (self.c_d_max - node.depth)-2)
         else:
             tmp1 = 1.0-node.hn_g
-            tmp_vec = np.empty(self.NUM_CHILDREN)
-            for i in range(self.NUM_CHILDREN):
+            tmp_vec = np.empty(self.c_num_children)
+            for i in range(self.c_num_children):
                 tmp_vec[i] = self._map_recursion(node.children[i])
             if tmp1 > node.hn_g*tmp_vec.prod():
                 node.map_leaf = True
@@ -945,8 +946,8 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         copyed_node.hn_g = original_node.hn_g
         if original_node.map_leaf == False:
             copyed_node.k = original_node.k
-            for i in range(self.NUM_CHILDREN):
-                copyed_node.children[i] = _LearnNode(copyed_node.depth+1,self.NUM_CHILDREN)
+            for i in range(self.c_num_children):
+                copyed_node.children[i] = _LearnNode(copyed_node.depth+1,self.c_num_children)
                 self._copy_map_tree_recursion(copyed_node.children[i],original_node.children[i])
         else:
             copyed_node.sub_model = copy.deepcopy(original_node.sub_model)
@@ -964,7 +965,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                 if prob > map_prob:
                     map_index = i
                     map_prob = prob
-            map_root = _LearnNode(0,self.NUM_CHILDREN)
+            map_root = _LearnNode(0,self.c_num_children)
             self._copy_map_tree_recursion(map_root,self.hn_metatree_list[map_index])
             if visualize:
                 import graphviz
@@ -1009,7 +1010,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             tree_graph.edge(f'{parent_id}', f'{tmp_id}', label=f'{sibling_num}')
         
         if node.leaf != True:
-            for i in range(self.NUM_CHILDREN):
+            for i in range(self.c_num_children):
                 node_id = self._visualize_model_recursion(tree_graph,node.children[i],node_id+1,tmp_id,i,tmp_p_v*node.hn_g)
         
         return node_id
@@ -1149,10 +1150,10 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             The predicted value under the given loss function. 
         """
         _check.nonneg_int_vec(x,'x',DataFormatError)
-        if x.shape[-1] != self.K:
-            raise(DataFormatError(f"x.shape[-1] must equal to K:{self.K}"))
-        if x.max() >= self.NUM_CHILDREN:
-            raise(DataFormatError(f"x.max() must smaller than NUM_CHILDREN:{self.NUM_CHILDREN}"))
+        if x.shape[-1] != self.c_k:
+            raise(DataFormatError(f"x.shape[-1] must equal to c_k:{self.c_k}"))
+        if x.max() >= self.c_num_children:
+            raise(DataFormatError(f"x.max() must smaller than c_num_children:{self.c_num_children}"))
         self.calc_pred_dist(x)
         prediction = self.make_prediction(loss=loss)
         self.update_posterior(x,y,alg_type='given_MT')
