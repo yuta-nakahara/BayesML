@@ -8,7 +8,7 @@ import time
 model = metatree.GenModel(h_g=0.75,SubModel=bernoulli.GenModel)
 # model = metatree.GenModel(h_g=0.75,SubModel=normal.GenModel,sub_h_params={'h_kappa':0.001})
 model.gen_params()
-model.visualize_model(filename='true_model.gv')
+model.visualize_model()
 x,y = model.gen_sample(sample_size=1000)
 
 # LearnModel

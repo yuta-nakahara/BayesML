@@ -495,6 +495,51 @@ class _LearnNode():
 
 class LearnModel(base.Posterior,base.PredictiveMixin):
     """The posterior distribution and the predictive distribution.
+
+    Parameters
+    ----------
+    c_k : int
+        A positive integer
+    c_d_max : int, optional
+        A positive integer, by default 10
+    c_num_children : int, optional
+        A positive integer, by default 2
+    SubModel : class, optional
+        LearnModel of bernoulli, categorical, 
+        poisson, normal, multivariate_normal, 
+        exponential, linearregression, 
+        by default bernoulli.LearnModel
+    h0_k_prob_vec : numpy.ndarray, optional
+        A vector of real numbers in :math:`[0, 1]`, 
+        by default [1/c_k, 1/c_k, ... , 1/c_k]
+        Sum of its elements must be 1.0.
+    h0_g : float, optional
+        A real number in :math:`[0, 1]`, by default 0.5
+    sub_h0_params : dict, optional
+        h0_params for self.SubModel, by default {}
+    h0_metatree_list : list of metatree._LearnNode, optional
+        Root nodes of meta-trees, by default []
+    h0_metatree_prob_vec : numpy.ndarray, optional
+        A vector of real numbers in :math:`[0, 1]` 
+        that represents prior distribution of h0_metatree_list, 
+        by default uniform distribution
+        Sum of its elements must be 1.0.
+
+    Attributes
+    ----------
+    hn_k_prob_vec : numpy.ndarray
+        A vector of real numbers in :math:`[0, 1]`. 
+        Sum of its elements is 1.
+    hn_g : float
+        A real number in :math:`[0, 1]`
+    sub_hn_params : dict
+        hn_params for self.SubModel
+    hn_metatree_list : list of metatree._LearnNode
+        Root nodes of meta-trees
+    hn_metatree_prob_vec : numpy.ndarray
+        A vector of real numbers in :math:`[0, 1]` 
+        that represents prior distribution of h0_metatree_list.
+        Sum of its elements is 1.0.
     """
     def __init__(
             self,
@@ -546,20 +591,25 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         h0_metatree_list=None,
         h0_metatree_prob_vec=None
         ):
-        """Set initial values of the hyperparameter of the posterior distribution.
+        """Set the hyperparameters of the prior distribution.
 
         Parameters
         ----------
-        h0_k_prob_vec : _type_
-            _description_
-        h0_g : _type_
-            _description_
-        sub_h0_params : _type_
-            _description_
-        h0_metatree_list : _type_
-            _description_
-        h0_metatree_prob_vec : _type_
-            _description_
+        h0_k_prob_vec : numpy.ndarray, optional
+            A vector of real numbers in :math:`[0, 1]`, 
+            by default None
+            Sum of its elements must be 1.
+        h0_g : float, optional
+            A real number in :math:`[0, 1]`, by default None
+        sub_h0_params : dict, optional
+            h0_params for self.SubModel, by default None
+        h0_metatree_list : list of metatree._LearnNode, optional
+            Root nodes of meta-trees, by default None
+        h0_metatree_prob_vec : numpy.ndarray, optional
+            A vector of real numbers in :math:`[0, 1]` 
+            that represents prior distribution of h0_metatree_list, 
+            by default None.
+            Sum of its elements must be 1.0.
         """
         if h0_k_prob_vec is not None:
             _check.float_vec_sum_1(h0_k_prob_vec,'h0_k_prob_vec',ParameterFormatError)
@@ -637,20 +687,25 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         hn_metatree_list=None,
         hn_metatree_prob_vec=None
         ):
-        """Set updated values of the hyperparameter of the posterior distribution.
+        """Set the hyperparameter of the posterior distribution.
 
         Parameters
         ----------
-        hn_k_prob_vec : _type_
-            _description_
-        hn_g : _type_
-            _description_
-        sub_hn_params : _type_
-            _description_
-        hn_metatree_list : _type_
-            _description_
-        hn_metatree_prob_vec : _type_
-            _description_
+        hn_k_prob_vec : numpy.ndarray, optional
+            A vector of real numbers in :math:`[0, 1]`, 
+            by default None
+            Sum of its elements must be 1.
+        hn_g : float, optional
+            A real number in :math:`[0, 1]`, by default None
+        sub_hn_params : dict, optional
+            hn_params for self.SubModel, by default None
+        hn_metatree_list : list of metatree._LearnNode, optional
+            Root nodes of meta-trees, by default None
+        hn_metatree_prob_vec : numpy.ndarray, optional
+            A vector of real numbers in :math:`[0, 1]` 
+            that represents prior distribution of hn_metatree_list, 
+            by default None.
+            Sum of its elements must be 1.0.
         """
         if hn_k_prob_vec is not None:
             _check.float_vec_sum_1(hn_k_prob_vec,'hn_k_prob_vec',ParameterFormatError)
@@ -831,7 +886,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         Parameters
         ----------
         x : numpy ndarray
-            values of explanatory variables whose dtype must be int
+            values of explanatory variables whose dtype is int
         y : numpy ndarray
             values of objective variable whose dtype may be int or float
         n_estimators : int, optional
@@ -871,7 +926,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         Parameters
         ----------
         x : numpy ndarray
-            values of explanatory variables whose dtype must be int
+            values of explanatory variables whose dtype is int
         y : numpy ndarray
             values of objective variable whose dtype may be int or float
 
@@ -881,6 +936,8 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             Each element is a root node of metatree.
         metatree_prob_vec : numpy ndarray
         """
+        if len(self.hn_metatree_list) == 0:
+            raise(ParameterFormatError("given_MT is supported only when len(self.hn_metatree_list) > 0."))
         log_metatree_posteriors = np.log(self.hn_metatree_prob_vec)
         for i,metatree in enumerate(self.hn_metatree_list):
             for j in range(x.shape[0]):
@@ -895,15 +952,15 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         Parameters
         ----------
         x : numpy ndarray
-            values of explanatory variables whose dtype must be int
+            values of explanatory variables whose dtype is int
         y : numpy ndarray
             values of objective variable whose dtype may be int or float
-        alg_type : {'MTRF'}, optional
+        alg_type : {'MTRF', 'given_MT'}, optional
             type of algorithm, by default 'MTRF'
         **kwargs : dict, optional
             optional parameters of algorithms, by default {}
         """
-        _check.int_vecs(x,'x',DataFormatError)
+        _check.nonneg_int_vecs(x,'x',DataFormatError)
         if x.shape[-1] != self.c_k:
             raise(DataFormatError(f"x.shape[-1] must equal to c_k:{self.c_k}"))
         if x.max() >= self.c_num_children:
@@ -975,7 +1032,31 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             copyed_node.leaf = True
 
     def estimate_params(self,loss="0-1",visualize=True,filename=None,format=None):
-        """Estimate the parameter of the stochastic data generative model under the given criterion.
+        """Estimate the parameter under the given criterion.
+
+        Parameters
+        ----------
+        loss : str, optional
+            Loss function underlying the Bayes risk function, by default ``\"0-1\"``.
+            This function supports only ``\"0-1\"``.
+        visualize : bool, optional
+            If True, the estimated metatree will be visualized, by default ``True``.
+            This visualization requires ``graphviz``.
+        filename : str, optional
+            Filename for saving the figure, by default ``None``
+        format : str, optional
+            Rendering output format (``\"pdf\"``, ``\"png\"``, ...).
+
+
+        Returns
+        -------
+        map_root : metatree._LearnNode
+            The root node of the estimated meta-tree 
+            that also contains the estimated parameters in each node.
+
+        See Also
+        --------
+        graphbiz.Digraph
         """
 
         if loss == "0-1":
@@ -1000,8 +1081,6 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                                 +"This function supports only \"0-1\"."))
     
     def _visualize_model_recursion(self,tree_graph,node,node_id,parent_id,sibling_num,p_v):
-        """Visualize the stochastic data generative model and generated samples.
-        """
         tmp_id = node_id
         tmp_p_v = p_v
         
@@ -1039,6 +1118,15 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
     def visualize_posterior(self,filename=None,format=None):
         """Visualize the posterior distribution for the parameter.
         
+        This method requires ``graphviz``.
+
+        Parameters
+        ----------
+        filename : str, optional
+            Filename for saving the figure, by default ``None``
+        format : str, optional
+            Rendering output format (``\"pdf\"``, ``\"png\"``, ...).
+
         Examples
         --------
         >>> from bayesml import metatree
@@ -1049,6 +1137,10 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         >>> learn_model.visualize_posterior()
 
         .. image:: ./images/metatree_posterior.png
+
+        See Also
+        --------
+        graphbiz.Digraph
         """
         MAP_index = np.argmax(self.hn_metatree_prob_vec)
         print(f'MAP probability of metatree:{self.hn_metatree_prob_vec[MAP_index]}')
@@ -1089,8 +1181,19 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             return self._calc_pred_dist_leaf(node,x)
 
     def calc_pred_dist(self,x):
-        """Calculate the parameters of the predictive distribution."""
-        self._tmp_x = np.copy(x)
+        """Calculate the parameters of the predictive distribution.
+        
+        Parameters
+        ----------
+        x : numpy ndarray
+            values of explanatory variables whose dtype is int
+        """
+        _check.nonneg_int_vec(x,'x',DataFormatError)
+        if x.shape[0] != self.c_k:
+            raise(DataFormatError(f"x.shape[0] must equal to c_k:{self.c_k}"))
+        if x.max() >= self.c_num_children:
+            raise(DataFormatError(f"x.max() must smaller than c_num_children:{self.c_num_children}"))
+        self._tmp_x[:] = x
         for root in self.hn_metatree_list:
             self._calc_pred_dist_recursion(root,self._tmp_x)
 
@@ -1136,7 +1239,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
 
         Returns
         -------
-        Predicted_value : {float, numpy.ndarray}
+        predicted_value : {float, numpy.ndarray}
             The predicted value under the given loss function. 
         """
         if loss == "squared":
@@ -1161,13 +1264,15 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         ----------
         x : numpy.ndarray
             It must be a degree-dimensional vector
+        y : numpy ndarray
+            values of objective variable whose dtype may be int or float
         loss : str, optional
             Loss function underlying the Bayes risk function, by default \"0-1\".
             This function supports \"squared\", \"0-1\", and \"KL\".
 
         Returns
         -------
-        Predicted_value : {float, numpy.ndarray}
+        predicted_value : {float, numpy.ndarray}
             The predicted value under the given loss function. 
         """
         _check.nonneg_int_vec(x,'x',DataFormatError)
