@@ -15,7 +15,7 @@ x,y = model.gen_sample(sample_size=1000)
 # dummynode = metatree._LearnNode(depth=0,k=0,sub_model=bernoulli.LearnModel(),hn_g=1.0)
 # dummynode.leaf = True
 # learn_model = metatree.LearnModel(h0_g=0.5,SubModel=bernoulli.LearnModel,h0_metatree_list=[dummynode])
-learn_model = metatree.LearnModel(h0_g=0.5,SubModel=bernoulli.LearnModel)
+learn_model = metatree.LearnModel(c_k=3,h0_g=0.5,SubModel=bernoulli.LearnModel)
 # learn_model = metatree.LearnModel(SubModel=normal.LearnModel,sub_h0_params={'h0_kappa':0.001})
 learn_model.update_posterior(x,y)
 # for i in range(10):

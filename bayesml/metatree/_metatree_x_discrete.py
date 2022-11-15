@@ -497,54 +497,47 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
     """The posterior distribution and the predictive distribution.
     """
     def __init__(
-        self,
-        *,
-        c_d_max=3,
-        c_k=None,
-        c_num_children=2,
-        h0_k_prob_vec = None,
-        h0_g=0.5,
-        SubModel=bernoulli.LearnModel,
-        sub_h0_params={},
-        h0_metatree_list=[],
-        h0_metatree_prob_vec=None
-        ):
-
+            self,
+            c_k,
+            c_d_max=10,
+            c_num_children=2,
+            *,
+            SubModel=bernoulli.LearnModel,
+            h0_k_prob_vec = None,
+            h0_g=0.5,
+            sub_h0_params={},
+            h0_metatree_list=[],
+            h0_metatree_prob_vec=None
+            ):
+        # constants
         self.c_d_max = _check.pos_int(c_d_max,'c_d_max',ParameterFormatError)
         self.c_num_children = _check.pos_int(c_num_children,'c_num_children',ParameterFormatError)
-        if c_k is not None:
-            self.c_k = _check.pos_int(c_k,'c_k',ParameterFormatError)
-            if h0_k_prob_vec is not None:
-                self.h0_k_prob_vec = _check.float_vec_sum_1(h0_k_prob_vec,'h0_k_prob_vec',ParameterFormatError)
-            else:
-                self.h0_k_prob_vec = np.ones(self.c_k) / self.c_k
-        elif h0_k_prob_vec is not None:
-            self.h0_k_prob_vec = _check.float_vec_sum_1(h0_k_prob_vec,'h0_k_prob_vec',ParameterFormatError)
-            self.c_k = self.h0_k_prob_vec.shape[0]
-        else:
-            self.c_k = 3
-            self.h0_k_prob_vec = np.ones(self.c_k) / self.c_k
-        if self.h0_k_prob_vec.shape[0] != self.c_k:
-            raise(ParameterFormatError(
-                "c_k and dimension of h0_k_prob_vec must be the same."
-            ))
-
-        self.h0_g = _check.float_in_closed01(h0_g,'h0_g',ParameterFormatError)
+        self.c_k = _check.pos_int(c_k,'c_k',ParameterFormatError)
         self.SubModel = SubModel
-        self.sub_h0_params = sub_h0_params
-        self.h0_metatree_list = h0_metatree_list
-        if h0_metatree_prob_vec is not None:
-            self.h0_metatree_prob_vec = _check.float_vec_sum_1(h0_metatree_prob_vec,'h0_metatree_prob_vec',ParameterFormatError)
-            if self.h0_metatree_prob_vec.shape[0] != len(self.h0_metatree_list):
-                raise(ParameterFormatError(
-                    "Length of h0_metatree_list and dimension of h0_metatree_prob_vec must be the same."
-                ))
-        else:
-            metatree_num = len(self.h0_metatree_list)
-            self.h0_metatree_prob_vec = np.ones(metatree_num) / metatree_num
+
+        # h0_params
+        self.h0_k_prob_vec = np.ones(self.c_k) / self.c_k
+        self.h0_g = 0.5
+        self.sub_h0_params = {}
+        self.h0_metatree_list = []
+        self.h0_metatree_prob_vec = None
+
+        # hn_params
+        self.hn_k_prob_vec = np.ones(self.c_k) / self.c_k
+        self.hn_g = 0.5
+        self.sub_hn_params = {}
+        self.hn_metatree_list = []
+        self.hn_metatree_prob_vec = None
 
         self._tmp_x = np.zeros(self.c_k,dtype=int)
-        self.reset_hn_params()
+
+        self.set_h0_params(
+            h0_k_prob_vec,
+            h0_g,
+            sub_h0_params,
+            h0_metatree_list,
+            h0_metatree_prob_vec,
+        )
 
     def set_h0_params(self,
         h0_k_prob_vec = None,
@@ -569,28 +562,42 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             _description_
         """
         if h0_k_prob_vec is not None:
-            self.h0_k_prob_vec = _check.float_vec_sum_1(h0_k_prob_vec,'h0_k_prob_vec',ParameterFormatError)
-            if self.h0_k_prob_vec.shape[0] != self.c_k:
-                raise(ParameterFormatError(
-                    "c_k and dimension of h0_k_prob_vec must be the same. "
-                    +"If you want to change c_k, you should re-construct a new instance of GenModel."
-                ))
+            _check.float_vec_sum_1(h0_k_prob_vec,'h0_k_prob_vec',ParameterFormatError)
+            _check.shape_consistency(
+                h0_k_prob_vec.shape[0],'h0_k_prob_vec',
+                self.c_k,'self.c_k',
+                ParameterFormatError
+                )
+            self.h0_k_prob_vec[:] = h0_k_prob_vec
 
         if h0_g is not None:
             self.h0_g = _check.float_in_closed01(h0_g,'h0_g',ParameterFormatError)
 
         if sub_h0_params is not None:
-            self.sub_h0_params = sub_h0_params
+            self.sub_h0_params = copy.copy(sub_h0_params)
+            self.SubModel(**self.sub_h0_params)
 
         if h0_metatree_list is not None:
-            self.h0_metatree_list = h0_metatree_list
+            self.h0_metatree_list = copy.copy(h0_metatree_list)
             if h0_metatree_prob_vec is not None:
-                self.h0_metatree_prob_vec = _check.float_vec_sum_1(h0_metatree_prob_vec,'h0_metatree_prob_vec',ParameterFormatError)
-            else:
+                self.h0_metatree_prob_vec = np.copy(
+                    _check.float_vec_sum_1(
+                        h0_metatree_prob_vec,
+                        'h0_metatree_prob_vec',
+                        ParameterFormatError
+                    )
+                )
+            elif len(self.h0_metatree_list) > 0:
                 metatree_num = len(self.h0_metatree_list)
                 self.h0_metatree_prob_vec = np.ones(metatree_num) / metatree_num
         elif h0_metatree_prob_vec is not None:
-            self.h0_metatree_prob_vec = _check.float_vec_sum_1(h0_metatree_prob_vec,'h0_metatree_prob_vec',ParameterFormatError)
+            self.h0_metatree_prob_vec = np.copy(
+                _check.float_vec_sum_1(
+                    h0_metatree_prob_vec,
+                    'h0_metatree_prob_vec',
+                    ParameterFormatError
+                )
+            )
 
         if type(self.h0_metatree_prob_vec) is np.ndarray:             
             if self.h0_metatree_prob_vec.shape[0] != len(self.h0_metatree_list):
@@ -606,7 +613,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self.reset_hn_params()
 
     def get_h0_params(self):
-        """Get the initial values of the hyperparameters of the posterior distribution.
+        """Get the hyperparameters of the prior distribution.
 
         Returns
         -------
@@ -646,28 +653,42 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             _description_
         """
         if hn_k_prob_vec is not None:
-            self.hn_k_prob_vec = _check.float_vec_sum_1(hn_k_prob_vec,'hn_k_prob_vec',ParameterFormatError)
-            if self.hn_k_prob_vec.shape[0] != self.c_k:
-                raise(ParameterFormatError(
-                    "c_k and dimension of hn_k_prob_vec must be the same."
-                    +"If you want to change c_k, you should re-construct a new instance of GenModel."
-                ))
+            _check.float_vec_sum_1(hn_k_prob_vec,'hn_k_prob_vec',ParameterFormatError)
+            _check.shape_consistency(
+                hn_k_prob_vec.shape[0],'hn_k_prob_vec',
+                self.c_k,'self.c_k',
+                ParameterFormatError
+                )
+            self.hn_k_prob_vec[:] = hn_k_prob_vec
 
         if hn_g is not None:
             self.hn_g = _check.float_in_closed01(hn_g,'hn_g',ParameterFormatError)
 
         if sub_hn_params is not None:
-            self.sub_hn_params = sub_hn_params
+            self.sub_hn_params = copy.copy(sub_hn_params)
+            self.SubModel(**self.sub_hn_params)
 
         if hn_metatree_list is not None:
-            self.hn_metatree_list = hn_metatree_list
+            self.hn_metatree_list = copy.copy(hn_metatree_list)
             if hn_metatree_prob_vec is not None:
-                self.hn_metatree_prob_vec = _check.float_vec_sum_1(hn_metatree_prob_vec,'hn_metatree_prob_vec',ParameterFormatError)
-            else:
+                self.hn_metatree_prob_vec = np.copy(
+                    _check.float_vec_sum_1(
+                        hn_metatree_prob_vec,
+                        'hn_metatree_prob_vec',
+                        ParameterFormatError
+                    )
+                )
+            elif len(self.hn_metatree_list) > 0:
                 metatree_num = len(self.hn_metatree_list)
                 self.hn_metatree_prob_vec = np.ones(metatree_num) / metatree_num
         elif hn_metatree_prob_vec is not None:
-            self.hn_metatree_prob_vec = _check.float_vec_sum_1(hn_metatree_prob_vec,'hn_metatree_prob_vec',ParameterFormatError)
+            self.hn_metatree_prob_vec = np.copy(
+                _check.float_vec_sum_1(
+                    hn_metatree_prob_vec,
+                    'hn_metatree_prob_vec',
+                    ParameterFormatError
+                )
+            )
 
         if type(self.hn_metatree_prob_vec) is np.ndarray:             
             if self.hn_metatree_prob_vec.shape[0] != len(self.hn_metatree_list):
@@ -680,7 +701,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                     "Length of hn_metatree_list must be zero when self.hn_metatree_prob_vec is None."
                 ))
 
-        self.calc_pred_dist(np.zeros(self.c_k))
+        self.calc_pred_dist(np.zeros(self.c_k,dtype=int))
 
     def get_hn_params(self):
         """Get the hyperparameters of the posterior distribution.
@@ -700,35 +721,35 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                 "hn_metatree_list":self.hn_metatree_list,
                 "hn_metatree_prob_vec":self.hn_metatree_prob_vec}
     
-    def reset_hn_params(self):
-        """Reset the hyperparameters of the posterior distribution to their initial values.
+    # def reset_hn_params(self):
+    #     """Reset the hyperparameters of the posterior distribution to their initial values.
         
-        They are reset to `self.h0_k_prob_vec`, `self.h0_g`, `self.sub_h0_params`, 
-        `self.h0_metatree_list` and `self.h0_metatree_prob_vec`.
-        Note that the parameters of the predictive distribution are also calculated from them.
-        """
-        self.hn_k_prob_vec = np.copy(self.h0_k_prob_vec)
-        self.hn_g = np.copy(self.h0_g)
-        self.sub_hn_params = copy.copy(self.sub_h0_params)
-        self.hn_metatree_list = copy.copy(self.h0_metatree_list)
-        self.hn_metatree_prob_vec = copy.copy(self.h0_metatree_prob_vec)
+    #     They are reset to `self.h0_k_prob_vec`, `self.h0_g`, `self.sub_h0_params`, 
+    #     `self.h0_metatree_list` and `self.h0_metatree_prob_vec`.
+    #     Note that the parameters of the predictive distribution are also calculated from them.
+    #     """
+    #     self.hn_k_prob_vec = np.copy(self.h0_k_prob_vec)
+    #     self.hn_g = np.copy(self.h0_g)
+    #     self.sub_hn_params = copy.copy(self.sub_h0_params)
+    #     self.hn_metatree_list = copy.copy(self.h0_metatree_list)
+    #     self.hn_metatree_prob_vec = copy.copy(self.h0_metatree_prob_vec)
 
-        self.calc_pred_dist(np.zeros(self.c_k,dtype=int))
+    #     self.calc_pred_dist(np.zeros(self.c_k,dtype=int))
     
-    def overwrite_h0_params(self):
-        """Overwrite the initial values of the hyperparameters of the posterior distribution by the learned values.
+    # def overwrite_h0_params(self):
+    #     """Overwrite the initial values of the hyperparameters of the posterior distribution by the learned values.
         
-        They are overwitten by `self.hn_k_prob_vec`, `self.hn_g`, `self.sub_hn_params`, 
-        `self.hn_metatree_list` and `self.hn_metatree_prob_vec`.
-        Note that the parameters of the predictive distribution are also calculated from them.
-        """
-        self.h0_k_prob_vec = np.copy(self.hn_k_prob_vec)
-        self.h0_g = np.copy(self.hn_g)
-        self.sub_h0_params = copy.copy(self.sub_hn_params)
-        self.h0_metatree_list = copy.copy(self.hn_metatree_list)
-        self.h0_metatree_prob_vec = np.copy(self.hn_metatree_prob_vec)
+    #     They are overwitten by `self.hn_k_prob_vec`, `self.hn_g`, `self.sub_hn_params`, 
+    #     `self.hn_metatree_list` and `self.hn_metatree_prob_vec`.
+    #     Note that the parameters of the predictive distribution are also calculated from them.
+    #     """
+    #     self.h0_k_prob_vec = np.copy(self.hn_k_prob_vec)
+    #     self.h0_g = np.copy(self.hn_g)
+    #     self.sub_h0_params = copy.copy(self.sub_hn_params)
+    #     self.h0_metatree_list = copy.copy(self.hn_metatree_list)
+    #     self.h0_metatree_prob_vec = np.copy(self.hn_metatree_prob_vec)
 
-        self.calc_pred_dist(np.zeros(self.c_k))
+    #     self.calc_pred_dist(np.zeros(self.c_k))
 
     def _copy_tree_from_sklearn_tree(self,new_node, original_tree,node_id):
         if original_tree.children_left[node_id] != sklearn_tree._tree.TREE_LEAF:  # 内部ノード
