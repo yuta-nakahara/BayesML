@@ -185,7 +185,7 @@ class GenModel(base.Generative):
         ----------
         node : object
                 a object form GenNode class
-        sub_h_params : bool
+        feature_fix : bool
                 a bool parameter show the feature is fixed or not
         """
         if node.depth == self.c_d_max or node.depth == self.c_k or self.rng.random() > node.h_g:  # 葉ノード
@@ -215,7 +215,7 @@ class GenModel(base.Generative):
         ----------
         node : object
                 a object form GenNode class
-        sub_h_params : bool
+        feature_fix : bool
                 a bool parameter show the feature is fixed or not
         """
         if self.leaf:  # 葉ノード
@@ -442,9 +442,9 @@ class GenModel(base.Generative):
         Parameters
         ----------
         feature_fix : bool
-            If ``True``, feature assignment indices will be fixed, by default ``False``
+            If ``True``, feature assignment indices will be fixed, by default ``False``.
         tree_fix : bool
-            If ``True``, tree shape will be fixed, by default ``False``
+            If ``True``, tree shape will be fixed, by default ``False``.
         """
         if from_list == True and len(self.h_metatree_list) > 0:
             tmp_root = self.rng.choice(self.h_metatree_list,p=self.h_metatree_prob_vec)
@@ -1244,9 +1244,9 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         label_string = f'k={node.k}\\lhn_g={node.hn_g:.2f}\\lp_v={tmp_p_v:.2f}\\lsub_params={{'
         if node.sub_model is not None:
             try:
-                sub_params = node.sub_model.estimate_params(loss='0-1',output='dict')
+                sub_params = node.sub_model.estimate_params(loss='0-1',dict_out=True)
             except:
-                sub_params = node.sub_model.estimate_params(output='dict')
+                sub_params = node.sub_model.estimate_params(dict_out=True)
             
             for key,value in sub_params.items():
                 try:

@@ -272,7 +272,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self.hn_alpha += np.sum(x==1)
         self.hn_beta += np.sum(x==0)
 
-    def estimate_params(self,loss="squared",output=None):
+    def estimate_params(self,loss="squared",dict_out=False):
         """Estimate the parameter of the stochastic data generative model under the given criterion.
 
         Parameters
@@ -280,10 +280,12 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         loss : str, optional
             Loss function underlying the Bayes risk function, by default \"squared\".
             This function supports \"squared\", \"0-1\", \"abs\", and \"KL\".
+        dict_out : bool, optional
+            If ``True``, output will be a dict, by default ``False``.
 
         Returns
         -------
-        Estimator : {float, None, rv_frozen}
+        estimator : {float, None, rv_frozen} or dict of {str : float, None}
             The estimated values under the given loss function. If it is not exist, `None` will be returned.
             If the loss function is \"KL\", the posterior distribution itself will be returned
             as rv_frozen object of scipy.stats.
@@ -294,34 +296,34 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         scipy.stats.rv_discrete
         """
         if loss == "squared":
-            if output == 'dict':
+            if dict_out:
                 return {'theta':self.hn_alpha / (self.hn_alpha + self.hn_beta)}
             else:
                 return self.hn_alpha / (self.hn_alpha + self.hn_beta)
         elif loss == "0-1":
             if self.hn_alpha > 1.0 and self.hn_beta > 1.0:
-                if output == 'dict':
+                if dict_out:
                     return {'theta':(self.hn_alpha - 1.0) / (self.hn_alpha + self.hn_beta - 2.0)}
                 else:
                     return (self.hn_alpha - 1.0) / (self.hn_alpha + self.hn_beta - 2.0)
             elif self.hn_alpha > 1.0:
-                if output == 'dict':
+                if dict_out:
                     return {'theta':1.0}
                 else:
                     return 1.0
             elif self.hn_beta > 1.0:
-                if output == 'dict':
+                if dict_out:
                     return {'theta':0.0}
                 else:
                     return 0.0
             else:
                 warnings.warn("MAP estimate doesn't exist for the current hn_alpha and hn_beta.",ResultWarning)
-                if output == 'dict':
+                if dict_out:
                     return {'theta':None}
                 else:
                     return None
         elif loss == "abs":
-            if output == 'dict':
+            if dict_out:
                 return {'theta':ss_beta.median(self.hn_alpha,self.hn_beta)}
             else:
                 return ss_beta.median(self.hn_alpha,self.hn_beta)
