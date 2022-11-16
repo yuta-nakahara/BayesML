@@ -66,7 +66,7 @@ class GenModel(base.Generative):
         
         The generated vaule is set at ``self.lambda_``.
         """
-        self.lambda_ = self.rng.gamma(self.h_alpha,1.0/self.h_beta, 1)
+        self.lambda_ = self.rng.gamma(self.h_alpha,1.0/self.h_beta)
         
     def set_params(self,lambda_):
         """Set the parameter of the sthocastic data generative model.

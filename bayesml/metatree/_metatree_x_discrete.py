@@ -21,42 +21,42 @@ from .. import bernoulli, categorical, normal, multivariate_normal, linearregres
 _CMAP = plt.get_cmap("Blues")
 GEN_MODELS = {
     bernoulli.GenModel,
-    categorical.GenModel,
+    # categorical.GenModel,
     normal.GenModel,
-    multivariate_normal.GenModel,
-    linearregression.GenModel,
+    # multivariate_normal.GenModel,
+    # linearregression.GenModel,
     poisson.GenModel,
     exponential.GenModel,
     }
 DISCRETE_GEN_MODELS = {
     bernoulli.GenModel,
-    categorical.GenModel,
+    # categorical.GenModel,
     poisson.GenModel,
     }
 CONTINUOUS_GEN_MODELS = {
     normal.GenModel,
-    multivariate_normal.GenModel,
-    linearregression.GenModel,
+    # multivariate_normal.GenModel,
+    # linearregression.GenModel,
     exponential.GenModel,
     }
 LEARN_MODELS = {
     bernoulli.LearnModel,
-    categorical.LearnModel,
+    # categorical.LearnModel,
     normal.LearnModel,
-    multivariate_normal.LearnModel,
-    linearregression.LearnModel,
+    # multivariate_normal.LearnModel,
+    # linearregression.LearnModel,
     poisson.LearnModel,
     exponential.LearnModel,
     }
 DISCRETE_LEARN_MODELS = {
     bernoulli.LearnModel,
-    categorical.LearnModel,
+    # categorical.LearnModel,
     poisson.LearnModel,
     }
 CONTINUOUS_LEARN_MODELS = {
     normal.LearnModel,
-    multivariate_normal.LearnModel,
-    linearregression.LearnModel,
+    # multivariate_normal.LearnModel,
+    # linearregression.LearnModel,
     exponential.LearnModel,
     }
 
@@ -151,9 +151,8 @@ class GenModel(base.Generative):
         self.c_k = _check.pos_int(c_k,'c_k',ParameterFormatError)
         if SubModel not in GEN_MODELS:
             raise(ParameterFormatError(
-                "SubModel must be a GenModel of bernoulli, categorical, "
-                +"poisson, normal, multivariate_normal, "
-                +"exponential, linearregression"
+                "SubModel must be a GenModel of bernoulli, "
+                +"poisson, normal, exponential."
             ))
         self.SubModel = SubModel
         self.rng = np.random.default_rng(seed)
@@ -274,7 +273,7 @@ class GenModel(base.Generative):
         """
         if node.leaf:  # 葉ノード
             try:
-                y = node.sub_model.gen_sample(sample_size=1,X=x)
+                y = node.sub_model.gen_sample(sample_size=1,x=x)
             except:
                 y = node.sub_model.gen_sample(sample_size=1)
             return y
@@ -713,9 +712,8 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self.c_k = _check.pos_int(c_k,'c_k',ParameterFormatError)
         if SubModel not in LEARN_MODELS:
             raise(ParameterFormatError(
-                "SubModel must be a LearnModel of bernoulli, categorical, "
-                +"poisson, normal, multivariate_normal, "
-                +"exponential, linearregression"
+                "SubModel must be a LearnModel of bernoulli, "
+                +"poisson, normal, exponential."
             ))
         self.SubModel = SubModel
 
@@ -989,7 +987,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                 node.sub_model.calc_pred_dist(x)
             except:
                 node.sub_model.calc_pred_dist()
-            pred_dist = node.sub_model.make_prediction(loss='KL')
+            pred_dist = node.sub_model.make_prediction(loss='KL') # Futurework: direct method to get marginal likelihood is better
 
             try:
                 node.sub_model.update_posterior(x,y)
@@ -998,13 +996,10 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
 
             if type(pred_dist) is np.ndarray:
                 return pred_dist[y]
-            elif hasattr(pred_dist,'pdf'):
+            try:
                 return pred_dist.pdf(y)
-            elif hasattr(pred_dist,'pmf'):
+            except:
                 return pred_dist.pmf(y)
-            else:
-                warnings.warn("Marginal likelyhood could not be calculated.", ResultWarning)
-                return 0.0
 
     def _update_posterior_recursion(self,node,x,y):
         if node.leaf == False:  # 内部ノード
