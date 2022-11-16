@@ -19,6 +19,46 @@ from .. import _check
 from .. import bernoulli, categorical, normal, multivariate_normal, linearregression, poisson, exponential
 
 _CMAP = plt.get_cmap("Blues")
+GEN_MODELS = {
+    bernoulli.GenModel,
+    categorical.GenModel,
+    normal.GenModel,
+    multivariate_normal.GenModel,
+    linearregression.GenModel,
+    poisson.GenModel,
+    exponential.GenModel,
+    }
+DISCRETE_GEN_MODELS = {
+    bernoulli.GenModel,
+    categorical.GenModel,
+    poisson.GenModel,
+    }
+CONTINUOUS_GEN_MODELS = {
+    normal.GenModel,
+    multivariate_normal.GenModel,
+    linearregression.GenModel,
+    exponential.GenModel,
+    }
+LEARN_MODELS = {
+    bernoulli.LearnModel,
+    categorical.LearnModel,
+    normal.LearnModel,
+    multivariate_normal.LearnModel,
+    linearregression.LearnModel,
+    poisson.LearnModel,
+    exponential.LearnModel,
+    }
+DISCRETE_LEARN_MODELS = {
+    bernoulli.LearnModel,
+    categorical.LearnModel,
+    poisson.LearnModel,
+    }
+CONTINUOUS_LEARN_MODELS = {
+    normal.LearnModel,
+    multivariate_normal.LearnModel,
+    linearregression.LearnModel,
+    exponential.LearnModel,
+    }
 
 class _GenNode:
     """ The node class used by generative model and the prior distribution
@@ -57,59 +97,86 @@ class GenModel(base.Generative):
 
     Parameters
     ----------
-    c_d_max : int 
-            a positive integer, by default 3
     c_k : int
-            a positive integer, by default 3
-    c_num_children : int
-            a positive integer, by default 2
-    h_k_prob : list of float
-            a list of positive real number witch in \[0 , 1 \], by default None
-    h_g : float 
-            a positive real number  in \[0 , 1 \], by default 0.5
-    sub_model : class
-            a class of generative model used by MT-Model 
-    sub_h_params : dictionary
-            a empty dcitionary to record parameters of sub_model, by default empty
+        A positive integer
+    c_d_max : int, optional
+        A positive integer, by default 10
+    c_num_children : int, optional
+        A positive integer, by default 2
+    SubModel : class, optional
+        GenModel of bernoulli, categorical, 
+        poisson, normal, multivariate_normal, 
+        exponential, linearregression, 
+        by default bernoulli.GenModel
+    root : metatree._GenNode, optional
+        A root node of a meta-tree, 
+        by default a tree consists of only one node.
+    h_k_prob_vec : numpy.ndarray, optional
+        A vector of real numbers in :math:`[0, 1]`, 
+        by default [1/c_k, 1/c_k, ... , 1/c_k]
+        Sum of its elements must be 1.0.
+    h_g : float, optional
+        A real number in :math:`[0, 1]`, by default 0.5
+    sub_h_params : dict, optional
+        h_params for self.SubModel, by default {}
+    h_metatree_list : list of metatree._LearnNode, optional
+        Root nodes of meta-trees, by default []
+    h_metatree_prob_vec : numpy.ndarray, optional
+        A vector of real numbers in :math:`[0, 1]` 
+        that represents prior distribution of h_metatree_list, 
+        by default uniform distribution
+        Sum of its elements must be 1.0.
+    seed : {None, int}, optional
+        A seed to initialize numpy.random.default_rng(),
+        by default None
     """
     def __init__(
-        self,
-        *,
-        c_d_max=3,
-        c_k=3,
-        c_num_children=2,
-        h_k_prob = None,
-        h_g=0.5,
-        SubModel=bernoulli.GenModel,
-        sub_h_params={},
-        seed=None
-        ):
-        # 例外処理
-        if not isinstance(c_d_max, int) or c_d_max <= 0: #numpy 1次元の場合は要検討
-            raise(ParameterFormatError("c_d_max must be an int type positive number."))
-        if not isinstance(c_k, int) or c_k <= 0:
-            raise(ParameterFormatError("c_k must be a int type positive number."))
-        if not isinstance(c_num_children, int) or c_num_children <= 0:
-            raise(ParameterFormatError("c_num_children must be a int type positive number."))
-        if h_k_prob is not None and (not isinstance(h_k_prob,list) or len(h_k_prob) != c_k):
-            raise(ParameterFormatError("h_k_prob must be a c_k-dimentional list type."))
-        if not isinstance(h_g, float) or h_g < 0.0 or h_g > 1.0:
-            raise(ParameterFormatError("h_g must be a float type between [0.0 , 1.0]."))
-        #
-
-      
-        self.c_d_max = c_d_max
-        self.c_k = c_k
-        self.c_num_children = c_num_children
-        if h_k_prob is not None:
-            self.h_k_prob = h_k_prob
-        else:
-            self.h_k_prob = np.ones(self.c_k) / self.c_k
-        self.h_g = h_g
+            self,
+            c_k,
+            c_d_max=10,
+            c_num_children=2,
+            *,
+            SubModel=bernoulli.GenModel,
+            root=None,
+            h_k_prob_vec = None,
+            h_g=0.5,
+            sub_h_params={},
+            h_metatree_list=[],
+            h_metatree_prob_vec=None,
+            seed=None,
+            ):
+        # constants
+        self.c_d_max = _check.pos_int(c_d_max,'c_d_max',ParameterFormatError)
+        self.c_num_children = _check.pos_int(c_num_children,'c_num_children',ParameterFormatError)
+        self.c_k = _check.pos_int(c_k,'c_k',ParameterFormatError)
+        if SubModel not in GEN_MODELS:
+            raise(ParameterFormatError(
+                "SubModel must be a GenModel of bernoulli, categorical, "
+                +"poisson, normal, multivariate_normal, "
+                +"exponential, linearregression"
+            ))
         self.SubModel = SubModel
-        self.sub_h_params = sub_h_params
         self.rng = np.random.default_rng(seed)
+
+        # h_params
+        self.h_k_prob_vec = np.ones(self.c_k) / self.c_k
+        self.h_g = 0.5
+        self.sub_h_params = {}
+        self.h_metatree_list = []
+        self.h_metatree_prob_vec = None
+
+        self.set_h_params(
+            h_k_prob_vec,
+            h_g,
+            sub_h_params,
+            h_metatree_list,
+            h_metatree_prob_vec,
+        )
+
+        # params
         self.root = _GenNode(0,list(range(self.c_k)),self.c_num_children,self.h_g,None,None)
+
+        self.set_params(root)
 
     def _gen_params_recursion(self,node,feature_fix):
         """ generate parameters recursively
@@ -121,7 +188,7 @@ class GenModel(base.Generative):
         sub_h_params : bool
                 a bool parameter show the feature is fixed or not
         """
-        if node.depth == self.c_d_max or self.rng.random() > node.h_g:  # 葉ノード
+        if node.depth == self.c_d_max or node.depth == self.c_k or self.rng.random() > node.h_g:  # 葉ノード
             node.sub_model = self.SubModel(**self.sub_h_params)
             node.sub_model.gen_params()
             if node.depth == self.c_d_max:
@@ -130,7 +197,7 @@ class GenModel(base.Generative):
         else:  # 内部ノード
             if feature_fix == False or node.k is None:
                 node.k = self.rng.choice(node.k_candidates,
-                                         p=self.h_k_prob[node.k_candidates]/self.h_k_prob[node.k_candidates].sum())
+                                         p=self.h_k_prob_vec[node.k_candidates]/self.h_k_prob_vec[node.k_candidates].sum())
             child_k_candidates = copy.copy(node.k_candidates)
             child_k_candidates.remove(node.k)
             node.leaf = False
@@ -160,7 +227,7 @@ class GenModel(base.Generative):
         else:  # 内部ノード
             if feature_fix == False or node.k is None:
                 node.k = self.rng.choice(node.k_candidates,
-                                         p=self.h_k_prob[node.k_candidates]/self.h_k_prob[node.k_candidates].sum())
+                                         p=self.h_k_prob_vec[node.k_candidates]/self.h_k_prob_vec[node.k_candidates].sum())
             child_k_candidates = copy.copy(node.k_candidates)
             child_k_candidates.remove(node.k)
             node.leaf = False
@@ -248,88 +315,159 @@ class GenModel(base.Generative):
         
         return node_id
 
-    def set_h_params(self,h_k_prob=None,h_g=0.5,sub_h_params={}):
-        """Set the parameter of the sthocastic data generative tree model.
+    def set_h_params(self,
+            h_k_prob_vec = None,
+            h_g=None,
+            sub_h_params=None,
+            h_metatree_list=None,
+            h_metatree_prob_vec=None
+            ):
+        """Set the hyperparameters of the prior distribution.
 
         Parameters
         ----------
-        h_k_prob : list 
-            c_k real numbers : math:`p \in [0, 1]` 
-        h_g : float
-            a real number :math:`p \in [0, 1]`
-        sub_h_params :  dict of {str:float}
-            a dictionary include hyper parameters for sub model 
+        h_k_prob_vec : numpy.ndarray, optional
+            A vector of real numbers in :math:`[0, 1]`, 
+            by default None
+            Sum of its elements must be 1.
+        h_g : float, optional
+            A real number in :math:`[0, 1]`, by default None
+        sub_h_params : dict, optional
+            h_params for self.SubModel, by default None
+        h_metatree_list : list of metatree._LearnNode, optional
+            Root nodes of meta-trees, by default None
+        h_metatree_prob_vec : numpy.ndarray, optional
+            A vector of real numbers in :math:`[0, 1]` 
+            that represents prior distribution of h_metatree_list, 
+            by default None.
+            Sum of its elements must be 1.0.
         """
-        #例外処理
-        if h_k_prob is not None and (not isinstance(h_k_prob,list) or len(h_k_prob) != c_k):
-            raise(ParameterFormatError("h_k_prob must be a c_k-dimentional list type."))
-        if h_k_prob is not None:
-            self.h_k_prob = h_k_prob
-        else:
-            self.h_k_prob = np.ones(self.c_k) / self.c_k
+        if h_k_prob_vec is not None:
+            _check.float_vec_sum_1(h_k_prob_vec,'h_k_prob_vec',ParameterFormatError)
+            _check.shape_consistency(
+                h_k_prob_vec.shape[0],'h_k_prob_vec',
+                self.c_k,'self.c_k',
+                ParameterFormatError
+                )
+            self.h_k_prob_vec[:] = h_k_prob_vec
 
-        if not isinstance(h_g, float) or h_g < 0.0 or h_g > 1.0:
-            raise(ParameterFormatError("h_g must be a float type between [0.0 , 1.0]."))
-        self.h_g = h_g
-        #
-        self.sub_h_params = sub_h_params
+        if h_g is not None:
+            self.h_g = _check.float_in_closed01(h_g,'h_g',ParameterFormatError)
+
+        if sub_h_params is not None:
+            self.sub_h_params = copy.deepcopy(sub_h_params)
+            self.SubModel(**self.sub_h_params)
+
+        if h_metatree_list is not None:
+            self.h_metatree_list = copy.deepcopy(h_metatree_list)
+            if h_metatree_prob_vec is not None:
+                self.h_metatree_prob_vec = np.copy(
+                    _check.float_vec_sum_1(
+                        h_metatree_prob_vec,
+                        'h_metatree_prob_vec',
+                        ParameterFormatError
+                    )
+                )
+            elif len(self.h_metatree_list) > 0:
+                metatree_num = len(self.h_metatree_list)
+                self.h_metatree_prob_vec = np.ones(metatree_num) / metatree_num
+        elif h_metatree_prob_vec is not None:
+            self.h_metatree_prob_vec = np.copy(
+                _check.float_vec_sum_1(
+                    h_metatree_prob_vec,
+                    'h_metatree_prob_vec',
+                    ParameterFormatError
+                )
+            )
+
+        if type(self.h_metatree_prob_vec) is np.ndarray:             
+            if self.h_metatree_prob_vec.shape[0] != len(self.h_metatree_list):
+                raise(ParameterFormatError(
+                    "Length of h_metatree_list and dimension of h_metatree_prob_vec must be the same."
+                ))
+        else:
+            if len(self.h_metatree_list) > 0:
+                raise(ParameterFormatError(
+                    "Length of h_metatree_list must be zero when self.h_metatree_prob_vec is None."
+                ))
 
     def get_h_params(self):
-        """Get the parameter of the sthocastic data generative tree model.
+        """Get the hyperparameters of the prior distribution.
 
         Returns
         -------
-        params : dict of {str: float or list or dict}
-            * ``"h_k_prob"`` : The value of ``self.h_k_prob``.
-            * ``"h_g"`` : The value of ``self.h_g``.
-            * ``"sub_h_params"`` : The value of ``self.sub_h_params``.
+        hn_params : dict of {str: float, list, dict, numpy.ndarray}
+            * ``"h_k_prob_vec"`` : the value of ``self.h_k_prob_vec``
+            * ``"h_g"`` : the value of ``self.h_g``
+            * ``"sub_h_params"`` : the value of ``self.sub_h_params``
+            * ``"h_metatree_list"`` : the value of ``self.h_metatree_list``
+            * ``"h_metatree_prob_vec"`` : the value of ``self.h_metatree_prob_vec``
         """
-        return {"h_k_prob":self.h_k_prob, "h_g":self.h_g, "sub_h_params":self.sub_h_params}
+        return {"h_k_prob_vec":self.h_k_prob_vec,
+                "h_g":self.h_g, 
+                "sub_h_params":self.sub_h_params, 
+                "h_metatree_list":self.h_metatree_list,
+                "h_metatree_prob_vec":self.h_metatree_prob_vec}
     
-    def save_h_params(self,filename):
-        """Save the parameter with pickle format.
+    # def save_h_params(self,filename):
+    #     """Save the parameter with pickle format.
 
-        Parameters
-        ----------
-        filename : str
-            The filename to which the hyperparameters are saved.
+    #     Parameters
+    #     ----------
+    #     filename : str
+    #         The filename to which the hyperparameters are saved.
 
-        """
+    #     """
 
-        with open(filename,'wb') as f:
-            pickle.dump(self.get_h_params(), f)
+    #     with open(filename,'wb') as f:
+    #         pickle.dump(self.get_h_params(), f)
 
-    def load_h_params(self,filename):
-        """Load the parameter saved by ``save_h_params``.
+    # def load_h_params(self,filename):
+    #     """Load the parameter saved by ``save_h_params``.
 
-        Parameters
-        ----------
-        filename : str
-            The filename to be loaded. 
-        """
-        with open(filename, 'rb') as f:
-            h_params = pickle.load(f)
-        self.set_h_params(**h_params)
+    #     Parameters
+    #     ----------
+    #     filename : str
+    #         The filename to be loaded. 
+    #     """
+    #     with open(filename, 'rb') as f:
+    #         h_params = pickle.load(f)
+    #     self.set_h_params(**h_params)
         
-    def gen_params(self,feature_fix=False,tree_fix=False):
-        """Generate a sample from the stochastic data generative tree model.
+    def gen_params(self,feature_fix=False,tree_fix=False,from_list=False):
+        """Generate the parameter from the prior distribution.
+
+        The generated vaule is set at ``self.root``.
 
         Parameters
         ----------
         feature_fix : bool
-            A bool integer by default False
+            If ``True``, feature assignment indices will be fixed, by default ``False``
         tree_fix : bool
-            A bool integer by default False
+            If ``True``, tree shape will be fixed, by default ``False``
         """
-        if tree_fix:
+        if from_list == True and len(self.h_metatree_list) > 0:
+            tmp_root = self.rng.choice(self.h_metatree_list,p=self.h_metatree_prob_vec)
+            self.set_params(tmp_root)
+        elif tree_fix:
             self._gen_params_recursion_tree_fix(self.root,feature_fix)
         else:
             self._gen_params_recursion(self.root,feature_fix)
     
-    def set_params(self,root):
-        """Set the parameter of the sthocastic data generative tree model.
+    def set_params(self,root=None):
+        """Set the parameter of the sthocastic data generative model.
+
+        Parameters
+        ----------
+        root : metatree._GenNode, optional
+            A root node of a meta-tree, by default None.
         """
-        self._set_params_recursion(self.root,root)
+        if root is not None:
+            if type(root) is not _GenNode:
+                raise(ParameterFormatError(
+                    "root must be an instance of metatree._GenNode"
+                ))
+            self._set_params_recursion(self.root,root)
 
     def get_params(self):
         """Get the parameter of the sthocastic data generative model.
@@ -341,66 +479,71 @@ class GenModel(base.Generative):
         """
         return {"root":self.root}
 
-    def save_params(self,filename):
-        """Save the parameter with pickle
+    # def save_params(self,filename):
+    #     """Save the parameter with pickle
 
-        Parameters
-        ----------
-        filename : str
-            The filename to which the hyperparameters are saved.
-        ----------
-        numpy.savez_compressed
-        """
-        with open(filename,'wb') as f:
-            pickle.dump(self.get_params(), f)
+    #     Parameters
+    #     ----------
+    #     filename : str
+    #         The filename to which the hyperparameters are saved.
+    #     ----------
+    #     numpy.savez_compressed
+    #     """
+    #     with open(filename,'wb') as f:
+    #         pickle.dump(self.get_params(), f)
 
-    def load_params(self,filename):
-        """Load the parameter saved by ``save_h_params``.
+    # def load_params(self,filename):
+    #     """Load the parameter saved by ``save_h_params``.
 
-        Parameters
-        ----------
-        filename : str
-            The filename to be loaded. 
-        """
-        with open(filename, 'rb') as f:
-            params = pickle.load(f)
-        if "h_alpha" not in h_params.files or "h_beta" not in h_params.files:
-            raise(ParameterFormatError(filename+" must be a NpzFile with keywords: \"h_alpha\" and \"h_beta\"."))
-        self.set_params(**params)
+    #     Parameters
+    #     ----------
+    #     filename : str
+    #         The filename to be loaded. 
+    #     """
+    #     with open(filename, 'rb') as f:
+    #         params = pickle.load(f)
+    #     if "h_alpha" not in h_params.files or "h_beta" not in h_params.files:
+    #         raise(ParameterFormatError(filename+" must be a NpzFile with keywords: \"h_alpha\" and \"h_beta\"."))
+    #     self.set_params(**params)
 
-    def gen_sample(self,sample_size,X=None):
+    def gen_sample(self,sample_size,x=None):
         """Generate a sample from the stochastic data generative model.
 
         Parameters
         ----------
         sample_size : int
             A positive integer
+        x : numpy ndarray, optional
+            2 dimensional array whose size is ``(sammple_size,c_k)``, by default None.
+            Each element x[i,j] must satisfy 0 <= x[i,j] < c_num_children.
 
         Returns
         -------
-        X : numpy ndarray
-            c_k dimensional array whose size is ``sammple_size`` and elements are 0 or 1.
-        Y : numpy ndarray
-            1 dimensional array whose size is ``sammple_size`` and elements are real number.
+        x : numpy ndarray
+            2 dimensional array whose size is ``(sammple_size,c_k)``.
+            Each element x[i,j] satisfies 0 <= x[i,j] < c_num_children.
+        y : numpy ndarray
+            1 dimensional array whose size is ``sammple_size``.
         """
-        #例外処理
-        if sample_size <= 0:
-            raise(DataFormatError("sample_size must be a positive integer."))
+        _check.pos_int(sample_size,'sample_size',DataFormatError)
 
-        if X is None:
-            X = self.rng.choice(self.c_num_children,(sample_size,self.c_k))
-        if self.SubModel == bernoulli.GenModel:
-            Y = np.empty(sample_size,dtype=int)
-        if self.SubModel == normal.GenModel:
-            Y = np.empty(sample_size,dtype=float)
-        for i in range(sample_size):
-            Y[i] = self._gen_sample_recursion(self.root,X[i])
-        return X,Y
+        if x is None:
+            x = self.rng.choice(self.c_num_children,(sample_size,self.c_k))
         
-    def save_sample(self,filename,sample_size,X=None):
+        if self.SubModel in DISCRETE_GEN_MODELS:
+            y = np.empty(sample_size,dtype=int)
+        elif self.SubModel in CONTINUOUS_GEN_MODELS:
+            y = np.empty(sample_size,dtype=float)
+        
+        for i in range(sample_size):
+            y[i] = self._gen_sample_recursion(self.root,x[i])
+
+        return x,y
+        
+    def save_sample(self,filename,sample_size,x=None):
         """Save the generated sample as NumPy ``.npz`` format.
 
-        It is saved as aNpzFile with keyword: \"X\".
+        It is saved as a NpzFile with keyword: \"x\".
 
         Parameters
         ----------
@@ -409,44 +552,54 @@ class GenModel(base.Generative):
             ``.npz`` will be appended if it isn't there.
         sample_size : int
             A positive integer
+        x : numpy ndarray, optional
+            2 dimensional array whose size is ``(sammple_size,c_k)``, by default None.
+            Each element x[i,j] must satisfy 0 <= x[i,j] < c_num_children.
         
         See Also
         --------
         numpy.savez_compressed
         """
-        X,Y = self.gen_sample(sample_size,X)
-        np.savez_compressed(filename,X=X,Y=Y)
+        x,y = self.gen_sample(sample_size,x)
+        np.savez_compressed(filename,x=x,y=y)
 
     def visualize_model(self,filename=None,format=None,sample_size=10):
-        """Visualize the stochastic data generative tree model and generated samples.
+        """Visualize the stochastic data generative model and generated samples.
 
         Parameters
         ----------
+        filename : str, optional
+            Filename for saving the figure, by default ``None``
+        format : str, optional
+            Rendering output format (``\"pdf\"``, ``\"png\"``, ...).
         sample_size : int, optional
             A positive integer, by default 10
 
         Examples
         --------
         >>> from bayesml import metatree
-        >>> model = metatree.GenModel()
+        >>> model = metatree.GenModel(c_k=3,h_g=0.75)
         >>> model.visualize_model()
-        p:0.5
-        [[1 0 1]
+        [[1 1 0]
+         [1 0 0]
          [0 0 0]
+         [1 0 0]
+         [1 1 1]
+         [0 0 1]
+         [1 1 1]
          [1 0 1]
-         [1 1 0]
-         [0 0 0]
-         [0 0 0]
-         [0 1 0]
-         [1 0 0]
-         [1 0 0]
-         [1 1 1]]
-        [0. 1. 0. 1. 0. 1. 0. 1. 0. 1.]
-        .. image:: ./metatree/Digraph.gv
+         [0 1 1]
+         [0 1 0]]
+        [0 1 0 1 0 0 0 1 0 0]
+
+        .. image:: ./images/metatree_example.png
+
+        See Also
+        --------
+        graphbiz.Digraph
         """
         #例外処理
-        if sample_size <= 0:
-            raise(DataFormatError("sample_size must be a positive integer."))
+        _check.pos_int(sample_size,'sample_size',DataFormatError)
 
         try:
             import graphviz
@@ -460,9 +613,9 @@ class GenModel(base.Generative):
         except graphviz.CalledProcessError as e:
             print(e)
         # 以下のサンプルの可視化は要改善．jitter plotで3次元散布図を書くのが良いか．
-        X,Y = self.gen_sample(sample_size)
-        print(X)
-        print(Y)
+        x,y = self.gen_sample(sample_size)
+        print(x)
+        print(y)
 
 class _LearnNode():
     """ The node class used by the posterior distribution
@@ -558,6 +711,12 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self.c_d_max = _check.pos_int(c_d_max,'c_d_max',ParameterFormatError)
         self.c_num_children = _check.pos_int(c_num_children,'c_num_children',ParameterFormatError)
         self.c_k = _check.pos_int(c_k,'c_k',ParameterFormatError)
+        if SubModel not in LEARN_MODELS:
+            raise(ParameterFormatError(
+                "SubModel must be a LearnModel of bernoulli, categorical, "
+                +"poisson, normal, multivariate_normal, "
+                +"exponential, linearregression"
+            ))
         self.SubModel = SubModel
 
         # h0_params
@@ -624,11 +783,11 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             self.h0_g = _check.float_in_closed01(h0_g,'h0_g',ParameterFormatError)
 
         if sub_h0_params is not None:
-            self.sub_h0_params = copy.copy(sub_h0_params)
+            self.sub_h0_params = copy.deepcopy(sub_h0_params)
             self.SubModel(**self.sub_h0_params)
 
         if h0_metatree_list is not None:
-            self.h0_metatree_list = copy.copy(h0_metatree_list)
+            self.h0_metatree_list = copy.deepcopy(h0_metatree_list)
             if h0_metatree_prob_vec is not None:
                 self.h0_metatree_prob_vec = np.copy(
                     _check.float_vec_sum_1(
@@ -667,7 +826,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
 
         Returns
         -------
-        h0_params : dict of {str: float, numpy.ndarray}
+        h0_params : dict of {str: float, list, dict, numpy.ndarray}
             * ``"h0_k_prob_vec"`` : the value of ``self.h0_k_prob_vec``
             * ``"h0_g"`` : the value of ``self.h0_g``
             * ``"sub_h0_params"`` : the value of ``self.sub_h0_params``
@@ -720,11 +879,11 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             self.hn_g = _check.float_in_closed01(hn_g,'hn_g',ParameterFormatError)
 
         if sub_hn_params is not None:
-            self.sub_hn_params = copy.copy(sub_hn_params)
+            self.sub_hn_params = copy.deepcopy(sub_hn_params)
             self.SubModel(**self.sub_hn_params)
 
         if hn_metatree_list is not None:
-            self.hn_metatree_list = copy.copy(hn_metatree_list)
+            self.hn_metatree_list = copy.deepcopy(hn_metatree_list)
             if hn_metatree_prob_vec is not None:
                 self.hn_metatree_prob_vec = np.copy(
                     _check.float_vec_sum_1(
@@ -763,7 +922,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
 
         Returns
         -------
-        hn_params : dict of {str: float, numpy.ndarray}
+        hn_params : dict of {str: float, list, dict, numpy.ndarray}
             * ``"hn_k_prob_vec"`` : the value of ``self.hn_k_prob_vec``
             * ``"hn_g"`` : the value of ``self.hn_g``
             * ``"sub_hn_params"`` : the value of ``self.sub_hn_params``
@@ -785,9 +944,9 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
     #     """
     #     self.hn_k_prob_vec = np.copy(self.h0_k_prob_vec)
     #     self.hn_g = np.copy(self.h0_g)
-    #     self.sub_hn_params = copy.copy(self.sub_h0_params)
-    #     self.hn_metatree_list = copy.copy(self.h0_metatree_list)
-    #     self.hn_metatree_prob_vec = copy.copy(self.h0_metatree_prob_vec)
+    #     self.sub_hn_params = copy.deepcopy(self.sub_h0_params)
+    #     self.hn_metatree_list = copy.deepcopy(self.h0_metatree_list)
+    #     self.hn_metatree_prob_vec = copy.deepcopy(self.h0_metatree_prob_vec)
 
     #     self.calc_pred_dist(np.zeros(self.c_k,dtype=int))
     
@@ -800,8 +959,8 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
     #     """
     #     self.h0_k_prob_vec = np.copy(self.hn_k_prob_vec)
     #     self.h0_g = np.copy(self.hn_g)
-    #     self.sub_h0_params = copy.copy(self.sub_hn_params)
-    #     self.h0_metatree_list = copy.copy(self.hn_metatree_list)
+    #     self.sub_h0_params = copy.deepcopy(self.sub_hn_params)
+    #     self.h0_metatree_list = copy.deepcopy(self.hn_metatree_list)
     #     self.h0_metatree_prob_vec = np.copy(self.hn_metatree_prob_vec)
 
     #     self.calc_pred_dist(np.zeros(self.c_k))
@@ -900,9 +1059,9 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         """
         if self.c_num_children != 2:
             raise(ParameterFormatError("MTRF is supported only when c_num_children == 2."))
-        if self.SubModel == bernoulli.LearnModel:
+        if self.SubModel in DISCRETE_LEARN_MODELS:
             randomforest = RandomForestClassifier(n_estimators=n_estimators,max_depth=self.c_d_max)
-        if self.SubModel == normal.LearnModel:
+        if self.SubModel in CONTINUOUS_LEARN_MODELS:
             randomforest = RandomForestRegressor(n_estimators=n_estimators,max_depth=self.c_d_max)
         randomforest.fit(x,y)
         tmp_metatree_list = [_LearnNode(0,2,self.h0_g,None,self.SubModel(**self.sub_h0_params)) for i in range(n_estimators)]
@@ -965,9 +1124,6 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             raise(DataFormatError(f"x.shape[-1] must equal to c_k:{self.c_k}"))
         if x.max() >= self.c_num_children:
             raise(DataFormatError(f"x.max() must smaller than c_num_children:{self.c_num_children}"))
-
-        if self.SubModel == bernoulli.LearnModel: # acceptable data type of y depends on SubModel
-            _check.ints_of_01(y,'y',DataFormatError)
                 
         if type(y) is np.ndarray:
             if x.shape[:-1] != y.shape: 
@@ -984,7 +1140,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             self.hn_metatree_list, self.hn_metatree_prob_vec = self._given_MT(x,y)
 
     def _map_recursion_add_nodes(self,node):
-        if node.depth == self.c_d_max:  # 葉ノード
+        if node.depth == self.c_d_max or node.depth == self.c_k:  # 葉ノード
             node.hn_g = 0.0
             node.leaf = True
             node.map_leaf = True
@@ -999,7 +1155,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
 
     def _map_recursion(self,node):
         if node.leaf:
-            if node.depth == self.c_d_max:
+            if node.depth == self.c_d_max or node.depth == self.c_k:
                 node.map_leaf = True
                 return 1.0
             elif 1.0 - node.hn_g > node.hn_g * self.h0_g ** (self.c_k ** (self.c_d_max - node.depth)-2):
@@ -1040,7 +1196,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             Loss function underlying the Bayes risk function, by default ``\"0-1\"``.
             This function supports only ``\"0-1\"``.
         visualize : bool, optional
-            If True, the estimated metatree will be visualized, by default ``True``.
+            If ``True``, the estimated metatree will be visualized, by default ``True``.
             This visualization requires ``graphviz``.
         filename : str, optional
             Filename for saving the figure, by default ``None``
@@ -1130,9 +1286,9 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         Examples
         --------
         >>> from bayesml import metatree
-        >>> gen_model = metatree.GenModel()
-        >>> x,y = gen_model.gen_sample(100)
-        >>> learn_model = metatree.LearnModel()
+        >>> gen_model = metatree.GenModel(c_k=3,h_g=0.75)
+        >>> x,y = gen_model.gen_sample(500)
+        >>> learn_model = metatree.LearnModel(c_k=3)
         >>> learn_model.update_posterior(x,y)
         >>> learn_model.visualize_posterior()
 
