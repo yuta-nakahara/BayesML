@@ -431,6 +431,67 @@ class GenModel(base.Generative):
             raise(ParameterFormatError("if c_degree > 1, it is impossible to visualize the model by this function."))
 
 class LearnModel(base.Posterior,base.PredictiveMixin):
+    """The posterior distribution and the predictive distribution.
+
+    Parameters
+    ----------
+    c_num_classes : int
+        A positive integer.
+    c_degree : int
+        A positive integer.
+    h0_eta_vec : numpy.ndarray, optional
+        A vector of positive real numbers, 
+        by default [1/2, 1/2, ... , 1/2].
+        If a real number is input, it will be broadcasted.
+    h0_zeta_vecs : numpy.ndarray, optional
+        Vectors of positive numbers, 
+        by default vectors whose elements are all 1.0
+        If a real number or a single vector is input, will be broadcasted.
+    h0_m_vecs : numpy.ndarray, optional
+        Vectors of real numbers, 
+        by default zero vectors
+        If a single vector is input, will be broadcasted.
+    h0_kappas : float or numpy.ndarray, optional
+        Positive real numbers, 
+        by default [1.0, 1.0, ... , 1.0]
+        If a single real number is input, it will be broadcasted.
+    h0_nus : float or numpy.ndarray, optional
+        Real numbers greater than c_degree-1, 
+        by default c_degree.
+        If a single real number is input, it will be broadcasted.
+    h0_w_mats : numpy.ndarray, optional
+        Positive definite symetric matrices, 
+        by default the identity matrices
+        If a single matrix is input, it will be broadcasted.
+    seed : {None, int}, optional
+        A seed to initialize numpy.random.default_rng(),
+        by default None.
+
+    Attributes
+    ----------
+    h0_w_mats_inv : numpy.ndarray
+        the inverse matrices of h0_w_mats
+    hn_eta_vec : numpy.ndarray
+        A vector of positive real numbers
+    hn_zeta_vecs : numpy.ndarray
+        Vectors of positive numbers
+    hn_m_vecs : numpy.ndarray
+        Vectors of real numbers.
+    hn_kappas : numpy.ndarray
+        Positive real numbers
+    hn_nus : numpy.ndarray
+        Real numbers greater than c_degree-1.
+    hn_w_mats : numpy.ndarray
+        Positive definite symetric matrices.
+    hn_w_mats_inv : numpy.ndarray
+        the inverse matrices of hn_w_mats
+    p_mu_vecs : numpy.ndarray
+        vectors of real numbers
+    p_nus : numpy.ndarray
+        positive real numbers
+    p_lambda_mats : numpy.ndarray
+        positive definite symetric matrices
+    """
     def __init__(
             self,
             c_num_classes,
@@ -491,6 +552,35 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             h0_nus = None,
             h0_w_mats = None,
             ):
+        """Set the hyperparameters of the prior distribution.
+
+        Parameters
+        ----------
+        h0_eta_vec : numpy.ndarray, optional
+            A vector of positive real numbers, 
+            by default [1/2, 1/2, ... , 1/2].
+            If a real number is input, it will be broadcasted.
+        h0_zeta_vecs : numpy.ndarray, optional
+            Vectors of positive numbers, 
+            by default vectors whose elements are all 1.0
+            If a real number or a single vector is input, will be broadcasted.
+        h0_m_vecs : numpy.ndarray, optional
+            Vectors of real numbers, 
+            by default zero vectors
+            If a single vector is input, will be broadcasted.
+        h0_kappas : float or numpy.ndarray, optional
+            Positive real numbers, 
+            by default [1.0, 1.0, ... , 1.0]
+            If a single real number is input, it will be broadcasted.
+        h0_nus : float or numpy.ndarray, optional
+            Real numbers greater than c_degree-1, 
+            by default c_degree.
+            If a single real number is input, it will be broadcasted.
+        h0_w_mats : numpy.ndarray, optional
+            Positive definite symetric matrices, 
+            by default the identity matrices
+            If a single matrix is input, it will be broadcasted.
+        """
         if h0_eta_vec is not None:
             _check.pos_floats(h0_eta_vec,'h0_eta_vec',ParameterFormatError)
             self.h0_eta_vec[:] = h0_eta_vec
@@ -534,6 +624,18 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self.reset_hn_params()
 
     def get_h0_params(self):
+        """Get the hyperparameters of the prior distribution.
+
+        Returns
+        -------
+        h0_params : dict of {str: numpy.ndarray}
+            * ``"h0_eta_vec"`` : the value of ``self.h0_eta_vec``
+            * ``"h0_zeta_vecs"`` : the value of ``self.h0_zeta_vecs``
+            * ``"h0_m_vecs"`` : the value of ``self.h0_m_vecs``
+            * ``"h0_kappas"`` : the value of ``self.h0_kappas``
+            * ``"h0_nus"`` : the value of ``self.h0_nus``
+            * ``"h0_w_mats"`` : the value of ``self.h0_w_mats``
+        """
         return {'h0_eta_vec':self.h0_eta_vec,
                 'h0_zeta_vecs':self.h0_zeta_vecs,
                 'h0_m_vecs':self.h0_m_vecs,
@@ -550,6 +652,35 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             hn_nus = None,
             hn_w_mats = None,
             ):
+        """Set the hyperparameter of the posterior distribution.
+
+        Parameters
+        ----------
+        hn_eta_vec : numpy.ndarray, optional
+            A vector of positive real numbers, 
+            by default [1/2, 1/2, ... , 1/2].
+            If a real number is input, it will be broadcasted.
+        hn_zeta_vecs : numpy.ndarray, optional
+            Vectors of positive numbers, 
+            by default vectors whose elements are all 1.0
+            If a real number or a single vector is input, will be broadcasted.
+        hn_m_vecs : numpy.ndarray, optional
+            Vectors of real numbers, 
+            by default zero vectors
+            If a single vector is input, will be broadcasted.
+        hn_kappas : float or numpy.ndarray, optional
+            Positive real numbers, 
+            by default [1.0, 1.0, ... , 1.0]
+            If a single real number is input, it will be broadcasted.
+        hn_nus : float or numpy.ndarray, optional
+            Real numbers greater than c_degree-1, 
+            by default c_degree.
+            If a single real number is input, it will be broadcasted.
+        hn_w_mats : numpy.ndarray, optional
+            Positive definite symetric matrices, 
+            by default the identity matrices
+            If a single matrix is input, it will be broadcasted.
+        """
         if hn_eta_vec is not None:
             _check.pos_floats(hn_eta_vec,'hn_eta_vec',ParameterFormatError)
             self.hn_eta_vec[:] = hn_eta_vec
@@ -593,6 +724,18 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self.calc_pred_dist()
 
     def get_hn_params(self):
+        """Get the hyperparameters of the posterior distribution.
+
+        Returns
+        -------
+        hn_params : dict of {str: numpy.ndarray}
+            * ``"hn_eta_vec"`` : the value of ``self.hn_eta_vec``
+            * ``"hn_zeta_vecs"`` : the value of ``self.hn_zeta_vecs``
+            * ``"hn_m_vecs"`` : the value of ``self.hn_m_vecs``
+            * ``"hn_kappas"`` : the value of ``self.hn_kappas``
+            * ``"hn_nus"`` : the value of ``self.hn_nus``
+            * ``"hn_w_mats"`` : the value of ``self.hn_w_mats``
+        """
         return {'hn_eta_vec':self.hn_eta_vec,
                 'hn_zeta_vecs':self.hn_zeta_vecs,
                 'hn_m_vecs':self.hn_m_vecs,
@@ -601,24 +744,128 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                 'hn_w_mats':self.hn_w_mats}
     
     def update_posterior():
+        """Update the the posterior distribution using traning data.
+        """
         pass
 
     def estimate_params(self,loss="squared"):
+        """Estimate the parameter under the given criterion.
+
+        Note that the criterion is applied to estimating 
+        ``xxx``, ``xxx`` and ``xxx`` independently.
+        Therefore, a tuple of xxx, xxx and xxx will be returned when loss=\"xxx\"
+
+        Parameters
+        ----------
+        loss : str, optional
+            Loss function underlying the Bayes risk function, by default \"xxx\".
+            This function supports \"xxx\", \"xxx\", and \"xxx\".
+
+        Returns
+        -------
+        Estimates : a tuple of {numpy ndarray, float, None, or rv_frozen}
+            * ``xxx`` : the estimate for xxx
+            The estimated values under the given loss function. 
+            If it is not exist, `np.nan` will be returned.
+            If the loss function is \"KL\", the posterior distribution itself 
+            will be returned as rv_frozen object of scipy.stats.
+
+        See Also
+        --------
+        scipy.stats.rv_continuous
+        scipy.stats.rv_discrete
+        """
         pass
 
     def visualize_posterior(self):
+        """Visualize the posterior distribution for the parameter.
+        
+        Examples
+        --------
+        >>> from bayesml import xxx
+        """
         pass
         
     def get_p_params(self):
+        """Get the parameters of the predictive distribution.
+
+        Returns
+        -------
+        p_params : dict of {str: numpy.ndarray}
+            * ``"xxx"`` : the value of ``self.xxx``
+        """
         return {'p_mu_vecs':self.p_mu_vecs,
                 'p_nus':self.p_nus,
                 'p_lambda_mats':self.p_lambda_mats}
 
     def calc_pred_dist(self):
+        """Calculate the parameters of the predictive distribution."""
         pass
 
     def make_prediction(self,loss="squared"):
+        """Predict a new data point under the given criterion.
+
+        Parameters
+        ----------
+        loss : str, optional
+            Loss function underlying the Bayes risk function, by default \"xxx\".
+            This function supports \"xxx\" and \"xxx\".
+
+        Returns
+        -------
+        predicted_value : {float, numpy.ndarray}
+            The predicted value under the given loss function. 
+        """
         pass
 
     def pred_and_update(self,x,loss="squared"):
+        """Predict a new data point and update the posterior sequentially.
+
+        h0_params will be overwritten by current hn_params 
+        before updating hn_params by x.
+        
+        Parameters
+        ----------
+
+        Returns
+        -------
+        predicted_value : {float, numpy.ndarray}
+            The predicted value under the given loss function. 
+        """
+        pass
+
+    def estimate_latent_vars(self,x,loss=''):
+        """Estimate latent variables under the given criterion.
+
+        Note that the criterion is independently applied to each data point.
+
+        Parameters
+        ----------
+        loss : str, optional
+            Loss function underlying the Bayes risk function, by default \"xxx\".
+            This function supports \"xxx\", \"xxx\", and \"xxx\".
+
+        Returns
+        -------
+        estimates : numpy.ndarray
+            The estimated values under the given loss function. 
+            If the loss function is \"xxx\", the posterior distribution will be returned 
+            as a numpy.ndarray whose elements consist of occurence probabilities.
+        """
+        pass
+
+    def estimate_latent_vars_and_update(self):
+        """Estimate latent variables and update the posterior sequentially.
+
+        h0_params will be overwritten by current hn_params 
+        before updating hn_params by x
+        
+        Parameters
+        ----------
+
+        Returns
+        -------
+        predicted_value : numpy.ndarray
+            The estimated values under the given loss function. 
+        """
         pass
