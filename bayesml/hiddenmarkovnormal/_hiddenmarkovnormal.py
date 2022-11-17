@@ -16,6 +16,59 @@ from .._exceptions import ParameterFormatError, DataFormatError, CriteriaError, 
 from .. import _check
 
 class GenModel(base.Generative):
+    """The stochastic data generative model and the prior distribution.
+
+    Parameters
+    ----------
+    c_num_classes : int
+        a positive integer
+    c_degree : int
+        a positive integer
+    pi_vec : numpy.ndarray, optional
+        A vector of real numbers in :math:`[0, 1]`, 
+        by default [1/c_num_classes, 1/c_num_classes, ... , 1/c_num_classes].
+        Sum of its elements must be 1.0.
+    a_mat : numpy.ndarray, optional
+        A matrix of real numbers in :math:`[0, 1]`, 
+        by default a matrix obtained by stacking 
+        [1/c_num_classes, 1/c_num_classes, ... , 1/c_num_classes].
+        Sum of the elements of each row vector must be 1.0.
+        If a single vector is input, will be broadcasted.
+    mu_vecs : numpy.ndarray, optional
+        Vectors of real numbers, 
+        by default zero vectors.
+        If a single vector is input, will be broadcasted.
+    lambda_mats : numpy.ndarray, optional
+        Positive definite symetric matrices, 
+        by default the identity matrices.
+        If a single matrix is input, it will be broadcasted.
+    h_eta_vec : numpy.ndarray, optional
+        A vector of positive real numbers, 
+        by default [1/2, 1/2, ... , 1/2]
+    h_zeta_vecs : numpy.ndarray, optional
+        Vectors of positive numbers, 
+        by default vectors whose elements are all 1/2
+        If a single vector is input, will be broadcasted.
+    h_m_vecs : numpy.ndarray, optional
+        Vectors of real numbers, 
+        by default zero vectors
+        If a single vector is input, will be broadcasted.
+    h_kappas : float or numpy.ndarray, optional
+        Positive real numbers, 
+        by default [1.0, 1.0, ... , 1.0].
+        If a single real number is input, it will be broadcasted.
+    h_nus : float or numpy.ndarray, optional
+        Real numbers greater than ``c_degree-1``,  
+        by default [c_degree, c_degree, ... , c_degree]
+        If a single real number is input, it will be broadcasted.
+    h_w_mats : numpy.ndarray, optional
+        Positive definite symetric matrices, 
+        by default the identity matrices.
+        If a single matrix is input, it will be broadcasted.
+    seed : {None, int}, optional
+        A seed to initialize numpy.random.default_rng(), 
+        by default None
+    """
     def __init__(
             self,
             c_num_classes,
@@ -77,14 +130,24 @@ class GenModel(base.Generative):
 
         Parameters
         ----------
-        pi_vec : numpy.ndarray
-            a real vector in :math:`[0, 1]^K`. The sum of its elements must be 1.
-        a_mat : numpy.ndarray
-            a real matrix in :math:`[0, 1]^{KxK}`. The sum of each row elements must be 1.
-        mu_vecs : numpy.ndarray
-            vectors of real numbers
-        lambda_mats : numpy.ndarray
-            positive definite symetric matrices
+        pi_vec : numpy.ndarray, optional
+            A vector of real numbers in :math:`[0, 1]`, 
+            by default [1/c_num_classes, 1/c_num_classes, ... , 1/c_num_classes].
+            Sum of its elements must be 1.0.
+        a_mat : numpy.ndarray, optional
+            A matrix of real numbers in :math:`[0, 1]`, 
+            by default a matrix obtained by stacking 
+            [1/c_num_classes, 1/c_num_classes, ... , 1/c_num_classes].
+            Sum of the elements of each row vector must be 1.0.
+            If a single vector is input, will be broadcasted.
+        mu_vecs : numpy.ndarray, optional
+            Vectors of real numbers, 
+            by default zero vectors.
+            If a single vector is input, will be broadcasted.
+        lambda_mats : numpy.ndarray, optional
+            Positive definite symetric matrices, 
+            by default the identity matrices.
+            If a single matrix is input, it will be broadcasted.
         """
         if pi_vec is not None:
             _check.float_vec_sum_1(pi_vec, "pi_vec", ParameterFormatError)
@@ -131,7 +194,34 @@ class GenModel(base.Generative):
             h_nus=None,
             h_w_mats=None,
             ):
+        """Set the hyperparameters of the prior distribution.
 
+        Parameters
+        ----------
+        h_eta_vec : numpy.ndarray, optional
+            A vector of positive real numbers, 
+            by default [1/2, 1/2, ... , 1/2]
+        h_zeta_vecs : numpy.ndarray, optional
+            Vectors of positive numbers, 
+            by default vectors whose elements are all 1/2
+            If a single vector is input, will be broadcasted.
+        h_m_vecs : numpy.ndarray, optional
+            Vectors of real numbers, 
+            by default zero vectors
+            If a single vector is input, will be broadcasted.
+        h_kappas : float or numpy.ndarray, optional
+            Positive real numbers, 
+            by default [1.0, 1.0, ... , 1.0].
+            If a single real number is input, it will be broadcasted.
+        h_nus : float or numpy.ndarray, optional
+            Real numbers greater than ``c_degree-1``,  
+            by default [c_degree, c_degree, ... , c_degree]
+            If a single real number is input, it will be broadcasted.
+        h_w_mats : numpy.ndarray, optional
+            Positive definite symetric matrices, 
+            by default the identity matrices.
+            If a single matrix is input, it will be broadcasted.
+        """
         if h_eta_vec is not None:
             _check.pos_floats(h_eta_vec,'h_eta_vec',ParameterFormatError)
             self.h_eta_vec[:] = h_eta_vec
@@ -171,12 +261,34 @@ class GenModel(base.Generative):
             self.h_w_mats[:] = h_w_mats
 
     def get_params(self):
+        """Get the parameter of the sthocastic data generative model.
+
+        Returns
+        -------
+        params : {str:float, numpy.ndarray}
+            * ``"pi_vec"`` : The value of ``self.pi_vec``
+            * ``"a_mat"`` : The value of ``self.a_mat``
+            * ``"mu_vecs"`` : The value of ``self.mu_vecs``
+            * ``"lambda_mats"`` : The value of ``self.lambda_mats``
+        """
         return {'pi_vec':self.pi_vec,
                 'a_mat':self.a_mat,
                 'mu_vecs':self.mu_vecs,
                 'lambda_mats': self.lambda_mats}
 
     def get_h_params(self):
+        """Get the hyperparameters of the prior distribution.
+        
+        Returns
+        -------
+        h_params : {str:float, np.ndarray}
+            * ``"h_eta_vec"`` : The value of ``self.h_eta_vec``
+            * ``"h_zeta_vecs"`` : The value of ``self.h_zeta_vecs``
+            * ``"h_m_vecs"`` : The value of ``self.h_m_vecs``
+            * ``"h_kappas"`` : The value of ``self.h_kappas``
+            * ``"h_nus"`` : The value of ``self.h_nus``
+            * ``"h_w_mats"`` : The value of ``self.h_w_mats``
+        """
         return {'h_eta_vec':self.h_eta_vec,
                 'h_zeta_vecs':self.h_zeta_vecs,
                 'h_m_vecs':self.h_m_vecs,
@@ -185,17 +297,64 @@ class GenModel(base.Generative):
                 'h_w_mats':self.h_w_mats}
 
     def gen_params(self):
+        """Generate the parameter from the prior distribution.
+        
+        To confirm the generated vaules, use `self.get_params()`.
+        """
         pass
 
-    def gen_sample(self):
-        pass
-    
-    def save_sample(self):
-        pass
-    
-    def visualize_model(self):
-        pass
+    def gen_sample(self,sample_length):
+        """Generate a sample from the stochastic data generative model.
 
+        Parameters
+        ----------
+        sample_length : int
+            A positive integer
+
+        Returns
+        -------
+        x : numpy ndarray
+            2-dimensional array whose shape is 
+            ``(sample_length,c_degree)`` .
+            Its elements are real numbers.
+        z : numpy ndarray
+            2-dimensional array whose shape is 
+            ``(sample_length,c_num_classes)`` 
+            whose rows are one-hot vectors.
+        """
+    
+    def save_sample(self,filename,sample_length):
+        """Save the generated sample as NumPy ``.npz`` format.
+
+        It is saved as a NpzFile with keyword: \"x\", \"z\".
+        
+        Parameters
+        ----------
+        filename : str
+            The filename to which the sample is saved.
+            ``.npz`` will be appended if it isn't there.
+        sample_length : int
+            A positive integer
+        
+        See Also
+        --------
+        numpy.savez_compressed
+        """
+    
+    def visualize_model(self,sample_length=100):
+        """Visualize the stochastic data generative model and generated samples.
+
+        Parameters
+        ----------
+        sample_length : int, optional
+            A positive integer, by default 100
+        
+        Examples
+        --------
+        >>> from bayesml import hiddenmarkovnormal
+        >>> model = hiddenmarkovnormal.GenModel(c_num_classes=2,c_degree=1)
+        >>> model.visualize_model()
+        """
 
 class LearnModel(base.Posterior,base.PredictiveMixin):
     def __init__(
