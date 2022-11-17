@@ -25,6 +25,10 @@ class GenModel(base.Generative):
         a value consistent with ``theta_vec``, ``h_mu_vec``, 
         and ``h_lambda_mat`` is used. If all of them are not given,
         degree is assumed to be 1.
+    theta_vec : numpy ndarray, optional
+        a vector of real numbers, by default [0.0, 0.0, ... , 0.0]
+    tau : float, optional
+        a positive real number, by default 1.0
     h_mu_vec : numpy ndarray, optional
         a vector of real numbers, by default [0.0, 0.0, ... , 0.0]
     h_lambda_mat : numpy ndarray, optional
@@ -558,7 +562,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self.hn_beta += (-self.hn_mu_vec[np.newaxis,:] @ self.hn_lambda_mat @ self.hn_mu_vec[:,np.newaxis]
                          + y @ y + hn1_mu[np.newaxis,:] @ hn1_Lambda @ hn1_mu[:,np.newaxis])[0,0] /2.0
 
-    def estimate_params(self,loss="squared"):
+    def estimate_params(self,loss="squared",dict_out=False):
         """Estimate the parameter of the stochastic data generative model under the given criterion.
 
         Note that the criterion is applied to estimating ``theta_vec`` and ``tau`` independently.
@@ -569,10 +573,12 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         loss : str, optional
             Loss function underlying the Bayes risk function, by default \"squared\".
             This function supports \"squared\", \"0-1\", \"abs\", and \"KL\".
+        dict_out : bool, optional
+            If ``True``, output will be a dict, by default ``False``.
 
         Returns
         -------
-        Estimates : tuple of {numpy ndarray, float, None, or rv_frozen}
+        estimates : tuple of {numpy ndarray, float, None, or rv_frozen}
             * ``theta_vec`` : the estimate for w
             * ``tau_hat`` : the estimate for tau
             The estimated values under the given loss function. If it is not exist, `None` will be returned.
@@ -584,15 +590,27 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         scipy.stats.rv_continuous
         scipy.stats.rv_discrete
         """
-        if loss == "squared": 
-            return  self.hn_mu_vec, self.hn_alpha/self.hn_beta
+        if loss == "squared":
+            if dict_out:
+                return {'theta_vec':self.hn_mu_vec,'tau':self.hn_alpha/self.hn_beta}
+            else:
+                return  self.hn_mu_vec, self.hn_alpha/self.hn_beta
         elif loss == "0-1":
             if self.hn_alpha >= 1.0:
-                return self.hn_mu_vec, (self.hn_alpha - 1.0) / self.hn_beta
+                if dict_out:
+                    return {'theta_vec':self.hn_mu_vec,'tau':(self.hn_alpha - 1.0) / self.hn_beta}
+                else:
+                    return self.hn_mu_vec, (self.hn_alpha - 1.0) / self.hn_beta
             else:
-                return self.hn_mu_vec, 0
+                if dict_out:
+                    return {'theta_vec':self.hn_mu_vec,'tau':0.0}
+                else:
+                    return self.hn_mu_vec, 0.0
         elif loss == "abs":
-            return self.hn_mu_vec, ss_gamma.median(a=self.hn_alpha,scale=1.0/self.hn_beta)
+            if dict_out:
+                return {'theta_vec':self.hn_mu_vec,'tau':ss_gamma.median(a=self.hn_alpha,scale=1.0/self.hn_beta)}
+            else:
+                return self.hn_mu_vec, ss_gamma.median(a=self.hn_alpha,scale=1.0/self.hn_beta)
         elif loss == "KL":
             return (ss_multivariate_t(loc=self.hn_mu_vec,
                                         shape=np.linalg.inv(self.hn_alpha / self.hn_beta * self.hn_lambda_mat),

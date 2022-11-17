@@ -66,7 +66,7 @@ class GenModel(base.Generative):
         
         The generated vaule is set at ``self.lambda_``.
         """
-        self.lambda_ = self.rng.gamma(self.h_alpha,1.0/self.h_beta, 1)
+        self.lambda_ = self.rng.gamma(self.h_alpha,1.0/self.h_beta)
         
     def set_params(self,lambda_):
         """Set the parameter of the sthocastic data generative model.
@@ -277,7 +277,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self.hn_alpha += x.size
         self.hn_beta += np.sum(x)
 
-    def estimate_params(self,loss="squared"):
+    def estimate_params(self,loss="squared",dict_out=False):
         """Estimate the parameter of the stochastic data generative model under the given criterion.
 
         Parameters
@@ -285,10 +285,12 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         loss : str, optional
             Loss function underlying the Bayes risk function, by default \"squared\".
             This function supports \"squared\", \"0-1\", \"abs\", and \"KL\".
+        dict_out : bool, optional
+            If ``True``, output will be a dict, by default ``False``.
 
         Returns
         -------
-        Estimator : {float, None, rv_frozen}
+        estimator : {float, None, rv_frozen}
             The estimated values under the given loss function. If it is not exist, `None` will be returned.
             If the loss function is \"KL\", the posterior distribution itself will be returned
             as rv_frozen object of scipy.stats.
@@ -299,14 +301,26 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         scipy.stats.rv_discrete
         """
         if loss == "squared":
-            return self.hn_alpha / self.hn_beta
+            if dict_out:
+                return {'lambda_':self.hn_alpha / self.hn_beta}
+            else:
+                return self.hn_alpha / self.hn_beta
         elif loss == "0-1":
             if self.hn_alpha > 1.0 :
-                return (self.hn_alpha - 1.0) / self.hn_beta
+                if dict_out:
+                    return {'lambda_':(self.hn_alpha - 1.0) / self.hn_beta}
+                else:
+                    return (self.hn_alpha - 1.0) / self.hn_beta
             else:
-                return 0.0
+                if dict_out:
+                    return {'lambda_':0.0}
+                else:
+                    return 0.0
         elif loss == "abs":
-            return ss_gamma.median(a=self.hn_alpha,scale=1/self.hn_beta)
+            if dict_out:
+                return {'lambda_':ss_gamma.median(a=self.hn_alpha,scale=1/self.hn_beta)}
+            else:
+                return ss_gamma.median(a=self.hn_alpha,scale=1/self.hn_beta)
         elif loss == "KL":
             return ss_gamma(a=self.hn_alpha,scale=1/self.hn_beta)
         else:

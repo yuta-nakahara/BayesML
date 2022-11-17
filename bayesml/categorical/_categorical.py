@@ -356,7 +356,7 @@ class LearnModel(base.Posterior, base.PredictiveMixin):
         for k in range(self.degree):
             self.hn_alpha_vec[k] += x[:,k].sum()
 
-    def estimate_params(self, loss="squared"):
+    def estimate_params(self, loss="squared",dict_out=False):
         """Estimate the parameter of the stochastic data generative model under the given criterion.
 
         Parameters
@@ -364,10 +364,12 @@ class LearnModel(base.Posterior, base.PredictiveMixin):
         loss : str, optional
             Loss function underlying the Bayes risk function, by default \"squared\".
             This function supports \"squared\", \"0-1\", and \"KL\".
+        dict_out : bool, optional
+            If ``True``, output will be a dict, by default ``False``.
 
         Returns
         -------
-        Estimates : {numpy ndarray, float, None, or rv_frozen}
+        estimates : {numpy ndarray, float, None, or rv_frozen}
             The estimated values under the given loss function. If it is not exist, `None` will be returned.
             If the loss function is \"KL\", the posterior distribution itself will be returned
             as rv_frozen object of scipy.stats.
@@ -378,10 +380,16 @@ class LearnModel(base.Posterior, base.PredictiveMixin):
         scipy.stats.rv_discrete
         """
         if loss == "squared":
-            return self.hn_alpha_vec / np.sum(self.hn_alpha_vec)
+            if dict_out:
+                return {'theta_vec':self.hn_alpha_vec / np.sum(self.hn_alpha_vec)}
+            else:
+                return self.hn_alpha_vec / np.sum(self.hn_alpha_vec)
         elif loss == "0-1":
             if np.all(self.hn_alpha_vec > 1):
-                return (self.hn_alpha_vec - 1) / (np.sum(self.hn_alpha_vec) - self.degree)
+                if dict_out:
+                    return {'theta_vec':(self.hn_alpha_vec - 1) / (np.sum(self.hn_alpha_vec) - self.degree)}
+                else:
+                    return (self.hn_alpha_vec - 1) / (np.sum(self.hn_alpha_vec) - self.degree)
             else:
                 warnings.warn("MAP estimate of lambda_mat doesn't exist for the current hn_alpha_vec.",ResultWarning)
                 return None
