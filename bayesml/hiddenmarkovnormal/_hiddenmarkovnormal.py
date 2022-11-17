@@ -301,7 +301,12 @@ class GenModel(base.Generative):
         
         To confirm the generated vaules, use `self.get_params()`.
         """
-        pass
+        self.pi_vec[:] = self.rng.dirichlet(self.h_eta_vec)
+        for k in range(self.c_num_classes):
+            self.a_mat[k] = self.rng.dirichlet(self.h_zeta_vecs[k])
+        for k in range(self.c_num_classes):
+            self.lambda_mats[k] = ss_wishart.rvs(df=self.h_nus[k],scale=self.h_w_mats[k],random_state=self.rng)
+            self.mu_vecs[k] = self.rng.multivariate_normal(mean=self.h_m_vecs[k],cov=np.linalg.inv(self.h_kappas[k]*self.lambda_mats[k]))
 
     def gen_sample(self,sample_length):
         """Generate a sample from the stochastic data generative model.
@@ -322,6 +327,21 @@ class GenModel(base.Generative):
             ``(sample_length,c_num_classes)`` 
             whose rows are one-hot vectors.
         """
+        _check.pos_int(sample_length,'sample_length',DataFormatError)
+        z = np.zeros([sample_length,self.c_num_classes],dtype=int)
+        x = np.empty([sample_length,self.c_degree])
+        _lambda_mats_inv = np.linalg.inv(self.lambda_mats)
+        
+        # i=0
+        k = self.rng.choice(self.c_num_classes,p=self.pi_vec)
+        z[0,k] = 1
+        x[0] = self.rng.multivariate_normal(mean=self.mu_vecs[k],cov=_lambda_mats_inv[k])
+        # i>0
+        for i in range(1,sample_length):
+            k = self.rng.choice(self.c_num_classes,p=self.a_mat[np.argmax(z[i-1])])
+            z[i,k] = 1
+            x[i] = self.rng.multivariate_normal(mean=self.mu_vecs[k],cov=_lambda_mats_inv[k])
+        return x,z
     
     def save_sample(self,filename,sample_length):
         """Save the generated sample as NumPy ``.npz`` format.
@@ -340,8 +360,10 @@ class GenModel(base.Generative):
         --------
         numpy.savez_compressed
         """
+        x,z=self.gen_sample(sample_length)
+        np.savez_compressed(filename,x=x,z=z)
     
-    def visualize_model(self,sample_length=100):
+    def visualize_model(self,sample_length=200):
         """Visualize the stochastic data generative model and generated samples.
 
         Parameters
@@ -352,9 +374,61 @@ class GenModel(base.Generative):
         Examples
         --------
         >>> from bayesml import hiddenmarkovnormal
-        >>> model = hiddenmarkovnormal.GenModel(c_num_classes=2,c_degree=1)
+        >>> import numpy as np
+        >>> model = hiddenmarkovnormal.GenModel(
+                c_num_classes=2,
+                c_degree=1,
+                mu_vecs=np.array([[5],[-5]]),
+                a_mat=np.array([[0.95,0.05],[0.1,0.9]]))
         >>> model.visualize_model()
+        pi_vec:
+        [0.5 0.5]
+        a_mat:
+        [[0.95 0.05]
+        [0.1  0.9 ]]
+        mu_vecs:
+        [[ 5.]
+        [-5.]]
+        lambda_mats:
+        [[[1.]]
+
+        [[1.]]]
+
+        .. image:: ./images/hiddenmarkovnormal_example.png
         """
+        if self.c_degree == 1:
+            print(f"pi_vec:\n {self.pi_vec}")
+            print(f"a_mat:\n {self.a_mat}")
+            print(f"mu_vecs:\n {self.mu_vecs}")
+            print(f"lambda_mats:\n {self.lambda_mats}")
+            _lambda_mats_inv = np.linalg.inv(self.lambda_mats)
+            fig, axes = plt.subplots()
+            sample, latent_vars = self.gen_sample(sample_length)
+
+            change_points = [0]
+            for i in range(1,sample_length):
+                if np.any(latent_vars[i-1] != latent_vars[i]):
+                    change_points.append(i)
+            change_points.append(sample_length)
+
+            cm = plt.get_cmap('jet')
+            for i in range(1,len(change_points)):
+                axes.axvspan(
+                    change_points[i-1],
+                    change_points[i],
+                    color=cm(
+                        int((np.argmax(latent_vars[change_points[i-1]])
+                             / (self.c_num_classes-1)) * 255)
+                        ),
+                    alpha=0.3,
+                    ls='',
+                    )
+            axes.plot(np.arange(sample.shape[0]),sample)
+            axes.set_xlabel("time")
+            axes.set_ylabel("x")
+            plt.show()
+        else:
+            raise(ParameterFormatError("if c_degree > 1, it is impossible to visualize the model by this function."))
 
 class LearnModel(base.Posterior,base.PredictiveMixin):
     def __init__(
