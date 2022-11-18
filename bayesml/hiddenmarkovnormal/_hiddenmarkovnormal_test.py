@@ -1,10 +1,11 @@
 from bayesml import hiddenmarkovnormal
 import numpy as np
 
-model = hiddenmarkovnormal.GenModel(3,1)
+model = hiddenmarkovnormal.LearnModel(
+                c_num_classes=3,
+                c_degree=1)
+# model.visualize_model()
 
-print(model.get_params())
-
-model.set_params(mu_vecs=np.ones([3,1]))
-
-print(model.get_params())
+print(model._ln_c_h0_eta_vec)
+print(model._ln_c_h0_zeta_vecs)
+print(model._ln_b_h0_w_nus)

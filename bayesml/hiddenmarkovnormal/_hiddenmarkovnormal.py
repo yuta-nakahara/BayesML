@@ -423,6 +423,11 @@ class GenModel(base.Generative):
                     alpha=0.3,
                     ls='',
                     )
+                axes.plot(
+                    np.linspace(change_points[i-1],change_points[i],100),
+                    np.ones(100) * self.mu_vecs[np.argmax(latent_vars[change_points[i-1]])],
+                    c='red',
+                    )
             axes.plot(np.arange(sample.shape[0]),sample)
             axes.set_xlabel("time")
             axes.set_ylabel("x")
@@ -519,6 +524,10 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self.h0_w_mats = np.tile(np.identity(self.c_degree),[self.c_num_classes,1,1])
         self.h0_w_mats_inv = np.linalg.inv(self.h0_w_mats)
 
+        self._ln_c_h0_eta_vec = 0.0
+        self._ln_c_h0_zeta_vecs_sum = 0.0
+        self._ln_b_h0_w_nus = np.empty(self.c_num_classes)
+
         # hn_params
         self.hn_eta_vec = np.empty(self.c_num_classes)
         self.hn_zeta_vecs = np.empty([self.c_num_classes,self.c_num_classes])
@@ -528,7 +537,41 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self.hn_w_mats = np.empty([self.c_num_classes,self.c_degree,self.c_degree])
         self.hn_w_mats_inv = np.empty([self.c_num_classes,self.c_degree,self.c_degree])
 
+        self._ln_rho = None
+        self.alpha_vecs = None
+        self.beta_vecs = None
+        self.gamma_vecs = None
+        self.xi_mats = None
+        self._cs = None
+        self._e_lambda_mats = np.empty([self.c_num_classes,self.c_degree,self.c_degree])
+        self._e_ln_lambda_dets = np.empty(self.c_num_classes)
+        self._ln_b_hn_w_nus = np.empty(self.c_num_classes)
+        self._ln_pi_tilde_vec = np.empty(self.c_num_classes)
+        self._pi_tilde_vec = np.empty(self.c_num_classes)
+        self._ln_a_tilde_mat = np.empty([self.c_num_classes,self.c_num_classes])
+        self._a_tilde_mat = np.empty([self.c_num_classes,self.c_num_classes])
+        self._ln_c_hn_zeta_vecs_sum = 0.0
+
+        # statistics
+        self.x_bar_vecs = np.empty([self.c_num_classes,self.c_degree])
+        self.ns = np.empty(self.c_num_classes)
+        self.ms = np.empty([self.c_num_classes,self.c_num_classes])
+        self.s_mats = np.empty([self.c_num_classes,self.c_degree,self.c_degree])
+
+        # variational lower bound
+        self.vl = 0.0
+        self._vl_p_x = 0.0
+        self._vl_p_z = 0.0
+        self._vl_p_pi = 0.0
+        self._vl_p_a = 0.0
+        self._vl_p_mu_lambda = 0.0
+        self._vl_q_z = 0.0
+        self._vl_q_pi = 0.0
+        self._vl_q_a = 0.0
+        self._vl_q_mu_lambda = 0.0
+
         # p_params
+        self.p_a_mat = np.ones([self.c_num_classes,self.c_num_classes]) / self.c_num_classes
         self.p_mu_vecs = np.empty([self.c_num_classes,self.c_degree])
         self.p_nus = np.empty([self.c_num_classes])
         self.p_lambda_mats = np.empty([self.c_num_classes,self.c_degree,self.c_degree])
@@ -621,6 +664,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         
         self.h0_w_mats_inv[:] = np.linalg.inv(self.h0_w_mats)
 
+        self._calc_prior_char()
         self.reset_hn_params()
 
     def get_h0_params(self):
@@ -721,6 +765,10 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         
         self.hn_w_mats_inv[:] = np.linalg.inv(self.hn_w_mats)
 
+        self._calc_q_pi_char()
+        self._calc_q_a_char()
+        self._calc_q_lambda_char()
+
         self.calc_pred_dist()
 
     def get_hn_params(self):
@@ -743,6 +791,117 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                 'hn_nus':self.hn_nus,
                 'hn_w_mats':self.hn_w_mats}
     
+    def _calc_prior_char(self):
+        self._ln_c_h0_eta_vec = gammaln(self.h0_eta_vec.sum()) - gammaln(self.h0_eta_vec).sum()
+        self._ln_c_h0_zeta_vecs_sum = np.sum(gammaln(self.h0_zeta_vecs.sum(axis=1)) - gammaln(self.h0_zeta_vecs).sum(axis=1))
+        self._ln_b_h0_w_nus = (
+            - self.h0_nus*np.linalg.slogdet(self.h0_w_mats)[1]
+            - self.h0_nus*self.c_degree*np.log(2.0)
+            - self.c_degree*(self.c_degree-1)/2.0*np.log(np.pi)
+            - np.sum(gammaln((self.h0_nus[:,np.newaxis]-np.arange(self.c_degree)) / 2.0),
+                     axis=1) * 2.0
+            ) / 2.0
+
+    def _calc_n_m_x_bar_s(self,x):
+        self.ns[:] = self.gamma_vecs.sum(axis=0)
+        self.ms[:] = self.xi_mats.sum(axis=0) # xi must be initialized as a zero matrix
+        self.x_bar_vecs[:] = (self.gamma_vecs[:,:,np.newaxis] * x[:,np.newaxis,:]).sum(axis=0) / self.ns[:,np.newaxis]
+        self.s_mats[:] = np.sum(self.gamma_vecs[:,:,np.newaxis,np.newaxis]
+                                * ((x[:,np.newaxis,:] - self.x_bar_vecs)[:,:,:,np.newaxis]
+                                   @ (x[:,np.newaxis,:] - self.x_bar_vecs)[:,:,np.newaxis,:]),
+                                axis=0) / self.ns[:,np.newaxis,np.newaxis]
+
+    def _calc_q_pi_char(self):
+        self._ln_pi_tilde_vec[:] = digamma(self.hn_eta_vec) - digamma(self.hn_eta_vec.sum())
+        self._pi_tilde_vec[:] = np.exp(self._ln_pi_tilde_vec)
+        # self._pi_tilde_vec[:] = np.exp(self._ln_pi_tilde_vec - self._ln_pi_tilde_vec.max())
+        # self._pi_tilde_vec[:] /= self._pi_tilde_vec.sum()
+
+    def _calc_q_a_char(self):
+        self._ln_a_tilde_mat[:] = digamma(self.hn_zeta_vecs) - digamma(self.hn_zeta_vecs.sum(axis=1,keepdims=True))
+        self._a_tilde_mat[:] = np.exp(self._ln_a_tilde_mat)
+        # self._a_tilde_mat[:] = np.exp(self._ln_a_tilde_mat - self._ln_a_tilde_mat.max(axis=1,keepdims=True))
+        # self._a_tilde_mat[:] /= self._a_tilde_mat.sum(axis=1,keepdims=True)
+        self._ln_c_hn_zeta_vecs_sum = np.sum(gammaln(self.hn_zeta_vecs.sum(axis=1)) - gammaln(self.hn_zeta_vecs).sum(axis=1))
+
+    def _calc_q_lambda_char(self):
+        self._e_lambda_mats[:] = self.hn_nus[:,np.newaxis,np.newaxis] * self.hn_w_mats
+        self._e_ln_lambda_dets[:] = (np.sum(digamma((self.hn_nus[:,np.newaxis]-np.arange(self.c_degree)) / 2.0),axis=1)
+                            + self.c_degree*np.log(2.0)
+                            - np.linalg.slogdet(self.hn_w_mats_inv)[1])
+        self._ln_b_hn_w_nus[:] = (
+            self.hn_nus*np.linalg.slogdet(self.hn_w_mats_inv)[1]
+            - self.hn_nus*self.c_degree*np.log(2.0)
+            - self.c_degree*(self.c_degree-1)/2.0*np.log(np.pi)
+            - np.sum(gammaln((self.hn_nus[:,np.newaxis]-np.arange(self.c_degree)) / 2.0),
+                     axis=1) * 2.0
+            ) / 2.0
+
+    def calc_vl(self):
+        # E[ln p(X|Z,mu,Lambda)]
+        self._vl_p_x = np.sum(
+            self.ns
+            * (self._e_ln_lambda_dets - self.c_degree / self.hn_kappas
+               - (self.s_mats * self._e_lambda_mats).sum(axis=(1,2))
+               - ((self.x_bar_vecs - self.hn_m_vecs)[:,np.newaxis,:]
+                  @ self._e_lambda_mats
+                  @ (self.x_bar_vecs - self.hn_m_vecs)[:,:,np.newaxis]
+                  )[:,0,0]
+               - self.c_degree * np.log(2*np.pi)
+               )
+            ) / 2.0
+
+        # E[ln p(Z|pi)]
+        self._vl_p_z = (self.gamma_vecs[0] * self._ln_pi_tilde_vec).sum() + (self.ms * self._ln_a_tilde_mat).sum()
+
+        # E[ln p(pi)]
+        self._vl_p_pi = self._ln_c_h0_eta_vec + ((self.h0_eta_vec - 1) * self._ln_pi_tilde_vec).sum()
+
+        # E[ln p(A)]
+        self._vl_p_a = self._ln_c_h0_zeta_vecs_sum + ((self.h0_zeta_vecs - 1) * self._ln_a_tilde_mat).sum()
+
+        # E[ln p(mu,Lambda)]
+        self._vl_p_mu_lambda = np.sum(
+            self.c_degree * (np.log(self.h0_kappas) - np.log(2*np.pi)
+                           - self.h0_kappas/self.hn_kappas)
+            - self.h0_kappas * ((self.hn_m_vecs - self.h0_m_vecs)[:,np.newaxis,:]
+                                @ self._e_lambda_mats
+                                @ (self.hn_m_vecs - self.h0_m_vecs)[:,:,np.newaxis])[:,0,0]
+            + 2.0 * self._ln_b_h0_w_nus
+            + (self.h0_nus - self.c_degree) * self._e_ln_lambda_dets
+            - np.sum(self.h0_w_mats_inv * self._e_lambda_mats,axis=(1,2))
+            ) / 2.0
+
+        # E[ln q(Z|pi)]
+        self._vl_q_z = (-(self.gamma_vecs * self._ln_rho).sum()
+                        -(self.ms * self._ln_a_tilde_mat).sum()
+                        -(self.gamma_vecs[0] * self._ln_pi_tilde_vec).sum()
+                        +np.log(self._cs).sum())
+
+        # E[ln q(pi)]
+        self._vl_q_pi = ss_dirichlet.entropy(self.hn_eta_vec)
+
+        # E[ln p(A)]
+        self._vl_q_a = -self._ln_c_hn_zeta_vecs_sum - ((self.hn_zeta_vecs - 1) * self._ln_a_tilde_mat).sum()
+
+        # E[ln q(mu,Lambda)]
+        self._vl_q_mu_lambda =  np.sum(
+            + self.c_degree * (1.0 + np.log(2.0*np.pi) - np.log(self.hn_kappas))
+            - self._ln_b_hn_w_nus * 2.0
+            - (self.hn_nus-self.c_degree)*self._e_ln_lambda_dets
+            + self.hn_nus * self.c_degree
+            ) / 2.0
+
+        self.vl = (self._vl_p_x
+                   + self._vl_p_z
+                   + self._vl_p_pi
+                   + self._vl_p_a
+                   + self._vl_p_mu_lambda
+                   + self._vl_q_z
+                   + self._vl_q_pi
+                   + self._vl_q_a
+                   + self._vl_q_mu_lambda)
+
     def update_posterior():
         """Update the the posterior distribution using traning data.
         """
