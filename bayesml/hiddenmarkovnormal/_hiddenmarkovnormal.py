@@ -915,10 +915,13 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self._cs[:] = 1.0
 
     def _init_random_responsibility(self,x):
-        self.xi_mats[:] = self.rng.dirichlet(np.ones(self.c_num_classes**2),self.xi_mats.shape[0]).reshape(self.xi_mats.shape)
-        self.xi_mats[0] = 0.0
-        self.gamma_vecs[:] = self.xi_mats.sum(axis=1)
-        self.gamma_vecs[0] = self.xi_mats[1].sum(axis=1)
+        if self._length == 1:
+            self.gamma_vecs[0] = self.rng.dirichlet(np.ones(self.c_num_classes))
+        else:
+            self.xi_mats[:] = self.rng.dirichlet(np.ones(self.c_num_classes**2),self.xi_mats.shape[0]).reshape(self.xi_mats.shape)
+            self.xi_mats[0] = 0.0
+            self.gamma_vecs[:] = self.xi_mats.sum(axis=1)
+            self.gamma_vecs[0] = self.xi_mats[1].sum(axis=1)
         self._calc_n_m_x_bar_s(x)
 
     def _init_subsampling(self,x):
@@ -1195,27 +1198,30 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         >>> learn_model.update_posterior(x)
         >>> learn_model.visualize_posterior()
         hn_alpha_vec:
-        [103.89444088  97.10555912]
+        [153.65657765  47.34342235]
         E[pi_vec]:
-        [0.51688777 0.48311223]
+        [0.76446059 0.23553941]
         hn_zeta_vecs:
-        [[0.90892737 0.09107263]
-        [0.08810659 0.91189341]]
+        [[147.64209251   5.51848792]
+        [  5.51448518  42.3249344 ]]
+        E[a_mat]
+        [[0.96396927 0.03603073]
+        [0.11527074 0.88472926]]
         hn_m_vecs (equivalent to E[mu_vecs]):
-        [[-2.00135008]
-        [ 1.97461369]]
+        [[ 1.99456861]
+        [-2.15581846]]
         hn_kappas:
-        [104.39444088  97.60555912]
+        [154.15657765  47.84342235]
         hn_nus:
-        [104.39444088  97.60555912]
+        [154.15657765  47.84342235]
         hn_w_mats:
-        [[[0.00890667]]
+        [[[0.00525177]]
 
-        [[0.01009789]]]
+        [[0.02569298]]]
         E[lambda_mats]=
-        [[[0.92980714]]
+        [[[0.8095951 ]]
 
-        [[0.98560985]]]
+        [[1.22924015]]]
 
         .. image:: ./images/hiddenmarkovnormal_posterior.png
         """
@@ -1224,6 +1230,8 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         print("E[pi_vec]:")
         print(f"{self.hn_eta_vec / self.hn_eta_vec.sum()}")
         print("hn_zeta_vecs:")
+        print(f"{self.hn_zeta_vecs}")
+        print("E[a_mat]")
         print(f"{self.hn_zeta_vecs/self.hn_zeta_vecs.sum(axis=1,keepdims=True)}")
         print("hn_m_vecs (equivalent to E[mu_vecs]):")
         print(f"{self.hn_m_vecs}")
@@ -1285,15 +1293,22 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         Returns
         -------
         p_params : dict of {str: numpy.ndarray}
-            * ``"xxx"`` : the value of ``self.xxx``
+            * ``"p_a_mat"`` : the value of ``self.p_a_mat``
+            * ``"p_mu_vecs"`` : the value of ``self.p_mu_vecs``
+            * ``"p_nus"`` : the value of ``self.p_nus``
+            * ``"p_lambda_mats"`` : the value of ``self.p_lambda_mats``
         """
-        return {'p_mu_vecs':self.p_mu_vecs,
+        return {'p_a_mat':self.p_a_mat,
+                'p_mu_vecs':self.p_mu_vecs,
                 'p_nus':self.p_nus,
                 'p_lambda_mats':self.p_lambda_mats}
 
     def calc_pred_dist(self):
         """Calculate the parameters of the predictive distribution."""
-        pass
+        self.p_a_mat[:] = self.hn_zeta_vecs/self.hn_zeta_vecs.sum(axis=1,keepdims=True)
+        self.p_mu_vecs[:] = self.hn_m_vecs
+        self.p_nus[:] = self.hn_nus - self.c_degree + 1
+        self.p_lambda_mats[:] = (self.hn_kappas * self.p_nus / (self.hn_kappas + 1))[:,np.newaxis,np.newaxis] * self.hn_w_mats
 
     def make_prediction(self,loss="squared"):
         """Predict a new data point under the given criterion.
@@ -1301,17 +1316,41 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         Parameters
         ----------
         loss : str, optional
-            Loss function underlying the Bayes risk function, by default \"xxx\".
-            This function supports \"xxx\" and \"xxx\".
+            Loss function underlying the Bayes risk function, by default \"squared\".
+            This function supports \"squared\" and \"0-1\".
 
         Returns
         -------
-        predicted_value : {float, numpy.ndarray}
+        Predicted_value : {float, numpy.ndarray}
             The predicted value under the given loss function. 
         """
-        pass
+        if loss == "squared":
+            return np.sum((self.gamma_vecs[-1] @ self.p_a_mat)[:,np.newaxis] * self.p_mu_vecs, axis=0)
+        elif loss == "0-1":
+            tmp_max = -1.0
+            tmp_argmax = np.empty([self.c_degree])
+            for k in range(self.c_num_classes):
+                val = ss_multivariate_t.pdf(x=self.p_mu_vecs[k],
+                                            loc=self.p_mu_vecs[k],
+                                            shape=np.linalg.inv(self.p_lambda_mats[k]),
+                                            df=self.p_nus[k])
+                if val * (self.gamma_vecs[-1] @ self.p_a_mat)[k] > tmp_max:
+                    tmp_argmax[:] = self.p_mu_vecs[k]
+                    tmp_max = val * (self.gamma_vecs[-1] @ self.p_a_mat)[k]
+            return tmp_argmax
+        else:
+            raise(CriteriaError(f"loss={loss} is unsupported. "
+                                +"This function supports \"squared\" and \"0-1\"."))
 
-    def pred_and_update(self,x,loss="squared"):
+    def pred_and_update(
+            self,
+            x,
+            loss="squared",
+            max_itr=100,
+            num_init=10,
+            tolerance=1.0E-8,
+            init_type='random_responsibility'
+            ):
         """Predict a new data point and update the posterior sequentially.
 
         h0_params will be overwritten by current hn_params 
@@ -1319,13 +1358,42 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         
         Parameters
         ----------
+        x : numpy.ndarray
+            It must be a `c_degree`-dimensional vector
+        loss : str, optional
+            Loss function underlying the Bayes risk function, by default \"squared\".
+            This function supports \"squared\" and \"0-1\".
+        max_itr : int, optional
+            maximum number of iterations, by default 100
+        num_init : int, optional
+            number of initializations, by default 10
+        tolerance : float, optional
+            convergence croterion of variational lower bound, by default 1.0E-8
+        init_type : str, optional
+            type of initialization, by default 'random_responsibility'
+            * 'random_responsibility': randomly assign responsibility to r_vecs
+            * 'subsampling': for each latent class, extract a subsample whose size is int(np.sqrt(x.shape[0])).
+              and use its mean and covariance matrix as an initial values of hn_m_vecs and hn_lambda_mats.
 
         Returns
         -------
         predicted_value : {float, numpy.ndarray}
             The predicted value under the given loss function. 
         """
-        pass
+        _check.float_vec(x,'x',DataFormatError)
+        if x.shape != (self.c_degree,):
+            raise(DataFormatError(f"x must be a 1-dimensional float array whose size is c_degree: {self.c_degree}."))
+        self.calc_pred_dist()
+        prediction = self.make_prediction(loss=loss)
+        self.overwrite_h0_params()
+        self.update_posterior(
+            x[np.newaxis,:],
+            max_itr=max_itr,
+            num_init=num_init,
+            tolerance=tolerance,
+            init_type=init_type
+            )
+        return prediction
 
     def estimate_latent_vars(self,x,loss=''):
         """Estimate latent variables under the given criterion.
