@@ -537,7 +537,9 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self.hn_w_mats = np.empty([self.c_num_classes,self.c_degree,self.c_degree])
         self.hn_w_mats_inv = np.empty([self.c_num_classes,self.c_degree,self.c_degree])
 
+        self._length = 0
         self._ln_rho = None
+        self._rho = None
         self.alpha_vecs = None
         self.beta_vecs = None
         self.gamma_vecs = None
@@ -901,11 +903,203 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                    + self._vl_q_pi
                    + self._vl_q_a
                    + self._vl_q_mu_lambda)
+    
+    def _init_fb_params(self):
+        self._ln_rho[:] = 0.0
+        self._rho[:] = 1.0
+        self.alpha_vecs[:] = 1/self.c_num_classes
+        self.beta_vecs[:] = 1.0
+        self.gamma_vecs[:] = 1/self.c_num_classes
+        self.xi_mats[:] = 1/(self.c_num_classes**2)
+        self.xi_mats[0] = 0.0
+        self._cs[:] = 1.0
 
-    def update_posterior():
+    def _init_random_responsibility(self,x):
+        self.xi_mats[:] = self.rng.dirichlet(np.ones(self.c_num_classes**2),self.xi_mats.shape[0]).reshape(self.xi_mats.shape)
+        self.xi_mats[0] = 0.0
+        self.gamma_vecs[:] = self.xi_mats.sum(axis=1)
+        self.gamma_vecs[0] = self.xi_mats[1].sum(axis=1)
+        self._calc_n_m_x_bar_s(x)
+
+    def _init_subsampling(self,x):
+        _size = int(np.sqrt(self._length))
+        for k in range(self.c_num_classes):
+            _subsample = self.rng.choice(x,size=_size,replace=False,axis=0,shuffle=False)
+            self.hn_m_vecs[k] = _subsample.sum(axis=0) / _size
+            self.hn_w_mats_inv[k] = ((_subsample - self.hn_m_vecs[k]).T
+                                 @ (_subsample - self.hn_m_vecs[k])
+                                 / _size * self.hn_nus[k]
+                                 + np.identity(self.c_degree) * 1.0E-5) # avoid singular matrix
+            self.hn_w_mats[k] = np.linalg.inv(self.hn_w_mats_inv[k])
+        self._calc_q_lambda_char()
+
+    def _update_q_mu_lambda(self):
+        self.hn_kappas[:] = self.h0_kappas + self.ns
+        self.hn_m_vecs[:] = (self.h0_kappas[:,np.newaxis] * self.h0_m_vecs
+                             + self.ns[:,np.newaxis] * self.x_bar_vecs) / self.hn_kappas[:,np.newaxis]
+        self.hn_nus[:] = self.h0_nus + self.ns
+        self.hn_w_mats_inv[:] = (self.h0_w_mats_inv
+                                 + self.ns[:,np.newaxis,np.newaxis] * self.s_mats
+                                 + (self.h0_kappas * self.ns / self.hn_kappas)[:,np.newaxis,np.newaxis]
+                                   * ((self.x_bar_vecs - self.h0_m_vecs)[:,:,np.newaxis]
+                                      @ (self.x_bar_vecs - self.h0_m_vecs)[:,np.newaxis,:])
+                                 )
+        self.hn_w_mats[:] = np.linalg.inv(self.hn_w_mats_inv)
+        self._calc_q_lambda_char()
+
+    def _update_q_pi(self):
+        self.hn_eta_vec[:] = self.h0_eta_vec + self.ns
+        self._calc_q_pi_char()
+
+    def _update_q_a(self):
+        self.hn_zeta_vecs[:] = self.h0_zeta_vecs + self.ms
+        self._calc_q_a_char()
+
+    def _calc_rho(self,x):
+        self._ln_rho[:] = ((self._e_ln_lambda_dets
+                            - self.c_degree * np.log(2*np.pi)
+                            - self.c_degree / self.hn_kappas
+                            - ((x[:,np.newaxis,:]-self.hn_m_vecs)[:,:,np.newaxis,:]
+                               @ self._e_lambda_mats
+                               @ (x[:,np.newaxis,:]-self.hn_m_vecs)[:,:,:,np.newaxis]
+                               )[:,:,0,0]
+                            ) / 2.0
+                          )
+        self._rho[:] = np.exp(self._ln_rho)
+
+    def _forward(self):
+        self.alpha_vecs[0] = self._rho[0] * self._pi_tilde_vec
+        self._cs[0] = self.alpha_vecs[0].sum()
+        self.alpha_vecs[0] /= self._cs[0]
+        for i in range(1,self._length):
+            self.alpha_vecs[i] = self._rho[i] * (self.alpha_vecs[i-1] @ self._a_tilde_mat)
+            self._cs[i] = self.alpha_vecs[i].sum()
+            self.alpha_vecs[i] /= self._cs[i]
+
+    def _backward(self):
+        for i in range(self._length-2,-1,-1):
+            self.beta_vecs[i] = self._a_tilde_mat @ (self._rho[i+1] * self.beta_vecs[i+1])
+            self.beta_vecs[i] /= self._cs[i+1]
+
+    def _update_gamma(self):
+        self.gamma_vecs[:] = self.alpha_vecs * self.beta_vecs
+
+    def _update_xi(self):
+        self.xi_mats[1:,:,:] = self.alpha_vecs[:-1,:,np.newaxis] * self._rho[1:,np.newaxis,:] * self._a_tilde_mat[np.newaxis,:,:] * self.beta_vecs[1:,np.newaxis,:]
+        self.xi_mats[1:,:,:] /= self._cs[1:,np.newaxis,np.newaxis]
+
+    def _update_q_z(self,x):
+        self._calc_rho(x)
+        self._forward()
+        self._backward()
+        self._update_gamma()
+        self._update_xi()
+        self._calc_n_m_x_bar_s(x)
+
+    def update_posterior(
+            self,
+            x,
+            max_itr=100,
+            num_init=10,
+            tolerance=1.0E-8,
+            init_type='subsampling'
+            ):
         """Update the the posterior distribution using traning data.
+
+        Parameters
+        ----------
+        x : numpy.ndarray
+            All the elements must be real number.
+        max_itr : int, optional
+            maximum number of iterations, by default 100
+        num_init : int, optional
+            number of initializations, by default 10
+        tolerance : float, optional
+            convergence criterion of variational lower bound, by default 1.0E-8
+        init_type : str, optional
+            type of initialization, by default 'subsampling'
+            * 'subsampling': for each latent class, extract a subsample whose size is int(np.sqrt(x.shape[0])).
+              and use its mean and covariance matrix as an initial values of hn_m_vecs and hn_lambda_mats.
+            * 'random_responsibility': randomly assign responsibility to gamma_vecs
         """
-        pass
+        _check.float_vecs(x,'x',DataFormatError)
+        if x.shape[-1] != self.c_degree:
+            raise(DataFormatError(
+                "x.shape[-1] must be self.c_degree: "
+                + f"x.shape[-1]={x.shape[-1]}, self.c_degree={self.c_degree}"))
+        x = x.reshape(-1,self.c_degree)
+        self._length = x.shape[0]
+        self._ln_rho = np.zeros([self._length,self.c_num_classes])
+        self._rho = np.ones([self._length,self.c_num_classes])
+        self.alpha_vecs = np.ones([self._length,self.c_num_classes])/self.c_num_classes
+        self.beta_vecs = np.ones([self._length,self.c_num_classes])
+        self.gamma_vecs = np.ones([self._length,self.c_num_classes])/self.c_num_classes
+        self.xi_mats = np.zeros([self._length,self.c_num_classes,self.c_num_classes])/(self.c_num_classes**2)
+        self._cs = np.ones([self._length])
+
+        tmp_vl = 0.0
+        tmp_eta_vec = np.copy(self.hn_eta_vec)
+        tmp_zeta_vecs = np.copy(self.hn_zeta_vecs)
+        tmp_m_vecs = np.copy(self.hn_m_vecs)
+        tmp_kappas = np.copy(self.hn_kappas)
+        tmp_nus = np.copy(self.hn_nus)
+        tmp_w_mats = np.copy(self.hn_w_mats)
+        tmp_w_mats_inv = np.copy(self.hn_w_mats_inv)
+
+        convergence_flag = True
+        for i in range(num_init):
+            self._init_fb_params()
+            self.reset_hn_params()
+            if init_type == 'subsampling':
+                self._init_subsampling(x)
+                self._update_q_z(x)
+            elif init_type == 'random_responsibility':
+                self._init_random_responsibility(x)
+            else:
+                raise(ValueError(
+                    f'init_type={init_type} is unsupported. '
+                    + 'This function supports only '
+                    + '"subsampling" and "random_responsibility"'))
+            self.calc_vl()
+            print(f'\r{i}. VL: {self.vl}',end='')
+            for t in range(max_itr):
+                vl_before = self.vl
+                self._update_q_mu_lambda()
+                self._update_q_pi()
+                self._update_q_a()
+                self._update_q_z(x)
+                self.calc_vl()
+                print(f'\r{i}. VL: {self.vl} t={t} ',end='')
+                if np.abs((self.vl-vl_before)/vl_before) < tolerance:
+                    convergence_flag = False
+                    print(f'(converged)',end='')
+                    break
+            if i==0 or self.vl > tmp_vl:
+                print('*')
+                tmp_vl = self.vl
+                tmp_eta_vec[:] = self.hn_eta_vec
+                tmp_zeta_vecs[:] = self.hn_zeta_vecs
+                tmp_m_vecs[:] = self.hn_m_vecs
+                tmp_kappas[:] = self.hn_kappas
+                tmp_nus[:] = self.hn_nus
+                tmp_w_mats[:] = self.hn_w_mats
+                tmp_w_mats_inv[:] = self.hn_w_mats_inv
+            else:
+                print('')
+        if convergence_flag:
+            warnings.warn("Algorithm has not converged even once.",ResultWarning)
+        
+        self.hn_eta_vec[:] = tmp_eta_vec
+        self.hn_zeta_vecs[:] = tmp_zeta_vecs
+        self.hn_m_vecs[:] = tmp_m_vecs
+        self.hn_kappas[:] = tmp_kappas
+        self.hn_nus[:] = tmp_nus
+        self.hn_w_mats[:] = tmp_w_mats
+        self.hn_w_mats_inv[:] = tmp_w_mats_inv
+        self._calc_q_pi_char()
+        self._calc_q_a_char()
+        self._calc_q_lambda_char()
+        self._update_q_z(x)
 
     def estimate_params(self,loss="squared"):
         """Estimate the parameter under the given criterion.
