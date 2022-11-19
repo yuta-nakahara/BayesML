@@ -283,6 +283,8 @@ class GenModel(base.Generative):
         >>> from bayesml import gaussianmixture
         >>> import numpy as np
         >>> model = gaussianmixture.GenModel(
+        >>>             c_num_classes=3,
+        >>>             c_degree=1
         >>>             pi_vec=np.array([0.444,0.444,0.112]),
         >>>             mu_vecs=np.array([[-2.8],[-0.8],[2]]),
         >>>             lambda_mats=np.array([[[6.25]],[[6.25]],[[100]]])
@@ -763,11 +765,11 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         for k in range(self.c_num_classes):
             _subsample = self.rng.choice(x,size=_size,replace=False,axis=0,shuffle=False)
             self.hn_m_vecs[k] = _subsample.sum(axis=0) / _size
-            self.hn_w_mats[k] = ((_subsample - self.hn_m_vecs[k]).T
+            self.hn_w_mats_inv[k] = ((_subsample - self.hn_m_vecs[k]).T
                                  @ (_subsample - self.hn_m_vecs[k])
-                                 / _size / self.hn_nus[k]
+                                 / _size * self.hn_nus[k]
                                  + np.identity(self.c_degree) * 1.0E-5) # avoid singular matrix
-            self.hn_w_mats_inv[k] = np.linalg.inv(self.hn_w_mats[k])
+            self.hn_w_mats[k] = np.linalg.inv(self.hn_w_mats_inv[k])
         self._calc_q_pi_char()
         self._calc_q_lambda_char()
 
