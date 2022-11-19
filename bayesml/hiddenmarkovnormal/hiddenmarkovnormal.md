@@ -112,7 +112,7 @@ $$
     \end{cases} \\
     \beta^{(t+1)} (\boldsymbol{z}_i) &\propto
     \begin{cases}
-    \sum_{\boldsymbol{z}_{i+1}} \left[ \prod_{k=1}^{K} \left( \rho_{i+1,k}^{(t+1)}\right)^{z_{i,k}} \prod_{k=1}^{K}\prod_{j=1}^{K}\left(\tilde{a}^{(t+1)}_{j,k}\right)^{z_{i,j}z_{i+1,k}}\beta^{(t+1)}(\boldsymbol{z}_{i+1})\right] & (i<n)\\
+    \sum_{\boldsymbol{z}_{i+1}} \left[ \prod_{k=1}^{K} \left( \rho_{i+1,k}^{(t+1)}\right)^{z_{i+1,k}} \prod_{k=1}^{K}\prod_{j=1}^{K}\left(\tilde{a}^{(t+1)}_{j,k}\right)^{z_{i,j}z_{i+1,k}}\beta^{(t+1)}(\boldsymbol{z}_{i+1})\right] & (i<n)\\
     1 & (i=n)
     \end{cases} \\
     q^{(t+1)}(\boldsymbol{z}_i) &\propto \alpha^{(t+1)}(\boldsymbol{z}_i)\beta^{(t+1)}(\boldsymbol{z}_i) \\
