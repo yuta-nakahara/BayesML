@@ -1023,10 +1023,11 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             * 'random_responsibility': randomly assign responsibility to gamma_vecs
         """
         _check.float_vecs(x,'x',DataFormatError)
-        if x.shape[-1] != self.c_degree:
-            raise(DataFormatError(
-                "x.shape[-1] must be self.c_degree: "
-                + f"x.shape[-1]={x.shape[-1]}, self.c_degree={self.c_degree}"))
+        _check.shape_consistency(
+            x.shape[-1],"x.shape[-1]", 
+            self.c_degree,"self.c_degree", 
+            DataFormatError
+            )
         x = x.reshape(-1,self.c_degree)
         self._length = x.shape[0]
         self._ln_rho = np.zeros([self._length,self.c_num_classes])
@@ -1105,19 +1106,24 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         """Estimate the parameter under the given criterion.
 
         Note that the criterion is applied to estimating 
-        ``xxx``, ``xxx`` and ``xxx`` independently.
-        Therefore, a tuple of xxx, xxx and xxx will be returned when loss=\"xxx\"
+        ``pi_vec``, ``a_mat`` ``mu_vecs`` and ``lambda_mats`` independently.
+        Therefore, a tuple of the dirichlet distribution, 
+        the student's t-distributions and 
+        the wishart distributions will be returned when loss=\"KL\"
 
         Parameters
         ----------
         loss : str, optional
             Loss function underlying the Bayes risk function, by default \"xxx\".
-            This function supports \"xxx\", \"xxx\", and \"xxx\".
+            This function supports \"squared\", \"0-1\", and \"KL\".
 
         Returns
         -------
         Estimates : a tuple of {numpy ndarray, float, None, or rv_frozen}
-            * ``xxx`` : the estimate for xxx
+            * ``pi_vec_hat`` : the estimate for pi_vec
+            * ``a_mat_hat`` : the estimate for a_mat
+            * ``mu_vecs_hat`` : the estimate for mu_vecs
+            * ``Lambda_mats_hat`` : the estimate for Lambda_mats
             The estimated values under the given loss function. 
             If it is not exist, `np.nan` will be returned.
             If the loss function is \"KL\", the posterior distribution itself 
@@ -1128,16 +1134,150 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         scipy.stats.rv_continuous
         scipy.stats.rv_discrete
         """
-        pass
+        if loss == "squared":
+            return (self.hn_eta_vec/self.hn_eta_vec.sum(),
+                    self.hn_zeta_vecs/self.hn_zeta_vecs.sum(axis=1,keepdims=True),
+                    self.hn_m_vecs,
+                    self._e_lambda_mats)
+        elif loss == "0-1":
+            pi_vec_hat = np.empty(self.c_num_classes)
+            if np.all(self.hn_eta_vec > 1):
+                pi_vec_hat[:] = (self.hn_eta_vec - 1) / (np.sum(self.hn_eta_vec) - self.c_degree)
+            else:
+                warnings.warn("MAP estimate of pi_vec doesn't exist for the current hn_eta_vec.",ResultWarning)
+                pi_vec_hat[:] = np.nan
+            a_mat_hat = np.empty([self.c_num_classes,self.c_num_classes])
+            for i in range(self.c_num_classes):
+                if np.all(self.hn_eta_vec > 1):
+                    a_mat_hat[i] = (self.hn_zeta_vecs[i] - 1) / (np.sum(self.hn_zeta_vecs[i]) - self.c_degree)
+                else:
+                    warnings.warn(f"MAP estimate of a_mat[{i}] doesn't exist for the current hn_zeta_vecs[{i}].",ResultWarning)
+                    a_mat_hat[i] = np.nan
+            lambda_mats_hat = np.empty([self.c_num_classes,self.c_degree,self.c_degree])
+            for k in range(self.c_num_classes):
+                if self.hn_nus[k] >= self.c_degree + 1:
+                    lambda_mats_hat[k] = (self.hn_nus[k] - self.c_degree - 1) * self.hn_w_mats[k]
+                else:
+                    warnings.warn(f"MAP estimate of lambda_mat doesn't exist for the current hn_nus[{k}].",ResultWarning)
+                    lambda_mats_hat[k] = np.nan
+            return pi_vec_hat, a_mat_hat, self.hn_m_vecs, lambda_mats_hat
+        elif loss == "KL":
+            a_mat_pdfs = []
+            mu_vec_pdfs = []
+            lambda_mat_pdfs = []
+            for k in range(self.c_num_classes):
+                a_mat_pdfs.append(ss_dirichlet(self.hn_zeta_vecs[k]))
+                mu_vec_pdfs.append(ss_multivariate_t(loc=self.hn_m_vecs[k],
+                                                 shape=self.hn_w_mats_inv[k] / self.hn_kappas[k] / (self.hn_nus[k] - self.c_degree + 1),
+                                                 df=self.hn_nus[k] - self.c_degree + 1))
+                lambda_mat_pdfs.append(ss_wishart(df=self.hn_nus[k],scale=self.hn_w_mats[k]))
+            return (ss_dirichlet(self.hn_eta_vec),
+                    a_mat_pdfs,
+                    mu_vec_pdfs,
+                    lambda_mat_pdfs)
+        else:
+            raise(CriteriaError(f"loss={loss} is unsupported. "
+                                +"This function supports \"squared\", \"0-1\", and \"KL\"."))
 
     def visualize_posterior(self):
         """Visualize the posterior distribution for the parameter.
         
         Examples
         --------
-        >>> from bayesml import xxx
+        >>> from bayesml import hiddenmarkovnormal
+        >>> gen_model = hiddenmarkovnormal.GenModel(
+        >>>     c_num_classes=2,
+        >>>     c_degree=1,
+        >>>     mu_vecs=np.array([[2],[-2]]),
+        >>>     a_mat=np.array([[0.95,0.05],[0.1,0.9]])
+        >>> x,z = gen_model.gen_sample(100)
+        >>> learn_model = hiddenmarkovnormal.LearnModel(c_num_classes=2, c_degree=1)
+        >>> learn_model.update_posterior(x)
+        >>> learn_model.visualize_posterior()
+        hn_alpha_vec:
+        [103.89444088  97.10555912]
+        E[pi_vec]:
+        [0.51688777 0.48311223]
+        hn_zeta_vecs:
+        [[0.90892737 0.09107263]
+        [0.08810659 0.91189341]]
+        hn_m_vecs (equivalent to E[mu_vecs]):
+        [[-2.00135008]
+        [ 1.97461369]]
+        hn_kappas:
+        [104.39444088  97.60555912]
+        hn_nus:
+        [104.39444088  97.60555912]
+        hn_w_mats:
+        [[[0.00890667]]
+
+        [[0.01009789]]]
+        E[lambda_mats]=
+        [[[0.92980714]]
+
+        [[0.98560985]]]
+
+        .. image:: ./images/hiddenmarkovnormal_posterior.png
         """
-        pass
+        print("hn_alpha_vec:")
+        print(f"{self.hn_eta_vec}")
+        print("E[pi_vec]:")
+        print(f"{self.hn_eta_vec / self.hn_eta_vec.sum()}")
+        print("hn_zeta_vecs:")
+        print(f"{self.hn_zeta_vecs/self.hn_zeta_vecs.sum(axis=1,keepdims=True)}")
+        print("hn_m_vecs (equivalent to E[mu_vecs]):")
+        print(f"{self.hn_m_vecs}")
+        print("hn_kappas:")
+        print(f"{self.hn_kappas}")
+        print("hn_nus:")
+        print(f"{self.hn_nus}")
+        print("hn_w_mats:")
+        print(f"{self.hn_w_mats}")
+        print("E[lambda_mats]=")
+        print(f"{self._e_lambda_mats}")
+        _, _, mu_vec_pdfs, lambda_mat_pdfs = self.estimate_params(loss="KL")
+        if self.c_degree == 1:
+            fig, axes = plt.subplots(1,2)
+            axes[0].set_xlabel("mu_vecs")
+            axes[0].set_ylabel("Density")
+            axes[1].set_xlabel("lambda_mats")
+            axes[1].set_ylabel("Log density")
+            for k in range(self.c_num_classes):
+                # for mu_vecs
+                x = np.linspace(self.hn_m_vecs[k,0]-4.0*np.sqrt((self.hn_w_mats_inv[k] / self.hn_kappas[k] / self.hn_nus[k])[0,0]),
+                                self.hn_m_vecs[k,0]+4.0*np.sqrt((self.hn_w_mats_inv[k] / self.hn_kappas[k] / self.hn_nus[k])[0,0]),
+                                100)
+                axes[0].plot(x,mu_vec_pdfs[k].pdf(x))
+                # for lambda_mats
+                x = np.linspace(max(1.0e-8,self.hn_nus[k]*self.hn_w_mats[k]-4.0*np.sqrt(self.hn_nus[k]/2.0)*(2.0*self.hn_w_mats[k])),
+                                self.hn_nus[k]*self.hn_w_mats[k]+4.0*np.sqrt(self.hn_nus[k]/2.0)*(2.0*self.hn_w_mats[k]),
+                                500)
+                axes[1].plot(x[:,0,0],lambda_mat_pdfs[k].logpdf(x[:,0,0]))
+
+            fig.tight_layout()
+            plt.show()
+
+        elif self.c_degree == 2:
+            fig, axes = plt.subplots()
+            for k in range(self.c_num_classes):
+                x = np.linspace(self.hn_m_vecs[k,0]-3.0*np.sqrt((self.hn_w_mats_inv[k] / self.hn_kappas[k] / self.hn_nus[k])[0,0]),
+                                self.hn_m_vecs[k,0]+3.0*np.sqrt((self.hn_w_mats_inv[k] / self.hn_kappas[k] / self.hn_nus[k])[0,0]),
+                                100)
+                y = np.linspace(self.hn_m_vecs[k,1]-3.0*np.sqrt((self.hn_w_mats_inv[k] / self.hn_kappas[k] / self.hn_nus[k])[1,1]),
+                                self.hn_m_vecs[k,1]+3.0*np.sqrt((self.hn_w_mats_inv[k] / self.hn_kappas[k] / self.hn_nus[k])[1,1]),
+                                100)
+                xx, yy = np.meshgrid(x,y)
+                grid = np.empty((100,100,2))
+                grid[:,:,0] = xx
+                grid[:,:,1] = yy
+                axes.contour(xx,yy,mu_vec_pdfs[k].pdf(grid),cmap='Blues')
+                axes.plot(self.hn_m_vecs[k,0],self.hn_m_vecs[k,1],marker="x",color='red')
+            axes.set_xlabel("mu_vec[0]")
+            axes.set_ylabel("mu_vec[1]")
+            plt.show()
+
+        else:
+            raise(ParameterFormatError("if c_degree > 2, it is impossible to visualize the model by this function."))
         
     def get_p_params(self):
         """Get the parameters of the predictive distribution.
