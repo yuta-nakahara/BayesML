@@ -770,8 +770,11 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                                  / _size * self.hn_nus[k]
                                  + np.identity(self.c_degree) * 1.0E-5) # avoid singular matrix
             self.hn_w_mats[k] = np.linalg.inv(self.hn_w_mats_inv[k])
-        self._calc_q_pi_char()
         self._calc_q_lambda_char()
+
+    def _init_rho_r(self):
+        self._ln_rho[:] = 0.0
+        self.r_vecs[:] = 1/self.c_num_classes
 
     def update_posterior(
             self,
@@ -818,6 +821,8 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
 
         convergence_flag = True
         for i in range(num_init):
+            self.reset_hn_params()
+            self._init_rho_r()
             if init_type == 'subsampling':
                 self._init_subsampling(x)
                 self._update_q_z(x)

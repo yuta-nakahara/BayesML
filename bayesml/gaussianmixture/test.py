@@ -11,8 +11,8 @@ gen_model = gaussianmixture.GenModel(
     lambda_mats=np.array([[[6.25]],[[6.25]],[[100]]])
     )
 
-x,z = gen_model.gen_sample(1000)
+x,z = gen_model.gen_sample(300)
 
 learn_model = gaussianmixture.LearnModel(3,1)
-learn_model.update_posterior(x)
+learn_model.update_posterior(x)#,init_type='random_responsibility')
 learn_model.visualize_posterior()
