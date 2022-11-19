@@ -579,6 +579,10 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self.p_lambda_mats = np.empty([self.c_num_classes,self.c_degree,self.c_degree])
         self.p_lambda_mats_inv = np.empty([self.c_num_classes,self.c_degree,self.c_degree])
         
+        # for Viterbi
+        self.omega_vecs = None
+        self.phi_vecs = None
+
         self.set_h0_params(
             h0_eta_vec,
             h0_zeta_vecs,
@@ -1012,6 +1016,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         Parameters
         ----------
         x : numpy.ndarray
+            (sample_length,c_degree)-dimensional ndarray.
             All the elements must be real number.
         max_itr : int, optional
             maximum number of iterations, by default 100
@@ -1395,27 +1400,92 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             )
         return prediction
 
-    def estimate_latent_vars(self,x,loss=''):
+    def estimate_latent_vars(self,x,loss='0-1',viterbi=True):
         """Estimate latent variables under the given criterion.
 
-        Note that the criterion is independently applied to each data point.
+        If the ``viterbi`` option is ``True``, this function estimates 
+        the latent variables maximizing the joint distribution. 
+        If ``False``, this function independently estimates the latent 
+        variables at each time point.
 
         Parameters
         ----------
+        x : numpy.ndarray
+            (sample_length,c_degree)-dimensional ndarray.
+            All the elements must be real number.
         loss : str, optional
-            Loss function underlying the Bayes risk function, by default \"xxx\".
-            This function supports \"xxx\", \"xxx\", and \"xxx\".
+            Loss function underlying the Bayes risk function, by default \"0-1\".
+            If the ``viterbi`` option is ``True``, this function supports only \"0-1\". 
+            Otherwise, \"0-1\", \"squared\", and \"KL\" are supported.
+        viterbi : bool, optional
+            If ``True``, this function estimates the latent variables as a sequence.
 
         Returns
         -------
         estimates : numpy.ndarray
             The estimated values under the given loss function. 
-            If the loss function is \"xxx\", the posterior distribution will be returned 
-            as a numpy.ndarray whose elements consist of occurence probabilities.
+            If the ``viterbi`` option is ``False`` and loss function is \"KL\", 
+            a marginalized posterior distribution will be returned as 
+            a numpy.ndarray whose elements consist of occurence 
+            probabilities for each latent variabl.
         """
-        pass
+        _check.float_vecs(x,'x',DataFormatError)
+        if x.shape[-1] != self.c_degree:
+            raise(DataFormatError(
+                "x.shape[-1] must be self.c_degree: "
+                + f"x.shape[-1]={x.shape[-1]}, self.c_degree={self.c_degree}"))
+        x = x.reshape(-1,self.c_degree)
+        self._length = x.shape[0]
+        z_hat = np.zeros([self._length,self.c_num_classes],dtype=int)
+        self._ln_rho = np.zeros([self._length,self.c_num_classes])
+        self._rho = np.ones([self._length,self.c_num_classes])
 
-    def estimate_latent_vars_and_update(self):
+        if viterbi:
+            if loss == '0-1':
+                self.omega_vecs = np.zeros([self._length,self.c_num_classes])
+                self.phi_vecs = np.zeros([self._length,self.c_num_classes],dtype=int)
+                self._calc_rho(x)
+
+                self.omega_vecs[0] = self._ln_rho[0] + self._ln_pi_tilde_vec
+                for i in range(1,self._length):
+                    self.omega_vecs[i] = self._ln_rho[i] + np.max(self._ln_a_tilde_mat + self.omega_vecs[i-1,:,np.newaxis],axis=0)
+                    self.phi_vecs[i] = np.argmax(self._ln_a_tilde_mat + self.omega_vecs[i-1,:,np.newaxis],axis=0)
+                
+                tmp_k = np.argmax(self.omega_vecs[-1])
+                z_hat[-1,tmp_k] = 1
+                for i in range(self._length-2,-1,-1):
+                    tmp_k = self.phi_vecs[i+1,tmp_k]
+                    z_hat[i,tmp_k] = 1
+                return z_hat
+            else:
+                raise(CriteriaError(f"loss=\"{loss}\" is unsupported. "
+                                    +"When viterbi == True, this function supports only \"0-1\"."))
+                
+        else:
+            self.alpha_vecs = np.ones([self._length,self.c_num_classes])/self.c_num_classes
+            self.beta_vecs = np.ones([self._length,self.c_num_classes])
+            self.gamma_vecs = np.ones([self._length,self.c_num_classes])/self.c_num_classes
+            self.xi_mats = np.zeros([self._length,self.c_num_classes,self.c_num_classes])/(self.c_num_classes**2)
+            self._cs = np.ones([self._length])
+            self._update_q_z(x)
+            if loss == "squared" or loss == "KL":
+                return self.gamma_vecs
+            elif loss == "0-1":
+                return np.identity(self.c_num_classes,dtype=int)[np.argmax(self.gamma_vecs,axis=1)]
+            else:
+                raise(CriteriaError(f"loss=\"{loss}\" is unsupported. "
+                                    +"When viterbi == False, This function supports \"squared\", \"0-1\", and \"KL\"."))
+
+    def estimate_latent_vars_and_update(
+            self,
+            x,
+            loss="0-1",
+            viterbi=True,
+            max_itr=100,
+            num_init=10,
+            tolerance=1.0E-8,
+            init_type='subsampling'
+            ):
         """Estimate latent variables and update the posterior sequentially.
 
         h0_params will be overwritten by current hn_params 
@@ -1423,10 +1493,45 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         
         Parameters
         ----------
+        x : numpy.ndarray
+            It must be a `c_degree`-dimensional vector
+        loss : str, optional
+            Loss function underlying the Bayes risk function, by default \"0-1\".
+            If the ``viterbi`` option is ``True``, this function supports only \"0-1\". 
+            Otherwise, \"0-1\", \"squared\", and \"KL\" are supported.
+        viterbi : bool, optional
+            If ``True``, this function estimates the latent variables as a sequence.
+        max_itr : int, optional
+            maximum number of iterations, by default 100
+        num_init : int, optional
+            number of initializations, by default 10
+        tolerance : float, optional
+            convergence croterion of variational lower bound, by default 1.0E-8
+        init_type : str, optional
+            type of initialization, by default 'random_responsibility'
+            * 'random_responsibility': randomly assign responsibility to r_vecs
+            * 'subsampling': for each latent class, extract a subsample whose size is int(np.sqrt(x.shape[0])).
+              and use its mean and covariance matrix as an initial values of hn_m_vecs and hn_lambda_mats.
 
         Returns
         -------
-        predicted_value : numpy.ndarray
+        estimates : numpy.ndarray
             The estimated values under the given loss function. 
+            If the ``viterbi`` option is ``False`` and loss function is \"KL\", 
+            a marginalized posterior distribution will be returned as 
+            a numpy.ndarray whose elements consist of occurence 
+            probabilities for each latent variabl.
         """
-        pass
+        _check.float_vec(x,'x',DataFormatError)
+        if x.shape != (self.c_degree,):
+            raise(DataFormatError(f"x must be a 1-dimensional float array whose size is c_degree: {self.c_degree}."))
+        z_hat = self.estimate_latent_vars(x,loss=loss,viterbi=viterbi)
+        self.overwrite_h0_params()
+        self.update_posterior(
+            x,
+            max_itr=max_itr,
+            num_init=num_init,
+            tolerance=tolerance,
+            init_type=init_type
+            )
+        return z_hat
