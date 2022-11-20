@@ -103,13 +103,33 @@
     </a>
    </li>
    <li class="toctree-l2">
+    <a class="reference internal" href="bayesml.contexttree.html">
+     bayesml.contexttree package
+    </a>
+   </li>
+   <li class="toctree-l2">
     <a class="reference internal" href="bayesml.exponential.html">
      bayesml.exponential package
     </a>
    </li>
    <li class="toctree-l2">
+    <a class="reference internal" href="bayesml.gaussianmixture.html">
+     bayesml.gaussianmixture package
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="bayesml.hiddenmarkovnormal.html">
+     bayesml.hiddenmarkovnormal package
+    </a>
+   </li>
+   <li class="toctree-l2">
     <a class="reference internal" href="bayesml.linearregression.html">
      bayesml.linearregression package
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="bayesml.metatree.html">
+     bayesml.metatree package
     </a>
    </li>
    <li class="toctree-l2">
@@ -286,8 +306,12 @@
 <li class="toctree-l1"><a class="reference internal" href="bayesml.autoregressive.html">bayesml.autoregressive package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="bayesml.bernoulli.html">bayesml.bernoulli package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="bayesml.categorical.html">bayesml.categorical package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bayesml.contexttree.html">bayesml.contexttree package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="bayesml.exponential.html">bayesml.exponential package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bayesml.gaussianmixture.html">bayesml.gaussianmixture package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bayesml.hiddenmarkovnormal.html">bayesml.hiddenmarkovnormal package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="bayesml.linearregression.html">bayesml.linearregression package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bayesml.metatree.html">bayesml.metatree package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="bayesml.multivariate_normal.html">bayesml.multivariate_normal package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="bayesml.normal.html">bayesml.normal package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="bayesml.poisson.html">bayesml.poisson package</a></li>
@@ -302,7 +326,7 @@
 <dl class="py class">
 <dt class="sig sig-object py" id="bayesml.base.Generative">
 <em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">bayesml.base.</span></span><span class="sig-name descname"><span class="pre">Generative</span></span><a class="headerlink" href="#bayesml.base.Generative" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p class="rubric">Methods</p>
 <table class="longtable table autosummary">
 <colgroup>
@@ -370,7 +394,7 @@
 <dt class="sig sig-object py" id="bayesml.base.Generative.save_h_params">
 <span class="sig-name descname"><span class="pre">save_h_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.base.Generative.save_h_params" title="Permalink to this definition">¶</a></dt>
 <dd><p>Save the hyperparameters using python <code class="docutils literal notranslate"><span class="pre">pickle</span></code> module.</p>
-<p>They are saved as a python dictionary obtained by <code class="docutils literal notranslate"><span class="pre">get_h_params()</span></code>.</p>
+<p>They are saved as a python dictionary obtained by <code class="docutils literal notranslate"><span class="pre">GenModel.get_h_params()</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
@@ -386,7 +410,7 @@
 <div class="admonition seealso">
 <p class="admonition-title">See also</p>
 <dl class="simple">
-<dt><a class="reference external" href="https://docs.python.org/3/library/pickle.html#module-pickle" title="(in Python v3.10)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pickle</span></code></a></dt><dd></dd>
+<dt><a class="reference external" href="https://docs.python.org/3/library/pickle.html#module-pickle" title="(in Python v3.11)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pickle</span></code></a></dt><dd></dd>
 </dl>
 </div>
 </dd></dl>
@@ -400,8 +424,8 @@
 <dd class="field-odd"><dl class="simple">
 <dt><strong>filename</strong><span class="classifier">str</span></dt><dd><p>The filename (including a extention like .pkl) to be loaded.
 It must be a pickled python dictionary obtained by
-<code class="docutils literal notranslate"><span class="pre">save_h_params()</span></code> of GenModel, <code class="docutils literal notranslate"><span class="pre">save_h0_params()</span></code> of LearnModel 
-or <code class="docutils literal notranslate"><span class="pre">save_hn_params()</span></code> of LearnModel.</p>
+<code class="docutils literal notranslate"><span class="pre">GenModel.save_h_params()</span></code>, <code class="docutils literal notranslate"><span class="pre">LearnModel.save_h0_params()</span></code> 
+or <code class="docutils literal notranslate"><span class="pre">LearnModel.save_hn_params()</span></code>.</p>
 </dd>
 </dl>
 </dd>
@@ -413,7 +437,7 @@ or <code class="docutils literal notranslate"><span class="pre">save_hn_params()
 <div class="admonition seealso">
 <p class="admonition-title">See also</p>
 <dl class="simple">
-<dt><a class="reference external" href="https://docs.python.org/3/library/pickle.html#module-pickle" title="(in Python v3.10)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pickle</span></code></a></dt><dd></dd>
+<dt><a class="reference external" href="https://docs.python.org/3/library/pickle.html#module-pickle" title="(in Python v3.11)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pickle</span></code></a></dt><dd></dd>
 </dl>
 </div>
 </dd></dl>
@@ -437,7 +461,7 @@ or <code class="docutils literal notranslate"><span class="pre">save_hn_params()
 <dt class="sig sig-object py" id="bayesml.base.Generative.save_params">
 <span class="sig-name descname"><span class="pre">save_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.base.Generative.save_params" title="Permalink to this definition">¶</a></dt>
 <dd><p>Save the parameters using python <code class="docutils literal notranslate"><span class="pre">pickle</span></code> module.</p>
-<p>They are saved as a pickled python dictionary obtained by <code class="docutils literal notranslate"><span class="pre">get_params()</span></code>.</p>
+<p>They are saved as a pickled python dictionary obtained by <code class="docutils literal notranslate"><span class="pre">GenModel.get_params()</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
@@ -453,7 +477,7 @@ or <code class="docutils literal notranslate"><span class="pre">save_hn_params()
 <div class="admonition seealso">
 <p class="admonition-title">See also</p>
 <dl class="simple">
-<dt><a class="reference external" href="https://docs.python.org/3/library/pickle.html#module-pickle" title="(in Python v3.10)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pickle</span></code></a></dt><dd></dd>
+<dt><a class="reference external" href="https://docs.python.org/3/library/pickle.html#module-pickle" title="(in Python v3.11)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pickle</span></code></a></dt><dd></dd>
 </dl>
 </div>
 </dd></dl>
@@ -466,7 +490,7 @@ or <code class="docutils literal notranslate"><span class="pre">save_hn_params()
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>filename</strong><span class="classifier">str</span></dt><dd><p>The filename (including a extention like .pkl) to be loaded.
-It must be a pickled python dictionary with keys obtained by <code class="docutils literal notranslate"><span class="pre">get_params().keys()</span></code>.</p>
+It must be a pickled python dictionary obtained by <code class="docutils literal notranslate"><span class="pre">GenModel.save_params()</span></code>.</p>
 </dd>
 </dl>
 </dd>
@@ -478,7 +502,7 @@ It must be a pickled python dictionary with keys obtained by <code class="docuti
 <div class="admonition seealso">
 <p class="admonition-title">See also</p>
 <dl class="simple">
-<dt><a class="reference external" href="https://docs.python.org/3/library/pickle.html#module-pickle" title="(in Python v3.10)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pickle</span></code></a></dt><dd></dd>
+<dt><a class="reference external" href="https://docs.python.org/3/library/pickle.html#module-pickle" title="(in Python v3.11)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pickle</span></code></a></dt><dd></dd>
 </dl>
 </div>
 </dd></dl>
@@ -503,7 +527,7 @@ It must be a pickled python dictionary with keys obtained by <code class="docuti
 <dl class="py class">
 <dt class="sig sig-object py" id="bayesml.base.Posterior">
 <em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">bayesml.base.</span></span><span class="sig-name descname"><span class="pre">Posterior</span></span><a class="headerlink" href="#bayesml.base.Posterior" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p class="rubric">Methods</p>
 <table class="longtable table autosummary">
 <colgroup>
@@ -516,6 +540,12 @@ It must be a pickled python dictionary with keys obtained by <code class="docuti
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#bayesml.base.Posterior.load_hn_params" title="bayesml.base.Posterior.load_hn_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_hn_params</span></code></a>(filename)</p></td>
 <td><p>Load the hyperparameters to hn_params.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bayesml.base.Posterior.overwrite_h0_params" title="bayesml.base.Posterior.overwrite_h0_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">overwrite_h0_params</span></code></a>()</p></td>
+<td><p>Overwrite the initial values of the hyperparameters of the posterior distribution by the learned values.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#bayesml.base.Posterior.reset_hn_params" title="bayesml.base.Posterior.reset_hn_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">reset_hn_params</span></code></a>()</p></td>
+<td><p>Reset the hyperparameters of the posterior distribution to their initial values.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#bayesml.base.Posterior.save_h0_params" title="bayesml.base.Posterior.save_h0_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_h0_params</span></code></a>(filename)</p></td>
 <td><p>Save the hyperparameters using python <code class="docutils literal notranslate"><span class="pre">pickle</span></code> module.</p></td>
@@ -538,12 +568,6 @@ It must be a pickled python dictionary with keys obtained by <code class="docuti
 <td></td>
 </tr>
 <tr class="row-odd"><td><p><strong>get_hn_params</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>overwrite_h0_params</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>reset_hn_params</strong></p></td>
 <td></td>
 </tr>
 <tr class="row-even"><td><p><strong>set_h0_params</strong></p></td>
@@ -574,7 +598,7 @@ It must be a pickled python dictionary with keys obtained by <code class="docuti
 <dt class="sig sig-object py" id="bayesml.base.Posterior.save_h0_params">
 <span class="sig-name descname"><span class="pre">save_h0_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.base.Posterior.save_h0_params" title="Permalink to this definition">¶</a></dt>
 <dd><p>Save the hyperparameters using python <code class="docutils literal notranslate"><span class="pre">pickle</span></code> module.</p>
-<p>They are saved as a pickled python dictionary obtained by <code class="docutils literal notranslate"><span class="pre">get_h0_params()</span></code>.</p>
+<p>They are saved as a pickled python dictionary obtained by <code class="docutils literal notranslate"><span class="pre">LearnModel.get_h0_params()</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
@@ -590,7 +614,7 @@ It must be a pickled python dictionary with keys obtained by <code class="docuti
 <div class="admonition seealso">
 <p class="admonition-title">See also</p>
 <dl class="simple">
-<dt><a class="reference external" href="https://docs.python.org/3/library/pickle.html#module-pickle" title="(in Python v3.10)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pickle</span></code></a></dt><dd></dd>
+<dt><a class="reference external" href="https://docs.python.org/3/library/pickle.html#module-pickle" title="(in Python v3.11)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pickle</span></code></a></dt><dd></dd>
 </dl>
 </div>
 </dd></dl>
@@ -604,8 +628,8 @@ It must be a pickled python dictionary with keys obtained by <code class="docuti
 <dd class="field-odd"><dl class="simple">
 <dt><strong>filename</strong><span class="classifier">str</span></dt><dd><p>The filename (including a extention like .pkl) to be loaded.
 It must be a pickled python dictionary obtained by
-<code class="docutils literal notranslate"><span class="pre">save_h_params()</span></code> of GenModel, <code class="docutils literal notranslate"><span class="pre">save_h0_params()</span></code> of LearnModel 
-or <code class="docutils literal notranslate"><span class="pre">save_hn_params()</span></code> of LearnModel.</p>
+<code class="docutils literal notranslate"><span class="pre">GenModel.save_h_params()</span></code>, <code class="docutils literal notranslate"><span class="pre">LearnModel.save_h0_params()</span></code> 
+or <code class="docutils literal notranslate"><span class="pre">LearnModel.save_hn_params()</span></code>.</p>
 </dd>
 </dl>
 </dd>
@@ -617,7 +641,7 @@ or <code class="docutils literal notranslate"><span class="pre">save_hn_params()
 <div class="admonition seealso">
 <p class="admonition-title">See also</p>
 <dl class="simple">
-<dt><a class="reference external" href="https://docs.python.org/3/library/pickle.html#module-pickle" title="(in Python v3.10)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pickle</span></code></a></dt><dd></dd>
+<dt><a class="reference external" href="https://docs.python.org/3/library/pickle.html#module-pickle" title="(in Python v3.11)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pickle</span></code></a></dt><dd></dd>
 </dl>
 </div>
 </dd></dl>
@@ -636,7 +660,7 @@ or <code class="docutils literal notranslate"><span class="pre">save_hn_params()
 <dt class="sig sig-object py" id="bayesml.base.Posterior.save_hn_params">
 <span class="sig-name descname"><span class="pre">save_hn_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.base.Posterior.save_hn_params" title="Permalink to this definition">¶</a></dt>
 <dd><p>Save the hyperparameters using python <code class="docutils literal notranslate"><span class="pre">pickle</span></code> module.</p>
-<p>They are saved as a pickled python dictionary obtained by <code class="docutils literal notranslate"><span class="pre">get_hn_params()</span></code>.</p>
+<p>They are saved as a pickled python dictionary obtained by <code class="docutils literal notranslate"><span class="pre">LearnModel.get_hn_params()</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
@@ -652,7 +676,7 @@ or <code class="docutils literal notranslate"><span class="pre">save_hn_params()
 <div class="admonition seealso">
 <p class="admonition-title">See also</p>
 <dl class="simple">
-<dt><a class="reference external" href="https://docs.python.org/3/library/pickle.html#module-pickle" title="(in Python v3.10)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pickle</span></code></a></dt><dd></dd>
+<dt><a class="reference external" href="https://docs.python.org/3/library/pickle.html#module-pickle" title="(in Python v3.11)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pickle</span></code></a></dt><dd></dd>
 </dl>
 </div>
 </dd></dl>
@@ -666,8 +690,8 @@ or <code class="docutils literal notranslate"><span class="pre">save_hn_params()
 <dd class="field-odd"><dl class="simple">
 <dt><strong>filename</strong><span class="classifier">str</span></dt><dd><p>The filename (including a extention like .pkl) to be loaded.
 It must be a pickled python dictionary obtained by
-<code class="docutils literal notranslate"><span class="pre">save_h_params()</span></code> of GenModel, <code class="docutils literal notranslate"><span class="pre">save_h0_params()</span></code> of LearnModel 
-or <code class="docutils literal notranslate"><span class="pre">save_hn_params()</span></code> of LearnModel.</p>
+<code class="docutils literal notranslate"><span class="pre">GenModel.save_h_params()</span></code>, <code class="docutils literal notranslate"><span class="pre">LearnModel.save_h0_params()</span></code> 
+or <code class="docutils literal notranslate"><span class="pre">LearnModel.save_hn_params()</span></code>.</p>
 </dd>
 </dl>
 </dd>
@@ -679,20 +703,26 @@ or <code class="docutils literal notranslate"><span class="pre">save_hn_params()
 <div class="admonition seealso">
 <p class="admonition-title">See also</p>
 <dl class="simple">
-<dt><a class="reference external" href="https://docs.python.org/3/library/pickle.html#module-pickle" title="(in Python v3.10)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pickle</span></code></a></dt><dd></dd>
+<dt><a class="reference external" href="https://docs.python.org/3/library/pickle.html#module-pickle" title="(in Python v3.11)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pickle</span></code></a></dt><dd></dd>
 </dl>
 </div>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="bayesml.base.Posterior.reset_hn_params">
-<em class="property"><span class="pre">abstract</span> </em><span class="sig-name descname"><span class="pre">reset_hn_params</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.base.Posterior.reset_hn_params" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<span class="sig-name descname"><span class="pre">reset_hn_params</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.base.Posterior.reset_hn_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reset the hyperparameters of the posterior distribution to their initial values.</p>
+<p>They are reset to the output of <cite>self.get_h0_params()</cite>.
+Note that the parameters of the predictive distribution are also calculated from them.</p>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="bayesml.base.Posterior.overwrite_h0_params">
-<em class="property"><span class="pre">abstract</span> </em><span class="sig-name descname"><span class="pre">overwrite_h0_params</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.base.Posterior.overwrite_h0_params" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<span class="sig-name descname"><span class="pre">overwrite_h0_params</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.base.Posterior.overwrite_h0_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Overwrite the initial values of the hyperparameters of the posterior distribution by the learned values.</p>
+<p>They are overwitten by the output of <cite>self.get_hn_params()</cite>.
+Note that the parameters of the predictive distribution are also calculated from them.</p>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="bayesml.base.Posterior.update_posterior">
@@ -714,7 +744,7 @@ or <code class="docutils literal notranslate"><span class="pre">save_hn_params()
 <dl class="py class">
 <dt class="sig sig-object py" id="bayesml.base.PredictiveMixin">
 <em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">bayesml.base.</span></span><span class="sig-name descname"><span class="pre">PredictiveMixin</span></span><a class="headerlink" href="#bayesml.base.PredictiveMixin" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p class="rubric">Methods</p>
 <table class="table">
 <colgroup>

@@ -37,37 +37,19 @@ class GenModel(base.Generative):
         self.h_alpha = _check.pos_float(h_alpha,'h_alpha',ParameterFormatError)
         self.h_beta = _check.pos_float(h_beta,'h_beta',ParameterFormatError)
         self.rng = np.random.default_rng(seed)
-        self._H_PARAM_KEYS = {'h_alpha','h_beta'}
-        self._H0_PARAM_KEYS = {'h0_alpha','h0_beta'}
-        self._HN_PARAM_KEYS = {'hn_alpha','hn_beta'}
 
-    def set_h_params(self,**kwargs):
+    def set_h_params(self,h_alpha,h_beta):
         """Set the hyperparameters of the prior distribution.
         
         Parameters
         ----------
-        **kwargs
-            a python dictionary {'h_alpha':float, 'h_beta':float} or
-            {'h0_alpha':float, 'h0_beta':float} or {'hn_alpha':float, 'hn_beta':float}
-            They are obtained by ``get_h_params()`` of GenModel,
-            ``get_h0_params`` of LearnModel or ``get_hn_params`` of LearnModel.
+        h_alpha : float
+            a positive real number
+        h_beta : float
+            a positibe real number
         """
-        if kwargs.keys() == self._H_PARAM_KEYS:
-            self.h_alpha = _check.pos_float(kwargs['h_alpha'],'h_alpha',ParameterFormatError)
-            self.h_beta = _check.pos_float(kwargs['h_beta'],'h_beta',ParameterFormatError)
-        elif kwargs.keys() == self._H0_PARAM_KEYS:
-            self.h_alpha = _check.pos_float(kwargs['h0_alpha'],'h_alpha',ParameterFormatError)
-            self.h_beta = _check.pos_float(kwargs['h0_beta'],'h_beta',ParameterFormatError)
-        elif kwargs.keys() == self._HN_PARAM_KEYS:
-            self.h_alpha = _check.pos_float(kwargs['hn_alpha'],'h_alpha',ParameterFormatError)
-            self.h_beta = _check.pos_float(kwargs['hn_beta'],'h_beta',ParameterFormatError)
-        else:
-            raise(ParameterFormatError(
-                "The input of this function must be a python dictionary with keys:"
-                +str(self._H_PARAM_KEYS)+" or "
-                +str(self._H0_PARAM_KEYS)+" or "
-                +str(self._HN_PARAM_KEYS)+".")
-                )
+        self.h_alpha = _check.pos_float(h_alpha,'h_alpha',ParameterFormatError)
+        self.h_beta = _check.pos_float(h_beta,'h_beta',ParameterFormatError)
 
     def get_h_params(self):
         """Get the hyperparameters of the prior distribution.
@@ -205,37 +187,19 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self.hn_beta = self.h0_beta
         self.p_r = self.hn_alpha
         self.p_theta = 1.0 / (1.0+self.hn_beta)
-        self._H_PARAM_KEYS = {'h_alpha','h_beta'}
-        self._H0_PARAM_KEYS = {'h0_alpha','h0_beta'}
-        self._HN_PARAM_KEYS = {'hn_alpha','hn_beta'}
     
-    def set_h0_params(self,**kwargs):
+    def set_h0_params(self,h0_alpha,h0_beta):
         """Set initial values of the hyperparameter of the posterior distribution.
         
         Parameters
         ----------
-        **kwargs
-            a python dictionary {'h_alpha':float, 'h_beta':float} or
-            {'h0_alpha':float, 'h0_beta':float} or {'hn_alpha':float, 'hn_beta':float}
-            They are obtained by ``get_h_params()`` of GenModel,
-            ``get_h0_params`` of LearnModel or ``get_hn_params`` of LearnModel.
+        h0_alpha : float
+            a positive real number
+        h0_beta : float
+            a positibe real number
         """
-        if kwargs.keys() == self._H_PARAM_KEYS:
-            self.h0_alpha = _check.pos_float(kwargs['h_alpha'],'h0_alpha',ParameterFormatError)
-            self.h0_beta = _check.pos_float(kwargs['h_beta'],'h0_beta',ParameterFormatError)
-        elif kwargs.keys() == self._H0_PARAM_KEYS:
-            self.h0_alpha = _check.pos_float(kwargs['h0_alpha'],'h0_alpha',ParameterFormatError)
-            self.h0_beta = _check.pos_float(kwargs['h0_beta'],'h0_beta',ParameterFormatError)
-        elif kwargs.keys() == self._HN_PARAM_KEYS:
-            self.h0_alpha = _check.pos_float(kwargs['hn_alpha'],'h0_alpha',ParameterFormatError)
-            self.h0_beta = _check.pos_float(kwargs['hn_beta'],'h0_beta',ParameterFormatError)
-        else:
-            raise(ParameterFormatError(
-                "The input of this function must be a python dictionary with keys:"
-                +str(self._H_PARAM_KEYS)+" or "
-                +str(self._H0_PARAM_KEYS)+" or "
-                +str(self._HN_PARAM_KEYS)+".")
-                )
+        self.h0_alpha = _check.pos_float(h0_alpha,'h0_alpha',ParameterFormatError)
+        self.h0_beta = _check.pos_float(h0_beta,'h0_beta',ParameterFormatError)
         self.reset_hn_params()
 
     def get_h0_params(self):
@@ -249,33 +213,18 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         """
         return {"h0_alpha":self.h0_alpha, "h0_beta":self.h0_beta}
 
-    def set_hn_params(self,**kwargs):
+    def set_hn_params(self,hn_alpha,hn_beta):
         """Set updated values of the hyperparameter of the posterior distribution.
         
         Parameters
         ----------
-        **kwargs
-            a python dictionary {'h_alpha':float, 'h_beta':float} or
-            {'h0_alpha':float, 'h0_beta':float} or {'hn_alpha':float, 'hn_beta':float}
-            They are obtained by ``get_h_params()`` of GenModel,
-            ``get_h0_params`` of LearnModel or ``get_hn_params`` of LearnModel.
+        hn_alpha : float
+            a positive real number
+        hn_beta : float
+            a positibe real number
         """
-        if kwargs.keys() == self._H_PARAM_KEYS:
-            self.hn_alpha = _check.pos_float(kwargs['h_alpha'],'hn_alpha',ParameterFormatError)
-            self.hn_beta = _check.pos_float(kwargs['h_beta'],'hn_beta',ParameterFormatError)
-        elif kwargs.keys() == self._H0_PARAM_KEYS:
-            self.hn_alpha = _check.pos_float(kwargs['h0_alpha'],'hn_alpha',ParameterFormatError)
-            self.hn_beta = _check.pos_float(kwargs['h0_beta'],'hn_beta',ParameterFormatError)
-        elif kwargs.keys() == self._HN_PARAM_KEYS:
-            self.hn_alpha = _check.pos_float(kwargs['hn_alpha'],'hn_alpha',ParameterFormatError)
-            self.hn_beta = _check.pos_float(kwargs['hn_beta'],'hn_beta',ParameterFormatError)
-        else:
-            raise(ParameterFormatError(
-                "The input of this function must be a python dictionary with keys:"
-                +str(self._H_PARAM_KEYS)+" or "
-                +str(self._H0_PARAM_KEYS)+" or "
-                +str(self._HN_PARAM_KEYS)+".")
-                )
+        self.hn_alpha = _check.pos_float(hn_alpha,'hn_alpha',ParameterFormatError)
+        self.hn_beta = _check.pos_float(hn_beta,'hn_beta',ParameterFormatError)
         self.calc_pred_dist()
 
     def get_hn_params(self):
@@ -321,7 +270,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self.hn_alpha += np.sum(x)
         self.hn_beta += x.size
 
-    def estimate_params(self,loss="squared"):
+    def estimate_params(self,loss="squared",dict_out=False):
         """Estimate the parameter of the stochastic data generative model under the given criterion.
 
         Parameters
@@ -329,10 +278,12 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         loss : str, optional
             Loss function underlying the Bayes risk function, by default \"squared\".
             This function supports \"squared\", \"0-1\", \"abs\", and \"KL\".
+        dict_out : bool, optional
+            If ``True``, output will be a dict, by default ``False``.
 
         Returns
         -------
-        Estimator : {float, None, rv_frozen}
+        estimator : {float, None, rv_frozen}
             The estimated values under the given loss function. If it is not exist, `None` will be returned.
             If the loss function is \"KL\", the posterior distribution itself will be returned
             as rv_frozen object of scipy.stats.
@@ -343,14 +294,26 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         scipy.stats.rv_discrete
         """
         if loss == "squared":
-            return self.hn_alpha / self.hn_beta
+            if dict_out:
+                return {'lambda_':self.hn_alpha / self.hn_beta}
+            else:
+                return self.hn_alpha / self.hn_beta
         elif loss == "0-1":
             if self.hn_alpha > 1.0 :
-                return (self.hn_alpha - 1.0) / self.hn_beta
+                if dict_out:
+                    return {'lambda_':(self.hn_alpha - 1.0) / self.hn_beta}
+                else:
+                    return (self.hn_alpha - 1.0) / self.hn_beta
             else:
-                return 0.0
+                if dict_out:
+                    return {'lambda_':0.0}
+                else:
+                    return 0.0
         elif loss == "abs":
-            return ss_gamma.median(a=self.hn_alpha,scale=1/self.hn_beta)
+            if dict_out:
+                return {'lambda_':ss_gamma.median(a=self.hn_alpha,scale=1/self.hn_beta)}
+            else:
+                return ss_gamma.median(a=self.hn_alpha,scale=1/self.hn_beta)
         elif loss == "KL":
             return ss_gamma(a=self.hn_alpha,scale=1/self.hn_beta)
         else:

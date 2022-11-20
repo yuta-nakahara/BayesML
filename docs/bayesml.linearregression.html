@@ -37,8 +37,8 @@
     <link rel="shortcut icon" href="_static/BayesML_favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="bayesml.multivariate_normal package" href="bayesml.multivariate_normal.html" />
-    <link rel="prev" title="bayesml.exponential package" href="bayesml.exponential.html" />
+    <link rel="next" title="bayesml.metatree package" href="bayesml.metatree.html" />
+    <link rel="prev" title="bayesml.hiddenmarkovnormal package" href="bayesml.hiddenmarkovnormal.html" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="docsearch:language" content="None">
     
@@ -105,13 +105,33 @@
     </a>
    </li>
    <li class="toctree-l2">
+    <a class="reference internal" href="bayesml.contexttree.html">
+     bayesml.contexttree package
+    </a>
+   </li>
+   <li class="toctree-l2">
     <a class="reference internal" href="bayesml.exponential.html">
      bayesml.exponential package
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="bayesml.gaussianmixture.html">
+     bayesml.gaussianmixture package
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="bayesml.hiddenmarkovnormal.html">
+     bayesml.hiddenmarkovnormal package
     </a>
    </li>
    <li class="toctree-l2 current active">
     <a class="current reference internal" href="#">
      bayesml.linearregression package
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="bayesml.metatree.html">
+     bayesml.metatree package
     </a>
    </li>
    <li class="toctree-l2">
@@ -261,6 +281,7 @@
                 
   <div class="section" id="bayesml-linearregression-package">
 <h1>bayesml.linearregression package<a class="headerlink" href="#bayesml-linearregression-package" title="Permalink to this headline">¶</a></h1>
+<img alt="_images/linearregression_example.png" src="_images/linearregression_example.png" />
 <div class="section" id="module-bayesml.linearregression">
 <span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-bayesml.linearregression" title="Permalink to this headline">¶</a></h2>
 <p>The  Baysian Linear Regression.</p>
@@ -349,6 +370,10 @@ a value consistent with <code class="docutils literal notranslate"><span class="
 and <code class="docutils literal notranslate"><span class="pre">h_lambda_mat</span></code> is used. If all of them are not given,
 degree is assumed to be 1.</p>
 </dd>
+<dt><strong>theta_vec</strong><span class="classifier">numpy ndarray, optional</span></dt><dd><p>a vector of real numbers, by default [0.0, 0.0, … , 0.0]</p>
+</dd>
+<dt><strong>tau</strong><span class="classifier">float, optional</span></dt><dd><p>a positive real number, by default 1.0</p>
+</dd>
 <dt><strong>h_mu_vec</strong><span class="classifier">numpy ndarray, optional</span></dt><dd><p>a vector of real numbers, by default [0.0, 0.0, … , 0.0]</p>
 </dd>
 <dt><strong>h_lambda_mat</strong><span class="classifier">numpy ndarray, optional</span></dt><dd><p>a positibe definate matrix, by default the identity matrix</p>
@@ -397,7 +422,7 @@ by default None</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="#bayesml.linearregression.GenModel.save_sample" title="bayesml.linearregression.GenModel.save_sample"><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_sample</span></code></a>(filename[, x, sample_size, constant])</p></td>
 <td><p>Save the generated sample as NumPy <code class="docutils literal notranslate"><span class="pre">.npz</span></code> format.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#bayesml.linearregression.GenModel.set_h_params" title="bayesml.linearregression.GenModel.set_h_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_h_params</span></code></a>(**kwargs)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#bayesml.linearregression.GenModel.set_h_params" title="bayesml.linearregression.GenModel.set_h_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_h_params</span></code></a>(h_mu_vec, h_lambda_mat, …)</p></td>
 <td><p>Set the hyperparameters of the prior distribution.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#bayesml.linearregression.GenModel.set_params" title="bayesml.linearregression.GenModel.set_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_params</span></code></a>(theta_vec, tau)</p></td>
@@ -410,16 +435,18 @@ by default None</p>
 </table>
 <dl class="py method">
 <dt class="sig sig-object py" id="bayesml.linearregression.GenModel.set_h_params">
-<span class="sig-name descname"><span class="pre">set_h_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.linearregression.GenModel.set_h_params" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_h_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">h_mu_vec</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h_lambda_mat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h_alpha</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h_beta</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.linearregression.GenModel.set_h_params" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set the hyperparameters of the prior distribution.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>**kwargs</strong></dt><dd><p>a python dictionary {‘h_mu_vec’:ndarray, ‘h_lambda_mat’:ndarray, ‘h_alpha’:float, ‘h_beta’:float} or
-{‘h0_mu_vec’:ndarray, ‘h0_lambda_mat’:ndarray, ‘h0_alpha’:float, ‘h0_beta’:float}
-or {‘hn_mu_vec’:ndarray, ‘hn_lambda_mat’:ndarray, ‘hn_alpha’:float, ‘hn_beta’:float}
-They are obtained by <code class="docutils literal notranslate"><span class="pre">get_h_params()</span></code> of GenModel,
-<code class="docutils literal notranslate"><span class="pre">get_h0_params</span></code> of LearnModel or <code class="docutils literal notranslate"><span class="pre">get_hn_params</span></code> of LearnModel.</p>
+<dt><strong>h_mu_vec</strong><span class="classifier">numpy ndarray</span></dt><dd><p>a vector of real numbers</p>
+</dd>
+<dt><strong>h_lambda_mat</strong><span class="classifier">numpy ndarray</span></dt><dd><p>a positibe definate matrix</p>
+</dd>
+<dt><strong>h_alpha</strong><span class="classifier">float</span></dt><dd><p>a positive real number</p>
+</dd>
+<dt><strong>h_beta</strong><span class="classifier">float</span></dt><dd><p>a positibe real number</p>
 </dd>
 </dl>
 </dd>
@@ -544,7 +571,7 @@ If constant is True, the last element of the generated explanatory variables wil
 <div class="admonition seealso">
 <p class="admonition-title">See also</p>
 <dl class="simple">
-<dt><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.savez_compressed.html#numpy.savez_compressed" title="(in NumPy v1.22)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy.savez_compressed</span></code></a></dt><dd></dd>
+<dt><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.savez_compressed.html#numpy.savez_compressed" title="(in NumPy v1.23)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy.savez_compressed</span></code></a></dt><dd></dd>
 </dl>
 </div>
 </dd></dl>
@@ -626,7 +653,7 @@ degree is assumed to be 1.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="#bayesml.linearregression.LearnModel.calc_pred_dist" title="bayesml.linearregression.LearnModel.calc_pred_dist"><code class="xref py py-obj docutils literal notranslate"><span class="pre">calc_pred_dist</span></code></a>(x)</p></td>
 <td><p>Calculate the parameters of the predictive distribution.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#bayesml.linearregression.LearnModel.estimate_params" title="bayesml.linearregression.LearnModel.estimate_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">estimate_params</span></code></a>([loss])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#bayesml.linearregression.LearnModel.estimate_params" title="bayesml.linearregression.LearnModel.estimate_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">estimate_params</span></code></a>([loss, dict_out])</p></td>
 <td><p>Estimate the parameter of the stochastic data generative model under the given criterion.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#bayesml.linearregression.LearnModel.get_h0_params" title="bayesml.linearregression.LearnModel.get_h0_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_h0_params</span></code></a>()</p></td>
@@ -662,10 +689,10 @@ degree is assumed to be 1.</p>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_hn_params</span></code>(filename)</p></td>
 <td><p>Save the hyperparameters using python <code class="docutils literal notranslate"><span class="pre">pickle</span></code> module.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#bayesml.linearregression.LearnModel.set_h0_params" title="bayesml.linearregression.LearnModel.set_h0_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_h0_params</span></code></a>(**kwargs)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#bayesml.linearregression.LearnModel.set_h0_params" title="bayesml.linearregression.LearnModel.set_h0_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_h0_params</span></code></a>(h0_mu_vec, h0_lambda_mat, …)</p></td>
 <td><p>Set initial values of the hyperparameter of the posterior distribution.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#bayesml.linearregression.LearnModel.set_hn_params" title="bayesml.linearregression.LearnModel.set_hn_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_hn_params</span></code></a>(**kwargs)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bayesml.linearregression.LearnModel.set_hn_params" title="bayesml.linearregression.LearnModel.set_hn_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_hn_params</span></code></a>(hn_mu_vec, hn_lambda_mat, …)</p></td>
 <td><p>Set updated values of the hyperparameter of the posterior distribution.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#bayesml.linearregression.LearnModel.update_posterior" title="bayesml.linearregression.LearnModel.update_posterior"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_posterior</span></code></a>(x, y)</p></td>
@@ -678,18 +705,20 @@ degree is assumed to be 1.</p>
 </table>
 <dl class="py method">
 <dt class="sig sig-object py" id="bayesml.linearregression.LearnModel.set_h0_params">
-<span class="sig-name descname"><span class="pre">set_h0_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.linearregression.LearnModel.set_h0_params" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_h0_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">h0_mu_vec</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h0_lambda_mat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h0_alpha</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h0_beta</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.linearregression.LearnModel.set_h0_params" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set initial values of the hyperparameter of the posterior distribution.</p>
 <p>Note that the parameters of the predictive distribution are also calculated from 
 <code class="docutils literal notranslate"><span class="pre">self.h0_mu_vec</span></code>, <code class="docutils literal notranslate"><span class="pre">slef.h0_lambda_mat</span></code>, <code class="docutils literal notranslate"><span class="pre">self.h0_alpha</span></code> and <code class="docutils literal notranslate"><span class="pre">self.h0_beta</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>**kwargs</strong></dt><dd><p>a python dictionary {‘h_mu_vec’:ndarray, ‘h_lambda_mat’:ndarray, ‘h_alpha’:float, ‘h_beta’:float} or
-{‘h0_mu_vec’:ndarray, ‘h0_lambda_mat’:ndarray, ‘h0_alpha’:float, ‘h0_beta’:float}
-or {‘hn_mu_vec’:ndarray, ‘hn_lambda_mat’:ndarray, ‘hn_alpha’:float, ‘hn_beta’:float}
-They are obtained by <code class="docutils literal notranslate"><span class="pre">get_h_params()</span></code> of GenModel,
-<code class="docutils literal notranslate"><span class="pre">get_h0_params</span></code> of LearnModel or <code class="docutils literal notranslate"><span class="pre">get_hn_params</span></code> of LearnModel.</p>
+<dt><strong>h0_mu_vec</strong><span class="classifier">numpy ndarray</span></dt><dd><p>a vector of real numbers</p>
+</dd>
+<dt><strong>h0_lambda_mat</strong><span class="classifier">numpy ndarray</span></dt><dd><p>a positibe definate matrix</p>
+</dd>
+<dt><strong>h0_alpha</strong><span class="classifier">float</span></dt><dd><p>a positive real number</p>
+</dd>
+<dt><strong>h0_beta</strong><span class="classifier">float</span></dt><dd><p>a positibe real number</p>
 </dd>
 </dl>
 </dd>
@@ -717,18 +746,20 @@ They are obtained by <code class="docutils literal notranslate"><span class="pre
 
 <dl class="py method">
 <dt class="sig sig-object py" id="bayesml.linearregression.LearnModel.set_hn_params">
-<span class="sig-name descname"><span class="pre">set_hn_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.linearregression.LearnModel.set_hn_params" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_hn_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hn_mu_vec</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hn_lambda_mat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hn_alpha</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hn_beta</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.linearregression.LearnModel.set_hn_params" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set updated values of the hyperparameter of the posterior distribution.</p>
 <p>Note that the parameters of the predictive distribution are also calculated from 
 <code class="docutils literal notranslate"><span class="pre">self.hn_mu_vec</span></code>, <code class="docutils literal notranslate"><span class="pre">slef.hn_lambda_mat</span></code>, <code class="docutils literal notranslate"><span class="pre">self.hn_alpha</span></code> and <code class="docutils literal notranslate"><span class="pre">self.hn_beta</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>**kwargs</strong></dt><dd><p>a python dictionary {‘h_mu_vec’:ndarray, ‘h_lambda_mat’:ndarray, ‘h_alpha’:float, ‘h_beta’:float} or
-{‘h0_mu_vec’:ndarray, ‘h0_lambda_mat’:ndarray, ‘h0_alpha’:float, ‘h0_beta’:float}
-or {‘hn_mu_vec’:ndarray, ‘hn_lambda_mat’:ndarray, ‘hn_alpha’:float, ‘hn_beta’:float}
-They are obtained by <code class="docutils literal notranslate"><span class="pre">get_h_params()</span></code> of GenModel,
-<code class="docutils literal notranslate"><span class="pre">get_h0_params</span></code> of LearnModel or <code class="docutils literal notranslate"><span class="pre">get_hn_params</span></code> of LearnModel.</p>
+<dt><strong>hn_mu_vec</strong><span class="classifier">numpy ndarray</span></dt><dd><p>a vector of real numbers</p>
+</dd>
+<dt><strong>hn_lambda_mat</strong><span class="classifier">numpy ndarray</span></dt><dd><p>a positibe definate matrix</p>
+</dd>
+<dt><strong>hn_alpha</strong><span class="classifier">float</span></dt><dd><p>a positive real number</p>
+</dd>
+<dt><strong>hn_beta</strong><span class="classifier">float</span></dt><dd><p>a positibe real number</p>
 </dd>
 </dl>
 </dd>
@@ -791,7 +822,7 @@ If you want to use a constant term, it should be included in x.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="bayesml.linearregression.LearnModel.estimate_params">
-<span class="sig-name descname"><span class="pre">estimate_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loss</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'squared'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.linearregression.LearnModel.estimate_params" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">estimate_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loss</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'squared'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dict_out</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.linearregression.LearnModel.estimate_params" title="Permalink to this definition">¶</a></dt>
 <dd><p>Estimate the parameter of the stochastic data generative model under the given criterion.</p>
 <p>Note that the criterion is applied to estimating <code class="docutils literal notranslate"><span class="pre">theta_vec</span></code> and <code class="docutils literal notranslate"><span class="pre">tau</span></code> independently.
 Therefore, a tuple of the student’s t-distribution and the gamma distribution will be returned when loss=”KL”</p>
@@ -801,11 +832,13 @@ Therefore, a tuple of the student’s t-distribution and the gamma distribution 
 <dt><strong>loss</strong><span class="classifier">str, optional</span></dt><dd><p>Loss function underlying the Bayes risk function, by default “squared”.
 This function supports “squared”, “0-1”, “abs”, and “KL”.</p>
 </dd>
+<dt><strong>dict_out</strong><span class="classifier">bool, optional</span></dt><dd><p>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, output will be a dict, by default <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
+</dd>
 </dl>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><dl>
-<dt><strong>Estimates</strong><span class="classifier">tuple of {numpy ndarray, float, None, or rv_frozen}</span></dt><dd><ul class="simple">
+<dt><strong>estimates</strong><span class="classifier">tuple of {numpy ndarray, float, None, or rv_frozen}</span></dt><dd><ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">theta_vec</span></code> : the estimate for w</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">tau_hat</span></code> : the estimate for tau</p></li>
 </ul>
@@ -819,8 +852,8 @@ as rv_frozen object of scipy.stats.</p>
 <div class="admonition seealso">
 <p class="admonition-title">See also</p>
 <dl class="simple">
-<dt><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.rv_continuous.html#scipy.stats.rv_continuous" title="(in SciPy v1.8.1)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scipy.stats.rv_continuous</span></code></a></dt><dd></dd>
-<dt><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.rv_discrete.html#scipy.stats.rv_discrete" title="(in SciPy v1.8.1)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scipy.stats.rv_discrete</span></code></a></dt><dd></dd>
+<dt><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.rv_continuous.html#scipy.stats.rv_continuous" title="(in SciPy v1.9.3)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scipy.stats.rv_continuous</span></code></a></dt><dd></dd>
+<dt><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.rv_discrete.html#scipy.stats.rv_discrete" title="(in SciPy v1.9.3)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scipy.stats.rv_discrete</span></code></a></dt><dd></dd>
 </dl>
 </div>
 </dd></dl>
@@ -897,8 +930,8 @@ as rv_frozen object of scipy.stats.</p>
 <div class="admonition seealso">
 <p class="admonition-title">See also</p>
 <dl class="simple">
-<dt><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.rv_continuous.html#scipy.stats.rv_continuous" title="(in SciPy v1.8.1)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scipy.stats.rv_continuous</span></code></a></dt><dd></dd>
-<dt><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.rv_discrete.html#scipy.stats.rv_discrete" title="(in SciPy v1.8.1)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scipy.stats.rv_discrete</span></code></a></dt><dd></dd>
+<dt><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.rv_continuous.html#scipy.stats.rv_continuous" title="(in SciPy v1.9.3)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scipy.stats.rv_continuous</span></code></a></dt><dd></dd>
+<dt><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.rv_discrete.html#scipy.stats.rv_discrete" title="(in SciPy v1.9.3)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scipy.stats.rv_discrete</span></code></a></dt><dd></dd>
 </dl>
 </div>
 </dd></dl>
@@ -940,17 +973,17 @@ as rv_frozen object of scipy.stats.</p>
             
                 <!-- Previous / next buttons -->
 <div class='prev-next-area'> 
-    <a class='left-prev' id="prev-link" href="bayesml.exponential.html" title="previous page">
+    <a class='left-prev' id="prev-link" href="bayesml.hiddenmarkovnormal.html" title="previous page">
         <i class="fas fa-angle-left"></i>
         <div class="prev-next-info">
             <p class="prev-next-subtitle">previous</p>
-            <p class="prev-next-title">bayesml.exponential package</p>
+            <p class="prev-next-title">bayesml.hiddenmarkovnormal package</p>
         </div>
     </a>
-    <a class='right-next' id="next-link" href="bayesml.multivariate_normal.html" title="next page">
+    <a class='right-next' id="next-link" href="bayesml.metatree.html" title="next page">
     <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">bayesml.multivariate_normal package</p>
+        <p class="prev-next-title">bayesml.metatree package</p>
     </div>
     <i class="fas fa-angle-right"></i>
     </a>

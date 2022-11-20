@@ -23,7 +23,7 @@ For more details, see our [website](https://yuta-nakahara.github.io/BayesML/ "Ba
 
 Please use the following commands to install BayesML.
 
-``` shell
+``` bash
 pip install bayesml
 ```
 
@@ -33,6 +33,7 @@ The following are required.
 * NumPy (>= 1.20)
 * SciPy (>= 1.7)
 * MatplotLib (>= 3.5)
+* Scikit-learn (>= 1.1)
 
 ## Example
 
@@ -53,11 +54,11 @@ gen_model.visualize_model()
 ```
 
 >theta:0.7  
->x0:[1 1 1 1 1 0 1 0 0 1 1 1 1 0 1 1 0 1 1 1]  
->x1:[1 0 1 1 1 1 1 1 0 0 1 1 1 1 1 1 1 1 1 1]  
->x2:[0 0 1 1 0 1 0 1 1 1 1 1 1 0 1 0 1 1 1 1]  
->x3:[1 0 1 1 1 1 1 0 0 0 1 0 0 1 0 1 1 0 1 0]  
->x4:[1 1 0 1 0 1 1 1 0 1 1 1 0 0 1 1 1 1 1 1]  
+>x0:[1 1 1 0 1 1 1 0 1 1 1 1 1 1 0 1 1 1 0 1]  
+>x1:[1 1 0 1 1 1 1 1 1 1 1 1 0 1 1 1 1 1 1 0]  
+>x2:[1 0 1 1 0 1 1 1 0 1 1 1 1 1 0 0 1 1 1 1]  
+>x3:[1 1 1 0 1 1 0 1 0 0 0 0 1 0 1 1 1 1 1 1]  
+>x4:[0 0 1 0 0 0 1 1 1 1 1 1 1 1 0 0 1 1 1 1]  
 >![bernoulli_example1](./doc/images/README_ex_img1.png)
 
 After confirming that the frequency of occurrence of 1 is around `theta=0.7`, we generate a sample and store it to variable `x`.
@@ -99,9 +100,9 @@ print(learn_model.estimate_params(loss='abs'))
 print(learn_model.estimate_params(loss='0-1'))
 ```
 
->0.6428571428571429  
->0.6474720009710451  
->0.6578947368421053  
+>0.7380952380952381  
+>0.7457656349087012  
+>0.7631578947368421  
 
 Different settings of a loss function yield different optimal estimates.
 
@@ -115,8 +116,12 @@ The following packages are currently available. In this library, a probabilistic
 * [Normal model](https://yuta-nakahara.github.io/BayesML/bayesml.normal.html "BayesML Normal Model")
 * [Multivariate normal model](https://yuta-nakahara.github.io/BayesML/bayesml.multivariate_normal.html "BayesML Multivariate Normal Model")
 * [Exponential model](https://yuta-nakahara.github.io/BayesML/bayesml.exponential.html "BayesML Exponential Model")
+* [Gaussian mixture model](https://yuta-nakahara.github.io/BayesML/bayesml.gaussianmixture.html "BayesML Gaussian Mixture Model")
 * [Linear regression model](https://yuta-nakahara.github.io/BayesML/bayesml.linearregression.html "BayesML Lenear Regression Model")
+* [Meta-tree model](https://yuta-nakahara.github.io/BayesML/bayesml.metatree.html "BayesML Meta-tree Model")
 * [Autoregressive model](https://yuta-nakahara.github.io/BayesML/bayesml.autoregressive.html "BayesML Autoregressive Model")
+* [Hidden Markov normal model](https://yuta-nakahara.github.io/BayesML/bayesml.hiddenmarkovnormal.html "BayesML Hidden Markov Normal Model")
+* [Context tree model](https://yuta-nakahara.github.io/BayesML/bayesml.contexttree.html "BayesML Context Tree Model")
 
 In the future, we will add packages to deal with a mixture normal model and a hidden Markov model, which are difficult to perform exact Bayesian inference, by using variational Bayes methods.
 
@@ -131,11 +136,8 @@ When you use BayesML for your academic work, please provide the following biblio
 Plain text
 
 ```
-Y. Nakahara, N. Ichijo, K. Shimada, 
-K. Tajima, K. Horinouchi, L. Ruan, 
-N. Namegaya, R. Maniwa, T. Ishiwatari, 
-W. Yu, Y. Iikubo, S. Saito, 
-K. Kazama, T. Matsushima, ``BayesML,'' 
+Y. Nakahara, N. Ichijo, K. Shimada, Y. Iikubo, 
+S. Saito, K. Kazama, T. Matsushima, ``BayesML 0.2.0,'' 
 [Online] https://github.com/yuta-nakahara/BayesML
 ```
 
@@ -144,11 +146,9 @@ BibTeX
 ``` bibtex
 @misc{bayesml,
   author = {Nakahara Yuta and Ichijo Naoki and Shimada Koshi and
-            Tajima Keito and Horinouchi Kohei and Ruan Luyu and
-            Namegaya Noboru and Maniwa Ryota and Ishiwatari Taisuke and
-            Yu Wenbin and Iikubo Yuji and Saito Shota and Kazama Koki and
-            Matsushima Toshiyasu},
-  title = {BayesML},
+            Iikubo Yuji and Saito Shota and Kazama Koki and
+            Matsushima Toshiyasu}
+  title = {BayesML 0.2.0},
   howpublished = {\url{https://github.com/yuta-nakahara/BayesML}},
   year = {2022}
 }

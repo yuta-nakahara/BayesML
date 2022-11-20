@@ -184,44 +184,25 @@ class GenModel(base.Generative):
 
         self.h_kappa = _check.pos_float(h_kappa,'h_kappa',ParameterFormatError)
         self.rng = np.random.default_rng(seed)
-        self._H_PARAM_KEYS = {'h_m_vec','h_kappa','h_nu','h_w_mat'}
-        self._H0_PARAM_KEYS = {'h0_m_vec','h0_kappa','h0_nu','h0_w_mat'}
-        self._HN_PARAM_KEYS = {'hn_m_vec','hn_kappa','hn_nu','hn_w_mat'}
         
-    def set_h_params(self,**kwargs):
+    def set_h_params(self,h_m_vec,h_kappa,h_nu,h_w_mat):
         """Set the hyperparameters of the prior distribution.
 
         Parameters
         ----------
-        **kwargs
-            a python dictionary {'h_m_vec':ndarray, 'h_kappa':float, 'h_nu':float, 'h_w_mat':ndarray} or
-            {'h0_m_vec':ndarray, 'h0_kappa':float, 'h0_nu':float, 'h0_w_mat':ndarray}
-            or {'hn_m_vec':ndarray, 'hn_kappa':float, 'hn_nu':float, 'hn_w_mat':ndarray}
-            They are obtained by ``get_h_params()`` of GenModel,
-            ``get_h0_params`` of LearnModel or ``get_hn_params`` of LearnModel.
+        h_m_vec : numpy.ndarray
+            a vector of real numbers
+        h_kappa : float
+            a positive real number
+        h_nu : float
+            a real number > degree-1
+        h_w_mat : numpy.ndarray
+            a positive definite symetric matrix
         """
-        if kwargs.keys() == self._H_PARAM_KEYS:
-            self.h_m_vec = _check.float_vec(kwargs['h_m_vec'],'h_m_vec',ParameterFormatError)
-            self.h_kappa = _check.pos_float(kwargs['h_kappa'],'h_kappa',ParameterFormatError)
-            self.h_nu = _check.pos_float(kwargs['h_nu'],'h_nu',ParameterFormatError)
-            self.h_w_mat = _check.pos_def_sym_mat(kwargs['h_w_mat'],'h_w_mat',ParameterFormatError)
-        elif kwargs.keys() == self._H0_PARAM_KEYS:
-            self.h_m_vec = _check.float_vec(kwargs['h0_m_vec'],'h_m_vec',ParameterFormatError)
-            self.h_kappa = _check.pos_float(kwargs['h0_kappa'],'h_kappa',ParameterFormatError)
-            self.h_nu = _check.pos_float(kwargs['h0_nu'],'h_nu',ParameterFormatError)
-            self.h_w_mat = _check.pos_def_sym_mat(kwargs['h0_w_mat'],'h_w_mat',ParameterFormatError)
-        elif kwargs.keys() == self._HN_PARAM_KEYS:
-            self.h_m_vec = _check.float_vec(kwargs['hn_m_vec'],'h_m_vec',ParameterFormatError)
-            self.h_kappa = _check.pos_float(kwargs['hn_kappa'],'h_kappa',ParameterFormatError)
-            self.h_nu = _check.pos_float(kwargs['hn_nu'],'h_nu',ParameterFormatError)
-            self.h_w_mat = _check.pos_def_sym_mat(kwargs['hn_w_mat'],'h_w_mat',ParameterFormatError)
-        else:
-            raise(ParameterFormatError(
-                "The input of this function must be a python dictionary with keys:"
-                +str(self._H_PARAM_KEYS)+" or "
-                +str(self._H0_PARAM_KEYS)+" or "
-                +str(self._HN_PARAM_KEYS)+".")
-                )
+        self.h_m_vec = _check.float_vec(h_m_vec,'h_m_vec',ParameterFormatError)
+        self.h_kappa = _check.pos_float(h_kappa,'h_kappa',ParameterFormatError)
+        self.h_nu = _check.pos_float(h_nu,'h_nu',ParameterFormatError)
+        self.h_w_mat = _check.pos_def_sym_mat(h_w_mat,'h_w_mat',ParameterFormatError)
 
         if (self.h_m_vec.shape[0] != self.h_w_mat.shape[0]
             or self.h_nu <= self.h_m_vec.shape[0] - 1):
@@ -510,44 +491,24 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self.p_v_mat = self.hn_kappa*self.p_nu/(self.hn_kappa+1) * self.hn_w_mat
         self.p_v_mat_inv = (self.hn_kappa+1)/self.hn_kappa/self.p_nu * self.hn_w_mat_inv
 
-        self._H_PARAM_KEYS = {'h_m_vec','h_kappa','h_nu','h_w_mat'}
-        self._H0_PARAM_KEYS = {'h0_m_vec','h0_kappa','h0_nu','h0_w_mat'}
-        self._HN_PARAM_KEYS = {'hn_m_vec','hn_kappa','hn_nu','hn_w_mat'}
-
-    def set_h0_params(self,**kwargs):
+    def set_h0_params(self,h0_m_vec,h0_kappa,h0_nu,h0_w_mat):
         """Set the hyperparameters of the prior distribution.
         
         Parameters
         ----------
-        **kwargs
-            a python dictionary {'h_m_vec':ndarray, 'h_kappa':float, 'h_nu':float, 'h_w_mat':ndarray} or
-            {'h0_m_vec':ndarray, 'h0_kappa':float, 'h0_nu':float, 'h0_w_mat':ndarray}
-            or {'hn_m_vec':ndarray, 'hn_kappa':float, 'hn_nu':float, 'hn_w_mat':ndarray}
-            They are obtained by ``get_h_params()`` of GenModel,
-            ``get_h0_params`` of LearnModel or ``get_hn_params`` of LearnModel.
+        h0_m_vec : numpy.ndarray
+            a vector of real numbers
+        h0_kappa : float
+            a positive real number
+        h0_nu : float
+            a real number > degree-1
+        h0_w_mat : numpy.ndarray
+            a positive definite symetric matrix
         """
-        if kwargs.keys() == self._H_PARAM_KEYS:
-            self.h0_m_vec = _check.float_vec(kwargs['h_m_vec'],'h0_m_vec',ParameterFormatError)
-            self.h0_kappa = _check.pos_float(kwargs['h_kappa'],'h0_kappa',ParameterFormatError)
-            self.h0_nu = _check.pos_float(kwargs['h_nu'],'h0_nu',ParameterFormatError)
-            self.h0_w_mat = _check.pos_def_sym_mat(kwargs['h_w_mat'],'h0_w_mat',ParameterFormatError)
-        elif kwargs.keys() == self._H0_PARAM_KEYS:
-            self.h0_m_vec = _check.float_vec(kwargs['h0_m_vec'],'h0_m_vec',ParameterFormatError)
-            self.h0_kappa = _check.pos_float(kwargs['h0_kappa'],'h0_kappa',ParameterFormatError)
-            self.h0_nu = _check.pos_float(kwargs['h0_nu'],'h0_nu',ParameterFormatError)
-            self.h0_w_mat = _check.pos_def_sym_mat(kwargs['h0_w_mat'],'h0_w_mat',ParameterFormatError)
-        elif kwargs.keys() == self._HN_PARAM_KEYS:
-            self.h0_m_vec = _check.float_vec(kwargs['hn_m_vec'],'h0_m_vec',ParameterFormatError)
-            self.h0_kappa = _check.pos_float(kwargs['hn_kappa'],'h0_kappa',ParameterFormatError)
-            self.h0_nu = _check.pos_float(kwargs['hn_nu'],'h0_nu',ParameterFormatError)
-            self.h0_w_mat = _check.pos_def_sym_mat(kwargs['hn_w_mat'],'h0_w_mat',ParameterFormatError)
-        else:
-            raise(ParameterFormatError(
-                "The input of this function must be a python dictionary with keys:"
-                +str(self._H_PARAM_KEYS)+" or "
-                +str(self._H0_PARAM_KEYS)+" or "
-                +str(self._HN_PARAM_KEYS)+".")
-                )
+        self.h0_m_vec = _check.float_vec(h0_m_vec,'h0_m_vec',ParameterFormatError)
+        self.h0_kappa = _check.pos_float(h0_kappa,'h0_kappa',ParameterFormatError)
+        self.h0_nu = _check.pos_float(h0_nu,'h0_nu',ParameterFormatError)
+        self.h0_w_mat = _check.pos_def_sym_mat(h0_w_mat,'h0_w_mat',ParameterFormatError)
 
         if (self.h0_m_vec.shape[0] != self.h0_w_mat.shape[0]
             or self.h0_nu <= self.h0_m_vec.shape[0] - 1):
@@ -573,40 +534,24 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         """
         return {"h0_m_vec":self.h0_m_vec, "h0_kappa":self.h0_kappa, "h0_nu":self.h0_nu, "h0_w_mat":self.h0_w_mat}
     
-    def set_hn_params(self,**kwargs):
+    def set_hn_params(self,hn_m_vec,hn_kappa,hn_nu,hn_w_mat):
         """Set updated values of the hyperparameter of the posterior distribution.
 
         Parameters
         ----------
-        **kwargs
-            a python dictionary {'h_m_vec':ndarray, 'h_kappa':float, 'h_nu':float, 'h_w_mat':ndarray} or
-            {'h0_m_vec':ndarray, 'h0_kappa':float, 'h0_nu':float, 'h0_w_mat':ndarray}
-            or {'hn_m_vec':ndarray, 'hn_kappa':float, 'hn_nu':float, 'hn_w_mat':ndarray}
-            They are obtained by ``get_h_params()`` of GenModel,
-            ``get_h0_params`` of LearnModel or ``get_hn_params`` of LearnModel.
+        hn_m_vec : numpy.ndarray
+            a vector of real numbers
+        hn_kappa : float
+            a positive real number
+        hn_nu : float
+            a real number > degree-1
+        hn_w_mat : numpy.ndarray
+            a positive definite symetric matrix
         """
-        if kwargs.keys() == self._H_PARAM_KEYS:
-            self.hn_m_vec = _check.float_vec(kwargs['h_m_vec'],'hn_m_vec',ParameterFormatError)
-            self.hn_kappa = _check.pos_float(kwargs['h_kappa'],'hn_kappa',ParameterFormatError)
-            self.hn_nu = _check.pos_float(kwargs['h_nu'],'hn_nu',ParameterFormatError)
-            self.hn_w_mat = _check.pos_def_sym_mat(kwargs['h_w_mat'],'hn_w_mat',ParameterFormatError)
-        elif kwargs.keys() == self._H0_PARAM_KEYS:
-            self.hn_m_vec = _check.float_vec(kwargs['h0_m_vec'],'hn_m_vec',ParameterFormatError)
-            self.hn_kappa = _check.pos_float(kwargs['h0_kappa'],'hn_kappa',ParameterFormatError)
-            self.hn_nu = _check.pos_float(kwargs['h0_nu'],'hn_nu',ParameterFormatError)
-            self.hn_w_mat = _check.pos_def_sym_mat(kwargs['h0_w_mat'],'hn_w_mat',ParameterFormatError)
-        elif kwargs.keys() == self._HN_PARAM_KEYS:
-            self.hn_m_vec = _check.float_vec(kwargs['hn_m_vec'],'hn_m_vec',ParameterFormatError)
-            self.hn_kappa = _check.pos_float(kwargs['hn_kappa'],'hn_kappa',ParameterFormatError)
-            self.hn_nu = _check.pos_float(kwargs['hn_nu'],'hn_nu',ParameterFormatError)
-            self.hn_w_mat = _check.pos_def_sym_mat(kwargs['hn_w_mat'],'hn_w_mat',ParameterFormatError)
-        else:
-            raise(ParameterFormatError(
-                "The input of this function must be a python dictionary with keys:"
-                +str(self._H_PARAM_KEYS)+" or "
-                +str(self._H0_PARAM_KEYS)+" or "
-                +str(self._HN_PARAM_KEYS)+".")
-                )
+        self.hn_m_vec = _check.float_vec(hn_m_vec,'hn_m_vec',ParameterFormatError)
+        self.hn_kappa = _check.pos_float(hn_kappa,'hn_kappa',ParameterFormatError)
+        self.hn_nu = _check.pos_float(hn_nu,'hn_nu',ParameterFormatError)
+        self.hn_w_mat = _check.pos_def_sym_mat(hn_w_mat,'hn_w_mat',ParameterFormatError)
 
         if (self.hn_m_vec.shape[0] != self.hn_w_mat.shape[0]
             or self.hn_nu <= self.hn_m_vec.shape[0] - 1):
@@ -669,7 +614,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             All the elements must be real number.
         """
         _check.float_vecs(x,'x',DataFormatError)
-        if self.degree > 1 and x.shape[-1] != self.degree:
+        if x.shape[-1] != self.degree:
             raise(DataFormatError(f"x.shape[-1] must be degree:{self.degree}"))
         x = x.reshape(-1,self.degree)
 
@@ -685,7 +630,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
 
         self.hn_w_mat[:] = np.linalg.inv(self.hn_w_mat_inv) 
 
-    def estimate_params(self,loss="squared"):
+    def estimate_params(self,loss="squared",dict_out=False):
         """Estimate the parameter of the stochastic data generative model under the given criterion.
 
         Note that the criterion is applied to estimating ``mu_vec`` and ``lambda_mat`` independently.
@@ -696,10 +641,12 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         loss : str, optional
             Loss function underlying the Bayes risk function, by default \"squared\".
             This function supports \"squared\", \"0-1\", and \"KL\".
+        dict_out : bool, optional
+            If ``True``, output will be a dict, by default ``False``.
 
         Returns
         -------
-        Estimates : tuple of {numpy ndarray, float, None, or rv_frozen}
+        estimates : tuple of {numpy ndarray, float, None, or rv_frozen}
             * ``mu_vec_hat`` : the estimate for mu_vec
             * ``lambda_mat_hat`` : the estimate for lambda_mat
             The estimated values under the given loss function. If it is not exist, `None` will be returned.
@@ -713,13 +660,22 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         """
 
         if loss == "squared":
-            return self.hn_m_vec, self.hn_nu * self.hn_w_mat
+            if dict_out:
+                return {'mu_vec':self.hn_m_vec,'lambda_mat':self.hn_nu * self.hn_w_mat}
+            else:
+                return self.hn_m_vec, self.hn_nu * self.hn_w_mat
         elif loss == "0-1":
             if self.hn_nu >= self.degree + 1:
-                return self.hn_m_vec, (self.hn_nu - self.degree - 1) * self.hn_w_mat
+                if dict_out:
+                    return {'mu_vec':self.hn_m_vec,'lambda_mat':(self.hn_nu - self.degree - 1) * self.hn_w_mat}
+                else:
+                    return self.hn_m_vec, (self.hn_nu - self.degree - 1) * self.hn_w_mat
             else:
                 warnings.warn("MAP estimate of lambda_mat doesn't exist for the current hn_nu.",ResultWarning)
-                return self.hn_m_vec, None
+                if dict_out:
+                    return {'mu_vec':self.hn_m_vec,'lambda_mat':None}
+                else:
+                    return self.hn_m_vec, None
         elif loss == "KL":
             return (ss_multivariate_t(loc=self.hn_m_vec,
                                         shape=self.hn_w_mat_inv / self.hn_kappa / (self.hn_nu - self.degree + 1),
@@ -765,7 +721,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         print(f"{self.hn_w_mat}")
         print("E[lambda_mat]=")
         print(f"{self.hn_nu * self.hn_w_mat}")
-        mu_vec_pdf, w_mat_pdf = self.estimate_params(loss="KL")
+        mu_vec_pdf, lambda_mat_pdf = self.estimate_params(loss="KL")
         if self.degree == 1:
             fig, axes = plt.subplots(1,2)
             # for mu_vec
@@ -776,12 +732,12 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             axes[0].set_xlabel("mu_vec")
             axes[0].set_ylabel("Density")
             # for lambda_mat
-            x = np.linspace(max(1.0e-8,self.hn_nu*self.hn_w_mat)-4.0*np.sqrt(self.hn_nu/2.0)*(2.0*self.hn_w_mat),
+            x = np.linspace(max(1.0e-8,self.hn_nu*self.hn_w_mat-4.0*np.sqrt(self.hn_nu/2.0)*(2.0*self.hn_w_mat)),
                             self.hn_nu*self.hn_w_mat+4.0*np.sqrt(self.hn_nu/2.0)*(2.0*self.hn_w_mat),
                             100)
             print(self.hn_w_mat)
-            axes[1].plot(x[:,0,0],w_mat_pdf.pdf(x[:,0,0]))
-            axes[1].set_xlabel("w_mat")
+            axes[1].plot(x[:,0,0],lambda_mat_pdf.pdf(x[:,0,0]))
+            axes[1].set_xlabel("lambda_mat")
             axes[1].set_ylabel("Density")
 
             fig.tight_layout()
