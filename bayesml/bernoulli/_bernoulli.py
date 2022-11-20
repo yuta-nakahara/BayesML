@@ -368,7 +368,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         p_range = np.linspace(0,1,100,endpoint=False)
         fig, ax = plt.subplots()
         ax.plot(p_range,self.estimate_params(loss="KL").pdf(p_range))
-        ax.set_xlabel("p_theta")
+        ax.set_xlabel("theta")
         ax.set_ylabel("posterior")
         plt.show()
     

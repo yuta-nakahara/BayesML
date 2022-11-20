@@ -349,7 +349,7 @@ class LearnModel(base.Posterior, base.PredictiveMixin):
             2-dimensional array whose shape is ``(sample_size,degree)`` whose rows are one-hot vectors.
         """
         _check.onehot_vecs(x,'x',DataFormatError)
-        if self.degree > 1 and x.shape[-1] != self.degree:
+        if x.shape[-1] != self.degree:
             raise(DataFormatError(f"x.shape[-1] must be degree:{self.degree}"))
         x = x.reshape(-1,self.degree)
 

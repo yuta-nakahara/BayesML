@@ -173,7 +173,8 @@ class GenModel(base.Generative):
         )
 
         # params
-        self.root = _GenNode(0,list(range(self.c_k)),self.c_num_children,self.h_g,None,None)
+        self.root = _GenNode(0,list(range(self.c_k)),self.c_num_children,self.h_g,0,self.SubModel(**self.sub_h_params))
+        self.root.leaf = True
 
         self.set_params(root)
 
@@ -1282,6 +1283,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         --------
         >>> from bayesml import metatree
         >>> gen_model = metatree.GenModel(c_k=3,h_g=0.75)
+        >>> gen_model.gen_params()
         >>> x,y = gen_model.gen_sample(500)
         >>> learn_model = metatree.LearnModel(c_k=3)
         >>> learn_model.update_posterior(x,y)

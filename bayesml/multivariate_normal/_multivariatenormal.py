@@ -614,7 +614,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             All the elements must be real number.
         """
         _check.float_vecs(x,'x',DataFormatError)
-        if self.degree > 1 and x.shape[-1] != self.degree:
+        if x.shape[-1] != self.degree:
             raise(DataFormatError(f"x.shape[-1] must be degree:{self.degree}"))
         x = x.reshape(-1,self.degree)
 
@@ -721,7 +721,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         print(f"{self.hn_w_mat}")
         print("E[lambda_mat]=")
         print(f"{self.hn_nu * self.hn_w_mat}")
-        mu_vec_pdf, w_mat_pdf = self.estimate_params(loss="KL")
+        mu_vec_pdf, lambda_mat_pdf = self.estimate_params(loss="KL")
         if self.degree == 1:
             fig, axes = plt.subplots(1,2)
             # for mu_vec
@@ -732,12 +732,12 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             axes[0].set_xlabel("mu_vec")
             axes[0].set_ylabel("Density")
             # for lambda_mat
-            x = np.linspace(max(1.0e-8,self.hn_nu*self.hn_w_mat)-4.0*np.sqrt(self.hn_nu/2.0)*(2.0*self.hn_w_mat),
+            x = np.linspace(max(1.0e-8,self.hn_nu*self.hn_w_mat-4.0*np.sqrt(self.hn_nu/2.0)*(2.0*self.hn_w_mat)),
                             self.hn_nu*self.hn_w_mat+4.0*np.sqrt(self.hn_nu/2.0)*(2.0*self.hn_w_mat),
                             100)
             print(self.hn_w_mat)
-            axes[1].plot(x[:,0,0],w_mat_pdf.pdf(x[:,0,0]))
-            axes[1].set_xlabel("w_mat")
+            axes[1].plot(x[:,0,0],lambda_mat_pdf.pdf(x[:,0,0]))
+            axes[1].set_xlabel("lambda_mat")
             axes[1].set_ylabel("Density")
 
             fig.tight_layout()

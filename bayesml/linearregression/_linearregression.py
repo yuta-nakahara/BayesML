@@ -542,7 +542,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             float array.
         """
         _check.float_vecs(x,'x',DataFormatError)
-        if self.degree > 1 and x.shape[-1] != self.degree:
+        if x.shape[-1] != self.degree:
             raise(DataFormatError(f"x.shape[-1] must be degree:{self.degree}"))
         _check.floats(y,'y',DataFormatError)
         if type(y) is np.ndarray:
