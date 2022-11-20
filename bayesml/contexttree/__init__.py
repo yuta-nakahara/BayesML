@@ -54,7 +54,7 @@ For :math:`\boldsymbol{\theta}_s \in\mathcal{L}(T_\mathrm{max})`,
 where the updating rule of the hyperparameter is as follows:
 
 .. math::
-    \beta_n(k|s) = \beta_0(k|s) + \sum_{i=1}^n I \left\{ \text{:math:`s` is the ancestor of :math:`s_{T_\mathrm{max}}(x^{i-1})` and :math:`x_i=k` } \right\}.
+    \beta_n(k|s) = \beta_0(k|s) + \sum_{i=1}^n I \left\{ s \ \mathrm{is \ the \ ancestor \ of} \ s_{T_\mathrm{max}}(x^{i-1}) \ \mathrm{and} \ x_i=k \right\}.
 
 For :math:`T \in \mathcal{T}`,
 
@@ -66,9 +66,9 @@ where the updating rules of the hyperparameter are as follows:
 .. math::
     g_{n,s} =
     \begin{cases}
-        g_{0,s} & \text{if :math:`n=0`}, \\
+        g_{0,s}, & n=0, \\
         \frac{ g_{n-1,s} \tilde{q}_{s_{\mathrm{child}}} (x_n|x^{n-1}) }
-        { \tilde{q}_s(x_n|x^{n-1}) } & \text{otherwise},
+        { \tilde{q}_s(x_n|x^{n-1}) } & \mathrm{otherwise},
     \end{cases}
 
 where :math:`s_{\mathrm{child}}` is the child node of :math:`s` on the path from :math:`s_\lambda` to :math:`s_{T_\mathrm{max}}(x^n)` and
@@ -76,8 +76,8 @@ where :math:`s_{\mathrm{child}}` is the child node of :math:`s` on the path from
 .. math::
     \tilde{q}_s(x_n|x^{n-1}) =
     \begin{cases}
-        q_s(x_n|x^{n-1}) & \text{if :math:`s\in\mathcal{L}(T_\mathrm{max})`}, \\
-        (1-g_{n-1,s}) q_s(x_n|x^{n-1}) + g_{n-1,s} \tilde{q}_{s_{\mathrm{child}}}(x_n|x^{n-1}) & \text{otherwise}.
+        q_s(x_n|x^{n-1}) & s\in\mathcal{L}(T_\mathrm{max}), \\
+        (1-g_{n-1,s}) q_s(x_n|x^{n-1}) + g_{n-1,s} \tilde{q}_{s_{\mathrm{child}}}(x_n|x^{n-1}) & \mathrm{otherwise}.
     \end{cases}
 
 Here,

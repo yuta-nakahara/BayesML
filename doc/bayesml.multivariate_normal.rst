@@ -1,6 +1,8 @@
 bayesml.multivariate\_normal package
 ====================================
 
+.. image:: ./images/multivariate_normal_example.png
+
 Module contents
 ---------------
 

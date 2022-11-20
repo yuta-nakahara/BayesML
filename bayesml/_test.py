@@ -1,18 +1,8 @@
-from bayesml import bernoulli
-
-gen_model = bernoulli.GenModel(theta=0.7)
-
-gen_model.visualize_model()
-
-x = gen_model.gen_sample(sample_size=20)
-
-learn_model = bernoulli.LearnModel()
-
-learn_model.visualize_posterior()
-
-learn_model.update_posterior(x)
-learn_model.visualize_posterior()
-
-print(learn_model.estimate_params(loss='squared'))
-print(learn_model.estimate_params(loss='abs'))
-print(learn_model.estimate_params(loss='0-1'))
+from bayesml import hiddenmarkovnormal
+import numpy as np
+model = hiddenmarkovnormal.GenModel(
+        c_num_classes=2,
+        c_degree=1,
+        mu_vecs=np.array([[5],[-5]]),
+        a_mat=np.array([[0.95,0.05],[0.1,0.9]]))
+model.visualize_model()

@@ -191,7 +191,7 @@ class GenModel(base.Generative):
         tmp_p_v = p_v
         
         # add node information
-        label_string = f'h_g={node.h_g:.2f}\\lp_v={tmp_p_v:.2f}\\ltheta_vec='
+        label_string = f'h_g={node.h_g:.2f}\\lp_v={tmp_p_v:.2f}\\ltheta_vec\\l='
         if node.leaf:
             label_string += '['
             for i in range(self.c_k):
@@ -388,16 +388,16 @@ class GenModel(base.Generative):
         Examples
         --------
         >>> from bayesml import contexttree
-        >>> model = contexttree.GenModel(c_k=2,c_d_max=3,h_g=0.75)
+        >>> gen_model = contexttree.GenModel(c_k=2,c_d_max=3,h_g=0.75)
         >>> gen_model.gen_params()
-        >>> model.visualize_model()
-        [1 1 1 1 1 1 0 0 0 1]
+        >>> gen_model.visualize_model()
+        [1 0 1 0 0 0 1 0 0 0]
 
         .. image:: ./images/contexttree_example.png
 
         See Also
         --------
-        graphbiz.Digraph
+        graphviz.Digraph
         """
         #例外処理
         _check.pos_int(sample_length,'sample_length',DataFormatError)
@@ -781,7 +781,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
 
         See Also
         --------
-        graphbiz.Digraph
+        graphviz.Digraph
         """
 
         if loss == "0-1":
@@ -820,7 +820,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         tmp_p_v = p_v
         
         # add node information
-        label_string = f'hn_g={node.hn_g:.2f}\\lp_v={tmp_p_v:.2f}\\ltheta_vec='
+        label_string = f'hn_g={node.hn_g:.2f}\\lp_v={tmp_p_v:.2f}\\ltheta_vec\\l='
         label_string += '['
         for i in range(self.c_k):
             theta_vec_hat = node.hn_beta_vec / node.hn_beta_vec.sum()
@@ -869,7 +869,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
 
         See Also
         --------
-        graphbiz.Digraph
+        graphviz.Digraph
         """
         try:
             import graphviz

@@ -1,6 +1,8 @@
 bayesml.normal package
 ======================
 
+.. image:: ./images/normal_example.png
+
 Module contents
 ---------------
 

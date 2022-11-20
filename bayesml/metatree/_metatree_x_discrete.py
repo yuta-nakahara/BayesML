@@ -596,7 +596,7 @@ class GenModel(base.Generative):
 
         See Also
         --------
-        graphbiz.Digraph
+        graphviz.Digraph
         """
         #例外処理
         _check.pos_int(sample_size,'sample_size',DataFormatError)
@@ -1208,7 +1208,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
 
         See Also
         --------
-        graphbiz.Digraph
+        graphviz.Digraph
         """
 
         if loss == "0-1":
@@ -1293,7 +1293,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
 
         See Also
         --------
-        graphbiz.Digraph
+        graphviz.Digraph
         """
         MAP_index = np.argmax(self.hn_metatree_prob_vec)
         print(f'MAP probability of metatree:{self.hn_metatree_prob_vec[MAP_index]}')

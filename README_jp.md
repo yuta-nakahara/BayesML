@@ -22,7 +22,7 @@ BayesMLは以下の特徴を持っています．
 
 以下のコマンドによりインストール可能です．
 
-``` shell
+``` bash
 pip install bayesml
 ```
 

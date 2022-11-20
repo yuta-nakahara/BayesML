@@ -391,7 +391,6 @@ class GenModel(base.Generative):
         [-5.]]
         lambda_mats:
         [[[1.]]
-
         [[1.]]]
 
         .. image:: ./images/hiddenmarkovnormal_example.png
@@ -843,7 +842,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                      axis=1) * 2.0
             ) / 2.0
 
-    def calc_vl(self):
+    def _calc_vl(self):
         # E[ln p(X|Z,mu,Lambda)]
         self._vl_p_x = np.sum(
             self.ns
@@ -1025,10 +1024,10 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         tolerance : float, optional
             convergence criterion of variational lower bound, by default 1.0E-8
         init_type : str, optional
-            type of initialization, by default 'subsampling'
-            * 'subsampling': for each latent class, extract a subsample whose size is int(np.sqrt(x.shape[0])).
+            * ``'subsampling'``: for each latent class, extract a subsample whose size is ``int(np.sqrt(x.shape[0]))``, 
               and use its mean and covariance matrix as an initial values of hn_m_vecs and hn_lambda_mats.
-            * 'random_responsibility': randomly assign responsibility to gamma_vecs
+            * ``'random_responsibility'``: randomly assign responsibility to gamma_vecs
+            Type of initialization, by default 'subsampling'
         """
         _check.float_vecs(x,'x',DataFormatError)
         _check.shape_consistency(
@@ -1069,7 +1068,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                     f'init_type={init_type} is unsupported. '
                     + 'This function supports only '
                     + '"subsampling" and "random_responsibility"'))
-            self.calc_vl()
+            self._calc_vl()
             print(f'\r{i}. VL: {self.vl}',end='')
             for t in range(max_itr):
                 vl_before = self.vl
@@ -1077,7 +1076,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                 self._update_q_pi()
                 self._update_q_a()
                 self._update_q_z(x)
-                self.calc_vl()
+                self._calc_vl()
                 print(f'\r{i}. VL: {self.vl} t={t} ',end='')
                 if np.abs((self.vl-vl_before)/vl_before) < tolerance:
                     convergence_flag = False
@@ -1221,11 +1220,9 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         [154.15657765  47.84342235]
         hn_w_mats:
         [[[0.00525177]]
-
         [[0.02569298]]]
         E[lambda_mats]=
         [[[0.8095951 ]]
-
         [[1.22924015]]]
 
         .. image:: ./images/hiddenmarkovnormal_posterior.png
@@ -1375,10 +1372,10 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         tolerance : float, optional
             convergence croterion of variational lower bound, by default 1.0E-8
         init_type : str, optional
-            type of initialization, by default 'random_responsibility'
-            * 'random_responsibility': randomly assign responsibility to r_vecs
-            * 'subsampling': for each latent class, extract a subsample whose size is int(np.sqrt(x.shape[0])).
+            * ``'random_responsibility'``: randomly assign responsibility to ``xi_mats`` and ``gamma_vecs``
+            * ``'subsampling'``: for each latent class, extract a subsample whose size is ``int(np.sqrt(x.shape[0]))``. 
               and use its mean and covariance matrix as an initial values of hn_m_vecs and hn_lambda_mats.
+            Type of initialization, by default 'random_responsibility'
 
         Returns
         -------
@@ -1508,10 +1505,10 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         tolerance : float, optional
             convergence croterion of variational lower bound, by default 1.0E-8
         init_type : str, optional
-            type of initialization, by default 'random_responsibility'
-            * 'random_responsibility': randomly assign responsibility to r_vecs
-            * 'subsampling': for each latent class, extract a subsample whose size is int(np.sqrt(x.shape[0])).
+            * ``'random_responsibility'``: randomly assign responsibility to ``xi_mats`` and ``gamma_vecs``
+            * ``'subsampling'``: for each latent class, extract a subsample whose size is ``int(np.sqrt(x.shape[0]))``.
               and use its mean and covariance matrix as an initial values of hn_m_vecs and hn_lambda_mats.
+            Type of initialization, by default ``'random_responsibility'``
 
         Returns
         -------

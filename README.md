@@ -23,7 +23,7 @@ For more details, see our [website](https://yuta-nakahara.github.io/BayesML/ "Ba
 
 Please use the following commands to install BayesML.
 
-``` shell
+``` bash
 pip install bayesml
 ```
 
