@@ -30,11 +30,11 @@ class GenModel(base.Generative):
     h_mu_vec : numpy ndarray, optional
         a vector of real numbers, by default [0.0, 0.0, ... , 0.0]
     h_lambda_mat : numpy ndarray, optional
-        a positibe definate matrix, by default the identity matrix
+        a positive definate matrix, by default the identity matrix
     h_alpha : float, optional
         a positive real number, by default 1.0
     h_beta : float, optional
-        a positibe real number, by default 1.0
+        a positive real number, by default 1.0
     seed : {None, int}, optional
         A seed to initialize numpy.random.default_rng(),
         by default None
