@@ -33,6 +33,7 @@ The following are required.
 * NumPy (>= 1.20)
 * SciPy (>= 1.7)
 * MatplotLib (>= 3.5)
+* Scikit-learn (>= 1.1)
 
 ## Example
 

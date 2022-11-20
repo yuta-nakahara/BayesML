@@ -32,6 +32,7 @@ BayesMLの実行には以下が必要です．
 * NumPy (>= 1.20)
 * SciPy (>= 1.7)
 * MatplotLib (>= 3.5)
+* Scikit-learn (>= 1.1)
 
 ## 実行例
 
