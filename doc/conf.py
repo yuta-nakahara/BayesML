@@ -22,7 +22,7 @@ copyright = '2022, BayesML Developers'
 author = 'BayesML Developers'
 
 # The full version, including alpha/beta/rc tags
-release = '0.1.0'
+release = '0.2.0'
 
 
 # -- General configuration ---------------------------------------------------
@@ -88,7 +88,8 @@ autosummary_generate = True
 #numpydoc_xref_param_type = True
 intersphinx_mapping = {'python': ('https://docs.python.org/3', None),
                        'numpy': ('https://numpy.org/doc/stable/', None),
-                       'scipy':('https://docs.scipy.org/doc/scipy/reference/', None)
+                       'scipy': ('https://docs.scipy.org/doc/scipy/reference/', None),
+                       'graphviz': ('https://graphviz.readthedocs.io/en/stable/', None)
 }
 
 html_favicon = 'logos/BayesML_favicon.ico'

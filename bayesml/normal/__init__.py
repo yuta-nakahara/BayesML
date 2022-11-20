@@ -66,7 +66,7 @@ where the updating rule of the hyperparameters is
     m_n &= \frac{\kappa_0 m_0 + n \bar{x}}{\kappa_0 + n}, \\
     \kappa_n &= \kappa_0 + n, \\
     \alpha_n &= \alpha_0 + \frac{n}{2}, \\
-    \beta_n &=  \beta_0 + \frac{1}{2} \left( \sum_{i=1}^n (x_i - \bar{x})^2 + \frac{\kappa_0 n}{\kappa_n + n} (\bar{x} - m_0)^2 \right).
+    \beta_n &=  \beta_0 + \frac{1}{2} \left( \sum_{i=1}^n (x_i - \bar{x})^2 + \frac{\kappa_0 n}{\kappa_0 + n} (\bar{x} - m_0)^2 \right).
 
 The predictive distribution is as follows:
 
