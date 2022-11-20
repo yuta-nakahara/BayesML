@@ -52,11 +52,11 @@ gen_model.visualize_model()
 ```
 
 >theta:0.7  
->x0:[1 1 1 1 1 0 1 0 0 1 1 1 1 0 1 1 0 1 1 1]  
->x1:[1 0 1 1 1 1 1 1 0 0 1 1 1 1 1 1 1 1 1 1]  
->x2:[0 0 1 1 0 1 0 1 1 1 1 1 1 0 1 0 1 1 1 1]  
->x3:[1 0 1 1 1 1 1 0 0 0 1 0 0 1 0 1 1 0 1 0]  
->x4:[1 1 0 1 0 1 1 1 0 1 1 1 0 0 1 1 1 1 1 1]  
+>x0:[1 1 1 0 1 1 1 0 1 1 1 1 1 1 0 1 1 1 0 1]  
+>x1:[1 1 0 1 1 1 1 1 1 1 1 1 0 1 1 1 1 1 1 0]  
+>x2:[1 0 1 1 0 1 1 1 0 1 1 1 1 1 0 0 1 1 1 1]  
+>x3:[1 1 1 0 1 1 0 1 0 0 0 0 1 0 1 1 1 1 1 1]  
+>x4:[0 0 1 0 0 0 1 1 1 1 1 1 1 1 0 0 1 1 1 1]  
 >![bernoulli_example1](./doc/images/README_ex_img1.png)
 
 1の出現頻度が`theta=0.7`程度であることを確認したら，サンプルを生成し変数`x`に保存します．
@@ -96,9 +96,9 @@ print(learn_model.estimate_params(loss='abs'))
 print(learn_model.estimate_params(loss='0-1'))
 ```
 
->0.6428571428571429  
->0.6474720009710451  
->0.6578947368421053  
+>0.7380952380952381  
+>0.7457656349087012  
+>0.7631578947368421  
 
 損失関数の設定が異なると，そのもとでの最適な推定値も異なることがわかります．
 
@@ -112,8 +112,12 @@ print(learn_model.estimate_params(loss='0-1'))
 * [正規モデル](https://yuta-nakahara.github.io/BayesML/bayesml.normal.html "BayesML Normal Model")
 * [多変量正規モデル](https://yuta-nakahara.github.io/BayesML/bayesml.multivariate_normal.html "BayesML Multivariate Normal Model")
 * [指数モデル](https://yuta-nakahara.github.io/BayesML/bayesml.exponential.html "BayesML Exponential Model")
+* [混合正規モデル](https://yuta-nakahara.github.io/BayesML/bayesml.gaussianmixture.html "BayesML Gaussian Mixture Model")
 * [線形回帰モデル](https://yuta-nakahara.github.io/BayesML/bayesml.linearregression.html "BayesML Lenear Regression Model")
+* [メタツリーモデル](https://yuta-nakahara.github.io/BayesML/bayesml.metatree.html "BayesML Meta-tree Model")
 * [自己回帰モデル](https://yuta-nakahara.github.io/BayesML/bayesml.autoregressive.html "BayesML Autoregressive Model")
+* [隠れマルコフモデル](https://yuta-nakahara.github.io/BayesML/bayesml.hiddenmarkovnormal.html "BayesML Hidden Markov Normal Model")
+* [文脈木モデル](https://yuta-nakahara.github.io/BayesML/bayesml.contexttree.html "BayesML Context Tree Model")
 
 また，今後は混合正規モデルや隠れマルコフモデルなどの厳密なベイズ推論が困難なモデルを変分ベイズ法で学習するパッケージが追加される予定です．
 
@@ -128,11 +132,8 @@ BayesMLへのコントリビューションを考えてくださってありが�
 プレーンテキスト
 
 ```
-Y. Nakahara, N. Ichijo, K. Shimada, 
-K. Tajima, K. Horinouchi, L. Ruan, 
-N. Namegaya, R. Maniwa, T. Ishiwatari, 
-W. Yu, Y. Iikubo, S. Saito, 
-K. Kazama, T. Matsushima, ``BayesML,'' 
+Y. Nakahara, N. Ichijo, K. Shimada, Y. Iikubo, 
+S. Saito, K. Kazama, T. Matsushima, ``BayesML,'' 
 [Online] https://github.com/yuta-nakahara/BayesML
 ```
 
@@ -141,9 +142,7 @@ BibTeX
 ``` bibtex
 @misc{bayesml,
   author = {Nakahara Yuta and Ichijo Naoki and Shimada Koshi and
-            Tajima Keito and Horinouchi Kohei and Ruan Luyu and
-            Namegaya Noboru and Maniwa Ryota and Ishiwatari Taisuke and
-            Yu Wenbin and Iikubo Yuji and Saito Shota and Kazama Koki and
+            Iikubo Yuji and Saito Shota and Kazama Koki and
             Matsushima Toshiyasu}
   title = {BayesML},
   howpublished = {\url{https://github.com/yuta-nakahara/BayesML}},
