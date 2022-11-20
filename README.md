@@ -137,7 +137,7 @@ Plain text
 
 ```
 Y. Nakahara, N. Ichijo, K. Shimada, Y. Iikubo, 
-S. Saito, K. Kazama, T. Matsushima, ``BayesML,'' 
+S. Saito, K. Kazama, T. Matsushima, ``BayesML 0.2.0,'' 
 [Online] https://github.com/yuta-nakahara/BayesML
 ```
 
@@ -148,7 +148,7 @@ BibTeX
   author = {Nakahara Yuta and Ichijo Naoki and Shimada Koshi and
             Iikubo Yuji and Saito Shota and Kazama Koki and
             Matsushima Toshiyasu}
-  title = {BayesML},
+  title = {BayesML 0.2.0},
   howpublished = {\url{https://github.com/yuta-nakahara/BayesML}},
   year = {2022}
 }
