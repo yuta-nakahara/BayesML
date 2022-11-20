@@ -1,12 +1,12 @@
-bayesml.categorical package
+bayesml.contexttree package
 ===========================
 
-.. image:: ./images/categorical_example.png
+.. image:: ./images/contexttree_example.png
 
 Module contents
 ---------------
 
-.. automodule:: bayesml.categorical
+.. automodule:: bayesml.contexttree
    :members:
    :undoc-members:
    :show-inheritance:
