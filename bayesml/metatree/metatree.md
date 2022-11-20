@@ -25,15 +25,15 @@ $$p(y | \boldsymbol{x}, \boldsymbol{\theta}, T, \boldsymbol{k})=p(y | \theta_{s(
 
 The prior distribution is as follows:
 
-* $g_s \in [0,1]$ : a hyperparameter assigned to $s \in \mathcal{S}$
+* $g_{0,s} \in [0,1]$ : a hyperparameter assigned to $s \in \mathcal{S}$
 * $M_{T, \boldsymbol{k}}$ : a meta-tree for $(T, \boldsymbol{k})$
 * $\mathcal{T}_{M_{T, \boldsymbol{k}}}$ : a set of $T$ represented by a meta-tree $M_{T, \boldsymbol{k}}$
 * $B \in \mathbb{N}$ : the number of meta-trees
 * $\mathcal{M}=\{(T_1, \boldsymbol{k}_1), (T_2, \boldsymbol{k}_2), \ldots, (T_B, \boldsymbol{k}_B) \}$ for $B$ meta-trees $M_{T_1, \boldsymbol{k}_1}, M_{T_2, \boldsymbol{k}_2}, \dots, M_{T_B, \boldsymbol{k}_B}$. (These meta-trees must be given beforehand by some method, e.g., constructed from bootstrap samples similar to the random forest.)
 
 For $T' \in M_{T, \boldsymbol{k}}$,
-$$p(T')=\prod_{s \in \mathcal{I}(T')} g_s \prod_{s' \in \mathcal{L}(T')} (1-g_{s'}),$$
-where $g_s=0$ for a leaf node $s$ of a meta-tree $M_{T, \boldsymbol{k}}$.
+$$p(T')=\prod_{s \in \mathcal{I}(T')} g_{0,s} \prod_{s' \in \mathcal{L}(T')} (1-g_{0,s'}),$$
+where $g_{0,s}=0$ for a leaf node $s$ of a meta-tree $M_{T, \boldsymbol{k}}$.
 
 For $\boldsymbol{k}_b \in \{\boldsymbol{k}_1, \boldsymbol{k}_2, \ldots, \boldsymbol{k}_B \}$,
 
@@ -44,16 +44,16 @@ The posterior distribution is as follows:
 * $n \in \mathbb{N}$ : a sample size
 * $\boldsymbol{x}^n = \{ \boldsymbol{x}_1, \boldsymbol{x}_2, \ldots, \boldsymbol{x}_n \}$
 * $y^n = \{ y_1, y_2, \ldots, y_n \}$
-* $g_{s|\boldsymbol{x}^n, y^n} \in [0,1]$ : a hyperparameter
+* $g_{n,s} \in [0,1]$ : a hyperparameter
 
 For $T' \in M_{T, \boldsymbol{k}}$,
-$$p(T' | \boldsymbol{x}^n, y^n, \boldsymbol{k})=\prod_{s \in \mathcal{I}(T')} g_{s|\boldsymbol{x}^n, y^n} \prod_{s' \in \mathcal{L}(T')} (1-g_{s'|\boldsymbol{x}^n, y^n}),$$
+$$p(T' | \boldsymbol{x}^n, y^n, \boldsymbol{k})=\prod_{s \in \mathcal{I}(T')} g_{n,s} \prod_{s' \in \mathcal{L}(T')} (1-g_{n,s'}),$$
 where the updating rules of the hyperparameter are as follows.
 
-$$g_{s | \boldsymbol{x}^i, y^i} =
+$$g_{i,s} =
 \begin{cases}
-g_s & (i = 0),\\
-\frac{g_{s | \boldsymbol{x}^{i-1}, y^{i-1}} \tilde{q}_{s_{\mathrm{child}}}(y_i | \boldsymbol{x}_i, \boldsymbol{x}^{i-1}, y^{i-1}, M_{T, \boldsymbol{k}})}{\tilde{q}_s(y_i | \boldsymbol{x}_i, \boldsymbol{x}^{i-1}, y^{i-1}, M_{T, \boldsymbol{k}})}  &(\mathrm{otherwise}),
+g_{0,s} & (i = 0),\\
+\frac{g_{i-1,s} \tilde{q}_{s_{\mathrm{child}}}(y_i | \boldsymbol{x}_i, \boldsymbol{x}^{i-1}, y^{i-1}, M_{T, \boldsymbol{k}})}{\tilde{q}_s(y_i | \boldsymbol{x}_i, \boldsymbol{x}^{i-1}, y^{i-1}, M_{T, \boldsymbol{k}})}  &(\mathrm{otherwise}),
 \end{cases}$$
 where $s_{\mathrm{child}}$ is the child node of $s$ on the path corresponding to $\boldsymbol{x}_{i}$ in $M_{T, \boldsymbol{k}}$ and
 
@@ -62,8 +62,8 @@ $$
 &\tilde{q}_s(y_{i} | \boldsymbol{x}_{i}, \boldsymbol{x}^{i-1}, y^{i-1}, M_{T, \boldsymbol{k}}) \\
 &= \begin{cases}
 q_s(y_{i} | \boldsymbol{x}_{i}, \boldsymbol{x}^{i-1}, y^{i-1}, \boldsymbol{k}),& (s \ {\rm is \ the \ leaf \ node \ of} \ M_{T, \boldsymbol{k}}),\\
-(1-g_{s | \boldsymbol{x}^{i-1}, y^{i-1}}) q_s(y_{i} | \boldsymbol{x}_{i}, \boldsymbol{x}^{i-1}, y^{i-1}, \boldsymbol{k}) \\
-\qquad + g_{s | \boldsymbol{x}^{i-1}, y^{i-1}} \tilde{q}_{s_{\mathrm{child}}}(y_{i} | \boldsymbol{x}_{i}, \boldsymbol{x}^{i-1}, y^{i-1}, M_{T, \boldsymbol{k}}),& ({\rm otherwise}),
+(1-g_{i-1,s}) q_s(y_{i} | \boldsymbol{x}_{i}, \boldsymbol{x}^{i-1}, y^{i-1}, \boldsymbol{k}) \\
+\qquad + g_{i-1,s} \tilde{q}_{s_{\mathrm{child}}}(y_{i} | \boldsymbol{x}_{i}, \boldsymbol{x}^{i-1}, y^{i-1}, M_{T, \boldsymbol{k}}),& ({\rm otherwise}),
 \end{cases}
 \end{align*}
 $$
@@ -88,8 +88,8 @@ $$
 &\mathbb{E}_{\tilde{q}_s(y_{n+1} | \boldsymbol{x}_{n+1}, \boldsymbol{x}^n, y^n, M_{T_b, \boldsymbol{k}_b})} [Y_{n+1} | \boldsymbol{x}_{n+1}, \boldsymbol{x}^n, y^n, \boldsymbol{k}_b] \\
 &= \begin{cases}
 \mathbb{E}_{q_s(y_{n+1} | \boldsymbol{x}_{n+1}, \boldsymbol{x}^n, y^n, \boldsymbol{k}_b)} [Y_{n+1} | \boldsymbol{x}_{n+1}, \boldsymbol{x}^n, y^n, \boldsymbol{k}_b],& (s \ {\rm is \ the \ leaf \ node \ of} \ M_{T_b, \boldsymbol{k}_b}),\\
-(1-g_{s | \boldsymbol{x}^n, y^n}) \mathbb{E}_{q_s(y_{n+1} | \boldsymbol{x}_{n+1}, \boldsymbol{x}^n, y^n, \boldsymbol{k}_b)} [Y_{n+1} | \boldsymbol{x}_{n+1}, \boldsymbol{x}^n, y^n, \boldsymbol{k}_b] \\
-\qquad + g_{s | \boldsymbol{x}^n, y^n} \mathbb{E}_{\tilde{q}_{s_{\mathrm{child}}}(y_{n+1} | \boldsymbol{x}_{n+1}, \boldsymbol{x}^n, y^n, M_{T_b, \boldsymbol{k}_b})} [Y_{n+1} | \boldsymbol{x}_{n+1}, \boldsymbol{x}^n, y^n, \boldsymbol{k}_b] ,& ({\rm otherwise}).
+(1-g_{n,s}) \mathbb{E}_{q_s(y_{n+1} | \boldsymbol{x}_{n+1}, \boldsymbol{x}^n, y^n, \boldsymbol{k}_b)} [Y_{n+1} | \boldsymbol{x}_{n+1}, \boldsymbol{x}^n, y^n, \boldsymbol{k}_b] \\
+\qquad + g_{n,s} \mathbb{E}_{\tilde{q}_{s_{\mathrm{child}}}(y_{n+1} | \boldsymbol{x}_{n+1}, \boldsymbol{x}^n, y^n, M_{T_b, \boldsymbol{k}_b})} [Y_{n+1} | \boldsymbol{x}_{n+1}, \boldsymbol{x}^n, y^n, \boldsymbol{k}_b] ,& ({\rm otherwise}).
 \end{cases}
 \end{align*}
 $$
@@ -105,8 +105,8 @@ $$
 &\max_{y_{n+1}} \tilde{q}_s(y_{n+1} | \boldsymbol{x}_{n+1}, \boldsymbol{x}^n, y^n, M_{T_b, \boldsymbol{k}_b}) \\
 &= \begin{cases}
 \max_{y_{n+1}} q_s(y_{n+1} | \boldsymbol{x}_{n+1}, \boldsymbol{x}^n, y^n, \boldsymbol{k}_b),& (s \ {\rm is \ the \ leaf \ node \ of} \ M_{T_b, \boldsymbol{k}_b}),\\
-\max \{ (1-g_{s | \boldsymbol{x}^n, y^n}) \max_{y_{n+1}} q_s(y_{n+1} | \boldsymbol{x}_{n+1}, \boldsymbol{x}^n, y^n, \boldsymbol{k}_b), \\
-\qquad \qquad g_{s | \boldsymbol{x}^n, y^n} \max_{y_{n+1}} \tilde{q}_{s_{\mathrm{child}}}(y_{n+1} | \boldsymbol{x}_{n+1}, \boldsymbol{x}^n, y^n, M_{T_b, \boldsymbol{k}_b}) \} ,& ({\rm otherwise}).
+\max \{ (1-g_{n,s}) \max_{y_{n+1}} q_s(y_{n+1} | \boldsymbol{x}_{n+1}, \boldsymbol{x}^n, y^n, \boldsymbol{k}_b), \\
+\qquad \qquad g_{n,s} \max_{y_{n+1}} \tilde{q}_{s_{\mathrm{child}}}(y_{n+1} | \boldsymbol{x}_{n+1}, \boldsymbol{x}^n, y^n, M_{T_b, \boldsymbol{k}_b}) \} ,& ({\rm otherwise}).
 \end{cases}
 \end{align*}
 $$
@@ -115,5 +115,5 @@ The mode of the predictive distribution can be also calculated by using the abov
 
 References
 
-* Dobashi, N.; Saito, S.; Nakahara, Y.; Matsushima, T. Meta-Tree Random Forest: Probabilistic Data-Generative Model and Bayes Optimal Prediction. Entropy 2021, 23, 768. https://doi.org/10.3390/e23060768
-* Nakahara, Y.; Saito, S.; Kamatsuka, A.; Matsushima, T. Probability Distribution on Full Rooted Trees. Entropy 2022, 24, 328. https://doi.org/10.3390/e24030328
+* Dobashi, N.; Saito, S.; Nakahara, Y.; Matsushima, T. Meta-Tree Random Forest: Probabilistic Data-Generative Model and Bayes Optimal Prediction. *Entropy* 2021, 23, 768. https://doi.org/10.3390/e23060768
+* Nakahara, Y.; Saito, S.; Kamatsuka, A.; Matsushima, T. Probability Distribution on Full Rooted Trees. *Entropy* 2022, 24, 328. https://doi.org/10.3390/e24030328
