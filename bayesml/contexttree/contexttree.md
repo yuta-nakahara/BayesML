@@ -66,7 +66,7 @@ where the updating rule of the hyperparameter is as follows:
 
 $$
 \begin{align}
-    \beta_n(k|s) = \beta_0(k|s) + \sum_{i=1}^n I \left\{ \text{$s$ is the ancestor of $s_{T_\mathrm{max}}(x^i)$} \right\}.
+    \beta_n(k|s) = \beta_0(k|s) + \sum_{i=1}^n I \left\{ \text{$s$ is the ancestor of $s_{T_\mathrm{max}}(x^{i-1})$ and $x_i=k$ } \right\}.
 \end{align}
 $$
 
