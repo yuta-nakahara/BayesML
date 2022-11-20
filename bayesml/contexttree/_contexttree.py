@@ -388,7 +388,7 @@ class GenModel(base.Generative):
         Examples
         --------
         >>> from bayesml import contexttree
-        >>> model = contexttree.GenModel(c_k=3,c_d_max=3,h_g=0.75)
+        >>> model = contexttree.GenModel(c_k=2,c_d_max=3,h_g=0.75)
         >>> gen_model.gen_params()
         >>> model.visualize_model()
         [1 1 1 1 1 1 0 0 0 1]
@@ -857,14 +857,14 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
 
         Examples
         --------
-        >>> from bayesml import metatree
-        >>> gen_model = metatree.GenModel(c_k=3,h_g=0.75)
-        >>> x,y = gen_model.gen_sample(500)
-        >>> learn_model = metatree.LearnModel(c_k=3)
-        >>> learn_model.update_posterior(x,y)
+        >>> from bayesml import contexttree
+        >>> gen_model = contexttree.GenModel(c_k=2,c_d_max=3,h_g=0.75)
+        >>> x = gen_model.gen_sample(50)
+        >>> learn_model = contexttree.LearnModel(c_k=2,c_d_max=3,h0_g=0.75)
+        >>> learn_model.update_posterior(x)
         >>> learn_model.visualize_posterior()
 
-        .. image:: ./images/metatree_posterior.png
+        .. image:: ./images/contexttree_posterior.png
 
         See Also
         --------
