@@ -121,4 +121,5 @@ $$
 
 References
 
-* T. Matsushima and S. Hirasawa, "A Class of Prior Distributions on Context Tree Models and an Efficient Algorithm of the Bayes Codes Assuming It," *2007 IEEE International Symposium on Signal Processing and Information Technology*, 2007, pp. 938-941, doi: 10.1109/ISSPIT.2007.4458049.
+* Matsushima, T.; and Hirasawa, S. Reducing the space complexity of a Bayes coding algorithm using an expanded context tree, *2009 IEEE International Symposium on Information Theory*, 2009, pp. 719-723, https://doi.org/10.1109/ISIT.2009.5205677
+* Nakahara, Y.; Saito, S.; Kamatsuka, A.; Matsushima, T. Probability Distribution on Full Rooted Trees. *Entropy* 2022, 24, 328. https://doi.org/10.3390/e24030328
