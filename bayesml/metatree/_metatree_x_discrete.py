@@ -1153,12 +1153,12 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             if node.depth == self.c_d_max or node.depth == self.c_k:
                 node.map_leaf = True
                 return 1.0
-            elif 1.0 - node.hn_g > node.hn_g * self.h0_g ** ((self.c_num_children ** (self.c_d_max - node.depth) - 1)/(self.c_k-1)):
+            elif 1.0 - node.hn_g > node.hn_g * self.h0_g ** ((self.c_num_children ** (self.c_d_max - node.depth) - 1)/(self.c_k-1)-1):
                 node.map_leaf = True
                 return 1.0 - node.hn_g
             else:
                 self._map_recursion_add_nodes(node)
-                return node.hn_g * self.h0_g ** ((self.c_num_children ** (self.c_d_max - node.depth) - 1)/(self.c_k-1))
+                return node.hn_g * self.h0_g ** ((self.c_num_children ** (self.c_d_max - node.depth) - 1)/(self.c_k-1)-1)
         else:
             tmp1 = 1.0-node.hn_g
             tmp_vec = np.empty(self.c_num_children)
