@@ -181,10 +181,8 @@ class GenModel(base.Generative):
             1 dimensional array whose elements are 0 or 1.
         """
         if node.leaf:  # 葉ノード
-            print('')
             return self.rng.choice(self.c_k,p=node.theta_vec)
         else:
-            print(f'{x[-node.depth-1]}',end=',')
             return self._gen_sample_recursion(node.children[x[-node.depth-1]],x)
     
     def _visualize_model_recursion(self,tree_graph,node,node_id,parent_id,sibling_num,p_v):
@@ -350,7 +348,7 @@ class GenModel(base.Generative):
             x[:self.c_d_max] = initial_values
         
         for i in range(self.c_d_max,sample_length+self.c_d_max):
-            x[i] = self._gen_sample_recursion(self.root,x[:i])
+            x[i] = self._gen_sample_recursion(self.root,x[i-self.c_d_max:i])
 
         return x[self.c_d_max:]
         

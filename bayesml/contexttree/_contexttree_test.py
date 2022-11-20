@@ -1,7 +1,7 @@
 import numpy as np
 import bayesml.contexttree as model
 
-gen_model = model.GenModel(c_k=2,c_d_max=3,h_g=0.75)
+gen_model = model.GenModel(c_k=2,c_d_max=3,h_g=0.99)
 # print(gen_model.get_params())
 gen_model.gen_params()
 gen_model.visualize_model()
