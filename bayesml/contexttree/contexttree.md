@@ -113,6 +113,4 @@ $$
 
 References
 
-* T. Matsushima and S. Hirasawa, "A Class of Prior Distributions on Context Tree Models and an Efficient Algorithm of the Bayes Codes Assuming It,"
-*2007 IEEE International Symposium on Signal Processing and Information Technology*,
-2007, pp. 938-941, doi: 10.1109/ISSPIT.2007.4458049.
+* T. Matsushima and S. Hirasawa, "A Class of Prior Distributions on Context Tree Models and an Efficient Algorithm of the Bayes Codes Assuming It," *2007 IEEE International Symposium on Signal Processing and Information Technology*, 2007, pp. 938-941, doi: 10.1109/ISSPIT.2007.4458049.
