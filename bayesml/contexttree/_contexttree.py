@@ -859,6 +859,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         --------
         >>> from bayesml import contexttree
         >>> gen_model = contexttree.GenModel(c_k=2,c_d_max=3,h_g=0.75)
+        >>> gen_model.gen_params()
         >>> x = gen_model.gen_sample(50)
         >>> learn_model = contexttree.LearnModel(c_k=2,c_d_max=3,h0_g=0.75)
         >>> learn_model.update_posterior(x)
