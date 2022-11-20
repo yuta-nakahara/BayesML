@@ -7,6 +7,9 @@ from . import multivariate_normal
 from . import normal
 from . import poisson
 from . import metatree
+from . import contexttree
+from . import gaussianmixture
+from . import hiddenmarkovnormal
 
 __all__ = ['bernoulli',
            'categorical',
@@ -16,5 +19,8 @@ __all__ = ['bernoulli',
            'multivariate_normal',
            'normal',
            'poisson',
-           'metatree'
+           'metatree',
+           'contexttree',
+           'gaussianmixture',
+           'hiddenmarkovnormal',
            ]
