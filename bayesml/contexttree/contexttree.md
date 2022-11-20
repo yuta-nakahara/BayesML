@@ -66,7 +66,7 @@ where the updating rule of the hyperparameter is as follows:
 
 $$
 \begin{align}
-    \beta_n(k|s) = \beta_0(k|s) + \sum_{i=1}^n I \left\{ \text{$s$ is the ancestor of $s_{T_\mathrm{max}}(x^i)$} \right\}.
+    \beta_n(k|s) = \beta_0(k|s) + \sum_{i=1}^n I \left\{ \text{$s$ is the ancestor of $s_{T_\mathrm{max}}(x^{i-1})$ and $x_i=k$ } \right\}.
 \end{align}
 $$
 
@@ -105,9 +105,17 @@ $$
 
 The predictive distribution is as follows:
 
+* $\boldsymbol{\theta}_\mathrm{p} = (\theta_{\mathrm{p},1}, \theta_{\mathrm{p},2}, \ldots, \theta_{\mathrm{p},K})$ : a parameter of the predictive distribution, where $\theta_{\mathrm{p},k}$ denotes the occurrence probability of $k\in\mathcal{X}$.
 $$
 \begin{align}
-p(x_n|x^{n-1}) = \tilde{q}_{s_\lambda}(x_n|x^{n-1}).
+p(x_n|x^{n-1}) = \theta_{\mathrm{p},x_n},
+\end{align}
+$$
+where the updating rule of the parameters of the pridictive distribution is as follows.
+
+$$
+\begin{align}
+\theta_{\mathrm{p}, k} = \tilde{q}_{s_\lambda}(k|x^{n-1})
 \end{align}
 $$
 
