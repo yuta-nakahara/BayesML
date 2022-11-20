@@ -630,7 +630,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
 
         self.hn_w_mat[:] = np.linalg.inv(self.hn_w_mat_inv) 
 
-    def estimate_params(self,loss="squared"):
+    def estimate_params(self,loss="squared",dict_out=False):
         """Estimate the parameter of the stochastic data generative model under the given criterion.
 
         Note that the criterion is applied to estimating ``mu_vec`` and ``lambda_mat`` independently.
@@ -641,10 +641,12 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         loss : str, optional
             Loss function underlying the Bayes risk function, by default \"squared\".
             This function supports \"squared\", \"0-1\", and \"KL\".
+        dict_out : bool, optional
+            If ``True``, output will be a dict, by default ``False``.
 
         Returns
         -------
-        Estimates : tuple of {numpy ndarray, float, None, or rv_frozen}
+        estimates : tuple of {numpy ndarray, float, None, or rv_frozen}
             * ``mu_vec_hat`` : the estimate for mu_vec
             * ``lambda_mat_hat`` : the estimate for lambda_mat
             The estimated values under the given loss function. If it is not exist, `None` will be returned.
@@ -658,13 +660,22 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         """
 
         if loss == "squared":
-            return self.hn_m_vec, self.hn_nu * self.hn_w_mat
+            if dict_out:
+                return {'mu_vec':self.hn_m_vec,'lambda_mat':self.hn_nu * self.hn_w_mat}
+            else:
+                return self.hn_m_vec, self.hn_nu * self.hn_w_mat
         elif loss == "0-1":
             if self.hn_nu >= self.degree + 1:
-                return self.hn_m_vec, (self.hn_nu - self.degree - 1) * self.hn_w_mat
+                if dict_out:
+                    return {'mu_vec':self.hn_m_vec,'lambda_mat':(self.hn_nu - self.degree - 1) * self.hn_w_mat}
+                else:
+                    return self.hn_m_vec, (self.hn_nu - self.degree - 1) * self.hn_w_mat
             else:
                 warnings.warn("MAP estimate of lambda_mat doesn't exist for the current hn_nu.",ResultWarning)
-                return self.hn_m_vec, None
+                if dict_out:
+                    return {'mu_vec':self.hn_m_vec,'lambda_mat':None}
+                else:
+                    return self.hn_m_vec, None
         elif loss == "KL":
             return (ss_multivariate_t(loc=self.hn_m_vec,
                                         shape=self.hn_w_mat_inv / self.hn_kappa / (self.hn_nu - self.degree + 1),

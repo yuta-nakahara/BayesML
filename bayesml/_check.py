@@ -65,6 +65,7 @@ def nonneg_int_vecs(val,val_name,exception_class):
             return val
     raise(exception_class(val_name + " must be a numpy.ndarray whose ndim >= 1 and dtype is int. Its values must be non-negative (including 0)."))
 
+
 def nonneg_float_vec(val,val_name,exception_class):
     if type(val) is np.ndarray:
         if np.issubdtype(val.dtype,np.floating) and val.ndim == 1 and np.all(val>=0):
@@ -242,6 +243,12 @@ def onehot_vecs(val,val_name,exception_class):
             return val
     raise(exception_class(val_name + " must be a numpy.ndarray whose dtype is int and whose last axis constitutes one-hot vectors."))
 
+def int_vecs(val,val_name,exception_class):
+    if type(val) is np.ndarray:
+        if np.issubdtype(val.dtype,np.integer) and val.ndim >= 1:
+            return val
+    raise(exception_class(val_name + " must be a numpy.ndarray whose dtype is int and ndim >= 1."))
+    
 def shape_consistency(val: int, val_name: str, correct: int, correct_name: str, exception_class):
     if val != correct:
         message = (f"{val_name} must coincide with {correct_name}: "
