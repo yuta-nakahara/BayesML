@@ -28,6 +28,8 @@ learn_model.update_posterior(x,y)
 learn_model.visualize_posterior(filename='metatree_posterior.gv')
 # learn_model.estimate_params(filename='map_model.gv')
 
+learn_model.make_prediction()
+
 # learn_model.calc_pred_dist(np.array([0,1,1]))
 # print(learn_model.make_prediction(loss='squared'))
 # print(learn_model.make_prediction(loss='0-1'))

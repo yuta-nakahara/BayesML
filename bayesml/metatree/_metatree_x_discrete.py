@@ -1360,12 +1360,16 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         pred_dist = node.sub_model.make_prediction(loss='KL')
         if type(pred_dist) is np.ndarray:
             mode_prob = pred_dist[mode]
-        elif hasattr(pred_dist,'pdf'):
+        try:
             mode_prob = pred_dist.pdf(mode)
-        elif hasattr(pred_dist,'pmf'):
+        except:
             mode_prob = pred_dist.pmf(mode)
-        else:
-            mode_prob = None
+        # elif hasattr(pred_dist,'pdf'):
+        #     mode_prob = pred_dist.pdf(mode)
+        # elif hasattr(pred_dist,'pmf'):
+        #     mode_prob = pred_dist.pmf(mode)
+        # else:
+        #     mode_prob = None
         return mode, mode_prob
 
     def _make_prediction_recursion_01(self,node):
