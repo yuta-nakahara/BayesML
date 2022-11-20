@@ -510,7 +510,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
     xxx : numpy.ndarray, optional
         A vector of real numbers in :math:`[0, 1]`, 
         by default [1/yyy, 1/yyy, ... , 1/yyy]
-        Sum of its elements must be 1.
+        Sum of its elements must be 1.0.
 ```
 
 #### 実数のベクトルの組

@@ -65,6 +65,13 @@ def nonneg_int_vecs(val,val_name,exception_class):
             return val
     raise(exception_class(val_name + " must be a numpy.ndarray whose ndim >= 1 and dtype is int. Its values must be non-negative (including 0)."))
 
+
+def nonneg_float_vec(val,val_name,exception_class):
+    if type(val) is np.ndarray:
+        if np.issubdtype(val.dtype,np.floating) and val.ndim == 1 and np.all(val>=0):
+            return val
+    raise(exception_class(val_name + " must be a 1-dimensional numpy.ndarray whose dtype is float. Its values must be non-negative (including 0)."))
+
 def int_of_01(val,val_name,exception_class):
     if np.issubdtype(type(val),np.integer):
         if val == 0 or val ==1:
@@ -184,6 +191,14 @@ def float_vecs(val,val_name,exception_class):
         if np.issubdtype(val.dtype,np.floating) and val.ndim >= 1:
             return val
     raise(exception_class(val_name + " must be a numpy.ndarray whose ndim >= 1."))
+
+def pos_float_vecs(val,val_name,exception_class):
+    if type(val) is np.ndarray:
+        if np.issubdtype(val.dtype,np.integer) and val.ndim >= 1 and np.all(val>0):
+            return val.astype(float)
+        if np.issubdtype(val.dtype,np.floating) and val.ndim >= 1 and np.all(val>0.0):
+            return val
+    raise(exception_class(val_name + " must be a 1-dimensional numpy.ndarray. Its values must be positive (not including 0)"))
 
 def float_vec_sum_1(val,val_name,exception_class):
     if type(val) is np.ndarray:
