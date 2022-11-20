@@ -217,7 +217,7 @@ class GenModel(base.Generative):
         feature_fix : bool
                 a bool parameter show the feature is fixed or not
         """
-        if self.leaf:  # 葉ノード
+        if node.leaf:  # 葉ノード
             node.sub_model = self.SubModel(**self.sub_h_params)
             node.sub_model.gen_params()
             if node.depth == self.c_d_max:
