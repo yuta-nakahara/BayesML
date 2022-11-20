@@ -2,7 +2,7 @@
 Ryohei Oka <o.ryohei07@gmail.com>
 -->
 
-The Hidden Markov model with the Gauss-Wishart prior distribution and the Dirichlet prior distribution.
+The hidden Markov model with the Gauss-Wishart prior distribution and the Dirichlet prior distribution.
 
 The stochastic data generative model is as follows:
 
