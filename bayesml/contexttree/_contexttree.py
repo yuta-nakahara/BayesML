@@ -498,6 +498,9 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self.hn_beta_vec = np.ones(self.c_k) / 2
         self.hn_root = None
 
+        # p_params
+        self.p_theta_vec = np.ones(self.c_k) / self.c_k
+
         self.set_h0_params(
             h0_g,
             h0_beta_vec,
@@ -882,26 +885,36 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
     def get_p_params(self):
         """Get the parameters of the predictive distribution.
 
-        This model does not have a simple parametric expression of the predictive distribution.
-        Therefore, this function returns ``None``.
-
         Returns
         -------
-        ``None``
+        p_params : dict of {str: numpy.ndarray}
+            * ``"p_theta_vec"`` : the value of ``self.p_theta_vec``
         """
-        return None
+        return {"p_theta_vec":self.p_theta_vec}
     
-    def _calc_pred_dist_leaf(self,node,x):
-            try:
-                node.sub_model.calc_pred_dist(x)
-            except:
-                node.sub_model.calc_pred_dist()
+    def _calc_pred_dist_leaf(self,node:_LearnNode):
+            return node.hn_beta_vec / node.hn_beta_vec.sum()
 
-    def _calc_pred_dist_recursion(self,node,x):
-        if node.leaf == False:  # 内部ノード
-            self._calc_pred_dist_recursion(node.children[x[node.k]],x)
+    def _calc_pred_dist_recursion(self,node:_LearnNode,x,i):
+        if node.depth < self.c_d_max and i-1-node.depth >= 0:  # 内部ノード
+            if node.children[x[i-node.depth-1]] is None:
+                node.children[x[i-node.depth-1]] = _LearnNode(
+                    node.depth+1,
+                    self.c_k,
+                    self.h0_g,
+                    self.hn_g,
+                    self.h0_beta_vec,
+                    self.hn_beta_vec,
+                )
+                if node.depth + 1 == self.c_d_max:
+                    node.children[x[i-node.depth-1]].h0_g = 0.0
+                    node.children[x[i-node.depth-1]].hn_g = 0.0
+                    node.children[x[i-node.depth-1]].leaf = True
+            tmp1 = self._calc_pred_dist_recursion(node.children[x[i-node.depth-1]],x,i)
+            tmp2 = (1 - node.hn_g) * self._calc_pred_dist_leaf(node) + node.hn_g * tmp1
+            return tmp2
         else:  # 葉ノード
-            return self._calc_pred_dist_leaf(node,x)
+            return self._calc_pred_dist_leaf(node)
 
     def calc_pred_dist(self,x):
         """Calculate the parameters of the predictive distribution.
@@ -909,90 +922,87 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         Parameters
         ----------
         x : numpy ndarray
-            values of explanatory variables whose dtype is int
+            1-dimensional int array
         """
-        return
         _check.nonneg_int_vec(x,'x',DataFormatError)
-        if x.shape[0] != self.c_k:
-            raise(DataFormatError(f"x.shape[0] must equal to c_k:{self.c_k}"))
         if x.max() >= self.c_k:
             raise(DataFormatError(f"x.max() must smaller than c_k:{self.c_k}"))
-        self._tmp_x[:] = x
-        for root in self.hn_metatree_list:
-            self._calc_pred_dist_recursion(root,self._tmp_x)
+        i = x.shape[0] - 1
 
-    def _make_prediction_recursion_squared(self,node):
-            if node.leaf == False:  # 内部ノード
-                return ((1 - node.hn_g) * node.sub_model.make_prediction(loss='squared')
-                        + node.hn_g * self._make_prediction_recursion_squared(node.children[self._tmp_x[node.k]]))
-            else:  # 葉ノード
-                return node.sub_model.make_prediction(loss='squared')
+        if self.hn_root is None:
+            self.hn_root = _LearnNode(
+                0,
+                self.c_k,
+                self.hn_g,
+                self.hn_g,
+                self.h0_beta_vec,
+                self.hn_beta_vec,
+            )
 
-    def _make_prediction_leaf_01(self,node):
-        mode = node.sub_model.make_prediction(loss='0-1')
-        pred_dist = node.sub_model.make_prediction(loss='KL')
-        if type(pred_dist) is np.ndarray:
-            mode_prob = pred_dist[mode]
-        elif hasattr(pred_dist,'pdf'):
-            mode_prob = pred_dist.pdf(mode)
-        elif hasattr(pred_dist,'pmf'):
-            mode_prob = pred_dist.pmf(mode)
-        else:
-            mode_prob = None
-        return mode, mode_prob
+        self.p_theta_vec[:] = self._calc_pred_dist_recursion(self.hn_root,x,i)
 
-    def _make_prediction_recursion_01(self,node):
-        if node.leaf == False:  # 内部ノード
-            mode1,mode_prob1 = self._make_prediction_leaf_01(node)
-            mode2,mode_prob2 = self._make_prediction_recursion_01(node.children[self._tmp_x[node.k]])
-            if (1 - node.hn_g) * mode_prob1 > node.hn_g * mode_prob2:
-                return mode1,mode_prob1
-            else:
-                return mode2,mode_prob2
-        else:  # 葉ノード
-            return self._make_prediction_leaf_01(node)
-
-    def make_prediction(self,loss="0-1"):
+    def make_prediction(self,loss="KL"):
         """Predict a new data point under the given criterion.
 
         Parameters
         ----------
         loss : str, optional
-            Loss function underlying the Bayes risk function, by default \"0-1\".
-            This function supports \"squared\", \"0-1\".
+            Loss function underlying the Bayes risk function, by default \"KL\".
+            This function supports \"KL\" and \"0-1\".
 
         Returns
         -------
         predicted_value : {float, numpy.ndarray}
             The predicted value under the given loss function. 
+            If the loss function is \"KL\", the predictive 
+            distribution will be returned as a 1-dimensional 
+            numpy.ndarray that consists of occurence probabilities.
         """
-        if loss == "squared":
-            tmp_pred_vec = np.empty(len(self.hn_metatree_list))
-            for i,metatree in enumerate(self.hn_metatree_list):
-                tmp_pred_vec[i] = self._make_prediction_recursion_squared(metatree)
-            return self.hn_metatree_prob_vec @ tmp_pred_vec
+        if loss == "KL":
+            return self.p_theta_vec
         elif loss == "0-1":
-            tmp_mode = np.empty(len(self.hn_metatree_list))
-            tmp_mode_prob_vec = np.empty(len(self.hn_metatree_list))
-            for i,metatree in enumerate(self.hn_metatree_list):
-                tmp_mode[i],tmp_mode_prob_vec[i] = self._make_prediction_recursion_01(metatree)
-            return tmp_mode[np.argmax(self.hn_metatree_prob_vec * tmp_mode_prob_vec)]
+            return np.argmax(self.p_theta_vec)
         else:
             raise(CriteriaError("Unsupported loss function! "
-                                +"This function supports \"squared\" and \"0-1\"."))
+                                +"This function supports \"0-1\" and \"KL\"."))
 
-    def pred_and_update(self,x,y,loss="0-1"):
+    def _pred_and_update_leaf(self,node:_LearnNode,x,i):
+            tmp = node.hn_beta_vec / node.hn_beta_vec.sum()
+            node.hn_beta_vec[x[i]] += 1
+            return tmp
+
+    def _pred_and_update_recursion(self,node:_LearnNode,x,i):
+        if node.depth < self.c_d_max and i-1-node.depth >= 0:  # 内部ノード
+            if node.children[x[i-node.depth-1]] is None:
+                node.children[x[i-node.depth-1]] = _LearnNode(
+                    node.depth+1,
+                    self.c_k,
+                    self.h0_g,
+                    self.hn_g,
+                    self.h0_beta_vec,
+                    self.hn_beta_vec,
+                )
+                if node.depth + 1 == self.c_d_max:
+                    node.children[x[i-node.depth-1]].h0_g = 0.0
+                    node.children[x[i-node.depth-1]].hn_g = 0.0
+                    node.children[x[i-node.depth-1]].leaf = True
+            tmp1 = self._pred_and_update_recursion(node.children[x[i-node.depth-1]],x,i)
+            tmp2 = (1 - node.hn_g) * self._pred_and_update_leaf(node,x,i) + node.hn_g * tmp1
+            node.hn_g = node.hn_g * tmp1[x[i]] / tmp2[x[i]]
+            return tmp2
+        else:  # 葉ノード
+            return self._pred_and_update_leaf(node,x,i)
+
+    def pred_and_update(self,x,loss="KL"):
         """Predict a new data point and update the posterior sequentially.
 
         Parameters
         ----------
         x : numpy.ndarray
-            It must be a degree-dimensional vector
-        y : numpy ndarray
-            values of objective variable whose dtype may be int or float
+            1-dimensional int array
         loss : str, optional
-            Loss function underlying the Bayes risk function, by default \"0-1\".
-            This function supports \"squared\", \"0-1\", and \"KL\".
+            Loss function underlying the Bayes risk function, by default \"KL\".
+            This function supports \"KL\", and \"0-1\".
 
         Returns
         -------
@@ -1000,11 +1010,20 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             The predicted value under the given loss function. 
         """
         _check.nonneg_int_vec(x,'x',DataFormatError)
-        if x.shape[-1] != self.c_k:
-            raise(DataFormatError(f"x.shape[-1] must equal to c_k:{self.c_k}"))
         if x.max() >= self.c_k:
             raise(DataFormatError(f"x.max() must smaller than c_k:{self.c_k}"))
-        self.calc_pred_dist(x)
+        i = x.shape[0] - 1
+
+        if self.hn_root is None:
+            self.hn_root = _LearnNode(
+                0,
+                self.c_k,
+                self.hn_g,
+                self.hn_g,
+                self.h0_beta_vec,
+                self.hn_beta_vec,
+            )
+
+        self.p_theta_vec[:] = self._pred_and_update_recursion(self.hn_root,x,i)
         prediction = self.make_prediction(loss=loss)
-        self.update_posterior(x,y,alg_type='given_MT')
         return prediction

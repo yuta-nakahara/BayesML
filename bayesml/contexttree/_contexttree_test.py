@@ -10,12 +10,13 @@ gen_model.visualize_model(filename='tmp1.gv')
 x = gen_model.gen_sample(30)
 print(x)
 
-learn_model = model.LearnModel(2,3,h0_g=0.75)
-print(learn_model.get_h0_params())
-print(learn_model.get_hn_params())
+learn_model_1 = model.LearnModel(2,3,h0_g=0.75)
+learn_model_2 = model.LearnModel(2,3,h0_g=0.75)
 
-learn_model.update_posterior(x)
-learn_model.visualize_posterior(filename='tmp2.gv')
-learn_model.estimate_params(filename='tmp3.gv')
-print(learn_model.get_h0_params())
-print(learn_model.get_hn_params())
+learn_model_1.update_posterior(x)
+learn_model_1.visualize_posterior(filename='tmp2.gv')
+# learn_model.estimate_params(filename='tmp3.gv')
+
+for i in range(30):
+    learn_model_2.pred_and_update(x[:i+1])
+learn_model_2.visualize_posterior(filename='tmp3.gv')
