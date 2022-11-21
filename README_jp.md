@@ -120,7 +120,7 @@ print(learn_model.estimate_params(loss='0-1'))
 * [隠れマルコフモデル](https://yuta-nakahara.github.io/BayesML/bayesml.hiddenmarkovnormal.html "BayesML Hidden Markov Normal Model")
 * [文脈木モデル](https://yuta-nakahara.github.io/BayesML/bayesml.contexttree.html "BayesML Context Tree Model")
 
-また，今後は混合正規モデルや隠れマルコフモデルなどの厳密なベイズ推論が困難なモデルを変分ベイズ法で学習するパッケージが追加される予定です．
+また，今後はより複雑な階層的モデルを取り扱うパッケージを追加していく予定です．
 
 ## コントリビューションの方法
 
