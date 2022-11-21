@@ -123,7 +123,7 @@ The following packages are currently available. In this library, a probabilistic
 * [Hidden Markov normal model](https://yuta-nakahara.github.io/BayesML/bayesml.hiddenmarkovnormal.html "BayesML Hidden Markov Normal Model")
 * [Context tree model](https://yuta-nakahara.github.io/BayesML/bayesml.contexttree.html "BayesML Context Tree Model")
 
-In the future, we will add packages to deal with a mixture normal model and a hidden Markov model, which are difficult to perform exact Bayesian inference, by using variational Bayes methods.
+In the future, we will add packages to deal with more complicated hierarchical models.
 
 ## How to contribute
 
