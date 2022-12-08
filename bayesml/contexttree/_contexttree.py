@@ -190,17 +190,13 @@ class GenModel(base.Generative):
                 a object from _Node class
         """
         if original_tree_node is None:
-            node.h_g = self.h_g
-            node.h_beta_vec[:] = self.h_beta_vec
-            if node.depth == self.c_d_max:  # 葉ノード
-                node.leaf = True
-                if node.depth == self.c_d_max:
-                    node.h_g = 0
+            if node.depth == self.c_d_max:
+                node.h_g = 0
             else:
-                node.leaf = False
-                for i in range(self.c_k):
-                    if node.children[i] is None:
-                        node.children[i] = _Node(node.depth+1,self.c_k)
+                node.h_g = self.h_g
+            node.h_beta_vec[:] = self.h_beta_vec
+            for i in range(self.c_k):
+                if node.children[i] is not None:
                     self._set_h_params_recursion(node.children[i],None)
         else:
             node.h_g = original_tree_node.h_g
@@ -525,17 +521,13 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                 a object from _Node class
         """
         if original_tree_node is None:
-            node.h_g = self.h0_g
-            node.h_beta_vec[:] = self.h0_beta_vec
-            if node.depth == self.c_d_max:  # 葉ノード
-                node.leaf = True
-                if node.depth == self.c_d_max:
-                    node.h_g = 0
+            if node.depth == self.c_d_max:
+                node.h_g = 0
             else:
-                node.leaf = False
-                for i in range(self.c_k):
-                    if node.children[i] is None:
-                        node.children[i] = _Node(node.depth+1,self.c_k)
+                node.h_g = self.h0_g
+            node.h_beta_vec[:] = self.h0_beta_vec
+            for i in range(self.c_k):
+                if node.children[i] is not None:
                     self._set_h0_params_recursion(node.children[i],None)
         else:
             node.h_g = original_tree_node.h_g
@@ -562,17 +554,13 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                 a object from _Node class
         """
         if original_tree_node is None:
-            node.h_g = self.hn_g
-            node.h_beta_vec[:] = self.hn_beta_vec
-            if node.depth == self.c_d_max:  # 葉ノード
-                node.leaf = True
-                if node.depth == self.c_d_max:
-                    node.h_g = 0
+            if node.depth == self.c_d_max:
+                node.h_g = 0
             else:
-                node.leaf = False
-                for i in range(self.c_k):
-                    if node.children[i] is None:
-                        node.children[i] = _Node(node.depth+1,self.c_k)
+                node.h_g = self.hn_g
+            node.h_beta_vec[:] = self.hn_beta_vec
+            for i in range(self.c_k):
+                if node.children[i] is not None:
                     self._set_hn_params_recursion(node.children[i],None)
         else:
             node.h_g = original_tree_node.h_g
