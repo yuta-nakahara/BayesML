@@ -15,7 +15,7 @@ from .. import _check
 
 _CMAP = plt.get_cmap("Blues")
 
-class _GenNode:
+class _Node:
     """ The node class used by generative model and the prior distribution
 
     Parameters
@@ -28,14 +28,14 @@ class _GenNode:
     def __init__(self,
                  depth,
                  c_k,
-                 h_g,
                  ):
         self.depth = depth
         self.children = [None for i in range(c_k)]  # child nodes
-        self.h_g = h_g
+        self.h_g = 0.5
         self.h_beta_vec = np.ones(c_k) / 2
         self.theta_vec = np.ones(c_k) / c_k
         self.leaf = False
+        self.map_leaf = False
 
 class GenModel(base.Generative):
     """ The stochastice data generative model and the prior distribution
@@ -46,11 +46,7 @@ class GenModel(base.Generative):
         A positive integer
     c_d_max : int, optional
         A positive integer, by default 10
-    theta_vec : numpy.ndarray, optional
-        A vector of real numbers in :math:`[0, 1]`, 
-        by default [1/c_k, 1/c_k, ... , 1/c_k]
-        Sum of its elements must be 1.0.
-    root : contexttree._GenNode, optional
+    root : contexttree._Node, optional
         A root node of a context tree, 
         by default a tree consists of only one node.
     h_g : float, optional
@@ -59,7 +55,7 @@ class GenModel(base.Generative):
         A vector of positive real numbers, 
         by default [1/2, 1/2, ... , 1/2].
         If a single real number is input, it will be broadcasted.
-    h_root : contexttree._GenNode, optional
+    h_root : contexttree._Node, optional
         A root node of a superposed tree for hyperparameters 
         by default ``None``
     seed : {None, int}, optional
@@ -71,7 +67,6 @@ class GenModel(base.Generative):
             c_k,
             c_d_max=10,
             *,
-            theta_vec=None,
             root=None,
             h_g=0.5,
             h_beta_vec=None,
@@ -95,20 +90,23 @@ class GenModel(base.Generative):
         )
 
         # params
-        self.theta_vec = np.ones(self.c_k) / self.c_k
-        self.root = _GenNode(0,self.c_k,self.h_g)
+        self.root = _Node(0,self.c_k)
+        self.root.h_g = self.h_g
+        self.root.h_beta_vec[:] = self.h_beta_vec
         self.root.leaf = True
 
         self.set_params(
-            theta_vec,
             root,
         )
 
-    def _gen_params_recursion(self,node,h_node):
+    def _gen_params_recursion(self,node:_Node,h_node:_Node):
         """ generate parameters recursively"""
-        if node.depth == self.c_d_max:
-            node.h_g = 0
         if h_node is None:
+            if node.depth == self.c_d_max:
+                node.h_g = 0
+            else:
+                node.h_g = self.h_g
+            node.h_beta_vec[:] = self.h_beta_vec
             if node.depth == self.c_d_max or self.rng.random() > self.h_g:  # 葉ノード
                 node.theta_vec[:] = self.rng.dirichlet(self.h_beta_vec)
                 node.leaf = True
@@ -116,9 +114,14 @@ class GenModel(base.Generative):
                 node.leaf = False
                 for i in range(self.c_k):
                     if node.children[i] is None:
-                        node.children[i] = _GenNode(node.depth+1,self.c_k,self.h_g)
+                        node.children[i] = _Node(node.depth+1,self.c_k)
                     self._gen_params_recursion(node.children[i],None)
         else:
+            if node.depth == self.c_d_max:
+                node.h_g = 0
+            else:
+                node.h_g = h_node.h_g
+            node.h_beta_vec[:] = h_node.h_beta_vec
             if node.depth == self.c_d_max or self.rng.random() > h_node.h_g:  # 葉ノード
                 node.theta_vec[:] = self.rng.dirichlet(h_node.h_beta_vec)
                 node.leaf = True
@@ -126,12 +129,17 @@ class GenModel(base.Generative):
                 node.leaf = False
                 for i in range(self.c_k):
                     if node.children[i] is None:
-                        node.children[i] = _GenNode(node.depth+1,self.c_k,self.h_g)
+                        node.children[i] = _Node(node.depth+1,self.c_k)
                     self._gen_params_recursion(node.children[i],h_node.children[i])
 
-    def _gen_params_recursion_tree_fix(self,node,h_node):
+    def _gen_params_recursion_tree_fix(self,node:_Node,h_node:_Node):
         """ generate parameters recursively for fixed tree"""
         if h_node is None:
+            if node.depth == self.c_d_max:
+                node.h_g = 0
+            else:
+                node.h_g = self.h_g
+            node.h_beta_vec[:] = self.h_beta_vec
             if node.leaf:  # 葉ノード
                 node.theta_vec[:] = self.rng.dirichlet(self.h_beta_vec)
             else:  # 内部ノード
@@ -139,6 +147,11 @@ class GenModel(base.Generative):
                     if node.children[i] is not None:
                         self._gen_params_recursion_tree_fix(node.children[i],None)
         else:
+            if node.depth == self.c_d_max:
+                node.h_g = 0
+            else:
+                node.h_g = h_node.h_g
+            node.h_beta_vec[:] = h_node.h_beta_vec
             if node.leaf:  # 葉ノード
                 node.theta_vec[:] = self.rng.dirichlet(h_node.h_beta_vec)
             else:  # 内部ノード
@@ -146,29 +159,63 @@ class GenModel(base.Generative):
                     if node.children[i] is not None:
                         self._gen_params_recursion_tree_fix(node.children[i],h_node.children[i])
 
-    def _set_recursion(self,node,original_tree_node):
+    def _set_params_recursion(self,node:_Node,original_tree_node:_Node):
         """ copy parameters from a fixed tree
 
         Parameters
         ----------
         node : object
-                a object form GenNode class
+                a object from _Node class
         original_tree_node : object
-                a object form GenNode class
+                a object from _Node class
         """
-        node.h_g = original_tree_node.h_g
-        node.h_beta_vec[:] = original_tree_node.h_beta_vec
         node.theta_vec[:] = original_tree_node.theta_vec
         if original_tree_node.leaf or node.depth == self.c_d_max:  # 葉ノード
             node.leaf = True
-            if node.depth == self.c_d_max:
-                node.h_g = 0
         else:
             node.leaf = False
             for i in range(self.c_k):
-                node.children[i] = _GenNode(node.depth+1,self.c_k,self.h_g)
-                self._set_recursion(node.children[i],original_tree_node.children[i])
-    
+                if node.children[i] is None:
+                    node.children[i] = _Node(node.depth+1,self.c_k)
+                self._set_params_recursion(node.children[i],original_tree_node.children[i])
+
+    def _set_h_params_recursion(self,node:_Node,original_tree_node:_Node):
+        """ copy parameters from a fixed tree
+
+        Parameters
+        ----------
+        node : object
+                a object from _Node class
+        original_tree_node : object
+                a object from _Node class
+        """
+        if original_tree_node is None:
+            node.h_g = self.h_g
+            node.h_beta_vec[:] = self.h_beta_vec
+            if node.depth == self.c_d_max:  # 葉ノード
+                node.leaf = True
+                if node.depth == self.c_d_max:
+                    node.h_g = 0
+            else:
+                node.leaf = False
+                for i in range(self.c_k):
+                    if node.children[i] is None:
+                        node.children[i] = _Node(node.depth+1,self.c_k)
+                    self._set_h_params_recursion(node.children[i],None)
+        else:
+            node.h_g = original_tree_node.h_g
+            node.h_beta_vec[:] = original_tree_node.h_beta_vec
+            if original_tree_node.leaf or node.depth == self.c_d_max:  # 葉ノード
+                node.leaf = True
+                if node.depth == self.c_d_max:
+                    node.h_g = 0
+            else:
+                node.leaf = False
+                for i in range(self.c_k):
+                    if node.children[i] is None:
+                        node.children[i] = _Node(node.depth+1,self.c_k)
+                    self._set_h_params_recursion(node.children[i],original_tree_node.children[i])
+
     def _gen_sample_recursion(self,node,x):
         """Generate a sample from the stochastic data generative model.
 
@@ -230,31 +277,35 @@ class GenModel(base.Generative):
         h_beta_vec : numpy.ndarray, optional
             A vector of positive real numbers, 
             by default ``None``
-        h_root : contexttree._GenNode, optional
+        h_root : contexttree._Node, optional
             A root node of a superposed tree for hyperparameters 
             by default ``None``
         """
         if h_g is not None:
             self.h_g = _check.float_in_closed01(h_g,'h_g',ParameterFormatError)
+            if self.h_root is not None:
+                self._set_h_params_recursion(self.h_root,None)
 
         if h_beta_vec is not None:
             _check.pos_floats(h_beta_vec,'h_beta_vec',ParameterFormatError)
             self.h_beta_vec[:] = h_beta_vec
+            if self.h_root is not None:
+                self._set_h_params_recursion(self.h_root,None)
         
         if h_root is not None:
-            if type(h_root) is not _GenNode:
+            if type(h_root) is not _Node:
                 raise(ParameterFormatError(
-                    "h_root must be an instance of contexttree._GenNode"
+                    "h_root must be an instance of contexttree._Node"
                 ))
-            self.h_root = _GenNode(0,self.c_k,self.h_g)
-            self._set_recursion(self.h_root,h_root)
+            self.h_root = _Node(0,self.c_k)
+            self._set_h_params_recursion(self.h_root,h_root)
 
     def get_h_params(self):
         """Get the hyperparameters of the prior distribution.
 
         Returns
         -------
-        h_params : dict of {str: float, numpy.ndarray, contexttree._GenNode}
+        h_params : dict of {str: float, numpy.ndarray, contexttree._Node}
             * ``"h_g"`` : the value of ``self.h_g``
             * ``"h_beta_vec"`` : the value of ``self.h_beta_vec``
             * ``"h_root"`` : the value of ``self.h_root``
@@ -278,32 +329,20 @@ class GenModel(base.Generative):
         else:
             self._gen_params_recursion(self.root,self.h_root)
     
-    def set_params(self,theta_vec=None,root=None):
+    def set_params(self,root=None):
         """Set the parameter of the sthocastic data generative model.
 
         Parameters
         ----------
-        theta_vec : numpy.ndarray, optional
-            A vector of real numbers in :math:`[0, 1]`, 
-            by default None.
-            Sum of its elements must be 1.0.
-        root : contexttree._GenNode, optional
+        root : contexttree._Node, optional
             A root node of a contexttree, by default None.
         """
-        if theta_vec is not None:
-            _check.float_vec_sum_1(theta_vec, "theta_vec", ParameterFormatError)
-            _check.shape_consistency(
-                theta_vec.shape[0],"theta_vec.shape[0]",
-                self.c_k,"self.c_k",
-                ParameterFormatError
-                )
-            self.theta_vec[:] = theta_vec
         if root is not None:
-            if type(root) is not _GenNode:
+            if type(root) is not _Node:
                 raise(ParameterFormatError(
-                    "root must be an instance of metatree._GenNode"
+                    "root must be an instance of metatree._Node"
                 ))
-            self._set_recursion(self.root,root)
+            self._set_params_recursion(self.root,root)
 
     def get_params(self):
         """Get the parameter of the sthocastic data generative model.
@@ -311,10 +350,9 @@ class GenModel(base.Generative):
         Returns
         -------
         params : dict of {str:float}
-            * ``"theta_vec"`` : The value of ``self.theta_vec``.
             * ``"root"`` : The value of ``self.root``.
         """
-        return {"theta_vec":self.theta_vec,"root":self.root}
+        return {"root":self.root}
 
     def gen_sample(self,sample_length,initial_values=None):
         """Generate a sample from the stochastic data generative model.
@@ -553,7 +591,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         h0_beta_vec : numpy.ndarray, optional
             A vector of positive real numbers, 
             by default ``None``
-        h0_root : contexttree._GenNode, optional
+        h0_root : contexttree._Node, optional
             A root node of a superposed tree for hyperparameters 
             by default ``None``
         """
@@ -601,7 +639,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         hn_beta_vec : numpy.ndarray, optional
             A vector of positive real numbers, 
             by default ``None``
-        hn_root : contexttree._GenNode, optional
+        hn_root : contexttree._Node, optional
             A root node of a superposed tree for hyperparameters 
             by default ``None``
         """
