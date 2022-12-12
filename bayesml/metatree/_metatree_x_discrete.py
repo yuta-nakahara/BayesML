@@ -39,26 +39,6 @@ CONTINUOUS_MODELS = {
     # linearregression,
     exponential,
     }
-# GEN_MODELS = {
-#     bernoulli.GenModel,
-#     # categorical.GenModel,
-#     normal.GenModel,
-#     # multivariate_normal.GenModel,
-#     # linearregression.GenModel,
-#     poisson.GenModel,
-#     exponential.GenModel,
-#     }
-# DISCRETE_GEN_MODELS = {
-#     bernoulli.GenModel,
-#     # categorical.GenModel,
-#     poisson.GenModel,
-#     }
-# CONTINUOUS_GEN_MODELS = {
-#     normal.GenModel,
-#     # multivariate_normal.GenModel,
-#     # linearregression.GenModel,
-#     exponential.GenModel,
-#     }
 LEARN_MODELS = {
     bernoulli.LearnModel,
     # categorical.LearnModel,
@@ -98,18 +78,14 @@ class _Node:
     """
     def __init__(self,
                  depth,
-                 k_candidates,
-                 c_num_children = 2,
-                 h_g = 0.5,
-                 k = None,
-                 sub_model = None
+                 c_num_children,
                  ):
         self.depth = depth
         self.children = [None for i in range(c_num_children)]  # child nodes
-        self.k_candidates = k_candidates
-        self.h_g = h_g
-        self.k = k
-        self.sub_model = sub_model
+        self.k_candidates = None
+        self.h_g = 0.5
+        self.k = None
+        self.sub_model = None
         self.leaf = False
         self.map_leaf = False
 
@@ -192,7 +168,11 @@ class GenModel(base.Generative):
         )
 
         # params
-        self.root = _Node(0,list(range(self.c_k)),self.c_num_children,self.h_g,0,self.SubModel.GenModel(**self.sub_h_params))
+        self.root = _Node(0,self.c_num_children)
+        self.root.k_candidates = list(range(self.c_k))
+        self.root.h_g = self.h_g
+        self.root.k = 0
+        self.root.sub_model = self.SubModel.GenModel(**self.sub_h_params)
         self.root.leaf = True
 
         self.set_params(root)
@@ -222,7 +202,9 @@ class GenModel(base.Generative):
             node.leaf = False
             for i in range(self.c_num_children):
                 if feature_fix == False or node.children[i] is None:
-                    node.children[i] = _Node(node.depth+1,child_k_candidates,self.c_num_children,self.h_g,None,None)
+                    node.children[i] = _Node(node.depth+1,self.c_num_children)
+                    node.children[i].k_candidates = child_k_candidates
+                    node.children[i].h_g = self.h_g
                 else:
                     node.children[i].k_candidates = child_k_candidates
                 self._gen_params_recursion(node.children[i],feature_fix)
@@ -252,7 +234,9 @@ class GenModel(base.Generative):
             node.leaf = False
             for i in range(self.c_num_children):
                 if feature_fix == False or node.children[i] is None:
-                    node.children[i] = _Node(node.depth+1,child_k_candidates,self.c_num_children,self.h_g,None,None)
+                    node.children[i] = _Node(node.depth+1,self.c_num_children)
+                    node.children[i].k_candidates = child_k_candidates
+                    node.children[i].h_g = self.h_g
                 else:
                     node.children[i].k_candidates = child_k_candidates
                 self._gen_params_recursion_tree_fix(node.children[i],feature_fix)
@@ -277,7 +261,8 @@ class GenModel(base.Generative):
             child_k_candidates = copy.copy(node.k_candidates)
             child_k_candidates.remove(node.k)
             for i in range(self.c_num_children):
-                node.children[i] = _Node(node.depth+1,child_k_candidates,self.c_num_children,self.h_g,None,None)
+                node.children[i] = _Node(node.depth+1,self.c_num_children)
+                node.children[i].k_candidates = child_k_candidates
                 self._set_params_recursion(node.children[i],original_tree_node.children[i])
     
     def _gen_sample_recursion(self,node:_Node,x):
