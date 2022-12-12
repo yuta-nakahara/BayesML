@@ -19,26 +19,46 @@ from .. import _check
 from .. import bernoulli, categorical, normal, multivariate_normal, linearregression, poisson, exponential
 
 _CMAP = plt.get_cmap("Blues")
-GEN_MODELS = {
-    bernoulli.GenModel,
-    # categorical.GenModel,
-    normal.GenModel,
-    # multivariate_normal.GenModel,
-    # linearregression.GenModel,
-    poisson.GenModel,
-    exponential.GenModel,
+MODELS = {
+    bernoulli,
+    # categorical,
+    normal,
+    # multivariate_normal,
+    # linearregression,
+    poisson,
+    exponential,
     }
-DISCRETE_GEN_MODELS = {
-    bernoulli.GenModel,
-    # categorical.GenModel,
-    poisson.GenModel,
+DISCRETE_MODELS = {
+    bernoulli,
+    # categorical,
+    poisson,
     }
-CONTINUOUS_GEN_MODELS = {
-    normal.GenModel,
-    # multivariate_normal.GenModel,
-    # linearregression.GenModel,
-    exponential.GenModel,
+CONTINUOUS_MODELS = {
+    normal,
+    # multivariate_normal,
+    # linearregression,
+    exponential,
     }
+# GEN_MODELS = {
+#     bernoulli.GenModel,
+#     # categorical.GenModel,
+#     normal.GenModel,
+#     # multivariate_normal.GenModel,
+#     # linearregression.GenModel,
+#     poisson.GenModel,
+#     exponential.GenModel,
+#     }
+# DISCRETE_GEN_MODELS = {
+#     bernoulli.GenModel,
+#     # categorical.GenModel,
+#     poisson.GenModel,
+#     }
+# CONTINUOUS_GEN_MODELS = {
+#     normal.GenModel,
+#     # multivariate_normal.GenModel,
+#     # linearregression.GenModel,
+#     exponential.GenModel,
+#     }
 LEARN_MODELS = {
     bernoulli.LearnModel,
     # categorical.LearnModel,
@@ -60,7 +80,7 @@ CONTINUOUS_LEARN_MODELS = {
     exponential.LearnModel,
     }
 
-class _GenNode:
+class _Node:
     """ The node class used by generative model and the prior distribution
 
     Parameters
@@ -91,6 +111,7 @@ class _GenNode:
         self.k = k
         self.sub_model = sub_model
         self.leaf = False
+        self.map_leaf = False
 
 class GenModel(base.Generative):
     """ The stochastice data generative model and the prior distribution
@@ -104,11 +125,9 @@ class GenModel(base.Generative):
     c_num_children : int, optional
         A positive integer, by default 2
     SubModel : class, optional
-        GenModel of bernoulli, categorical, 
-        poisson, normal, multivariate_normal, 
-        exponential, linearregression, 
-        by default bernoulli.GenModel
-    root : metatree._GenNode, optional
+        bernoulli, poisson, normal, or exponential, 
+        by default bernoulli
+    root : metatree._Node, optional
         A root node of a meta-tree, 
         by default a tree consists of only one node.
     h_k_prob_vec : numpy.ndarray, optional
@@ -118,7 +137,7 @@ class GenModel(base.Generative):
     h_g : float, optional
         A real number in :math:`[0, 1]`, by default 0.5
     sub_h_params : dict, optional
-        h_params for self.SubModel, by default {}
+        h_params for self.SubModel.GenModel, by default {}
     h_metatree_list : list of metatree._LearnNode, optional
         Root nodes of meta-trees, by default []
     h_metatree_prob_vec : numpy.ndarray, optional
@@ -136,7 +155,7 @@ class GenModel(base.Generative):
             c_d_max=10,
             c_num_children=2,
             *,
-            SubModel=bernoulli.GenModel,
+            SubModel=bernoulli,
             root=None,
             h_k_prob_vec = None,
             h_g=0.5,
@@ -149,10 +168,10 @@ class GenModel(base.Generative):
         self.c_d_max = _check.pos_int(c_d_max,'c_d_max',ParameterFormatError)
         self.c_num_children = _check.pos_int(c_num_children,'c_num_children',ParameterFormatError)
         self.c_k = _check.pos_int(c_k,'c_k',ParameterFormatError)
-        if SubModel not in GEN_MODELS:
+        if SubModel not in MODELS:
             raise(ParameterFormatError(
-                "SubModel must be a GenModel of bernoulli, "
-                +"poisson, normal, exponential."
+                "SubModel must be bernoulli, "
+                +"poisson, normal, or exponential."
             ))
         self.SubModel = SubModel
         self.rng = np.random.default_rng(seed)
@@ -173,12 +192,12 @@ class GenModel(base.Generative):
         )
 
         # params
-        self.root = _GenNode(0,list(range(self.c_k)),self.c_num_children,self.h_g,0,self.SubModel(**self.sub_h_params))
+        self.root = _Node(0,list(range(self.c_k)),self.c_num_children,self.h_g,0,self.SubModel.GenModel(**self.sub_h_params))
         self.root.leaf = True
 
         self.set_params(root)
 
-    def _gen_params_recursion(self,node,feature_fix):
+    def _gen_params_recursion(self,node:_Node,feature_fix):
         """ generate parameters recursively
 
         Parameters
@@ -188,13 +207,13 @@ class GenModel(base.Generative):
         feature_fix : bool
                 a bool parameter show the feature is fixed or not
         """
-        if node.depth == self.c_d_max or node.depth == self.c_k or self.rng.random() > node.h_g:  # 葉ノード
-            node.sub_model = self.SubModel(**self.sub_h_params)
+        if node.depth == self.c_d_max or node.depth == self.c_k or self.rng.random() > node.h_g:  # leaf node
+            node.sub_model = self.SubModel.GenModel(**self.sub_h_params)
             node.sub_model.gen_params()
             if node.depth == self.c_d_max:
                 node.h_g = 0
             node.leaf = True
-        else:  # 内部ノード
+        else:  # inner node
             if feature_fix == False or node.k is None:
                 node.k = self.rng.choice(node.k_candidates,
                                          p=self.h_k_prob_vec[node.k_candidates]/self.h_k_prob_vec[node.k_candidates].sum())
@@ -203,12 +222,12 @@ class GenModel(base.Generative):
             node.leaf = False
             for i in range(self.c_num_children):
                 if feature_fix == False or node.children[i] is None:
-                    node.children[i] = _GenNode(node.depth+1,child_k_candidates,self.c_num_children,self.h_g,None,None)
+                    node.children[i] = _Node(node.depth+1,child_k_candidates,self.c_num_children,self.h_g,None,None)
                 else:
                     node.children[i].k_candidates = child_k_candidates
                 self._gen_params_recursion(node.children[i],feature_fix)
 
-    def _gen_params_recursion_tree_fix(self,node,feature_fix):
+    def _gen_params_recursion_tree_fix(self,node:_Node,feature_fix):
         """ generate parameters recursively for fixed tree
 
         Parameters
@@ -218,13 +237,13 @@ class GenModel(base.Generative):
         feature_fix : bool
                 a bool parameter show the feature is fixed or not
         """
-        if node.leaf:  # 葉ノード
-            node.sub_model = self.SubModel(**self.sub_h_params)
+        if node.leaf:  # leaf node
+            node.sub_model = self.SubModel.GenModel(**self.sub_h_params)
             node.sub_model.gen_params()
             if node.depth == self.c_d_max:
                 node.h_g = 0
             node.leaf = True
-        else:  # 内部ノード
+        else:  # inner node
             if feature_fix == False or node.k is None:
                 node.k = self.rng.choice(node.k_candidates,
                                          p=self.h_k_prob_vec[node.k_candidates]/self.h_k_prob_vec[node.k_candidates].sum())
@@ -233,12 +252,12 @@ class GenModel(base.Generative):
             node.leaf = False
             for i in range(self.c_num_children):
                 if feature_fix == False or node.children[i] is None:
-                    node.children[i] = _GenNode(node.depth+1,child_k_candidates,self.c_num_children,self.h_g,None,None)
+                    node.children[i] = _Node(node.depth+1,child_k_candidates,self.c_num_children,self.h_g,None,None)
                 else:
                     node.children[i].k_candidates = child_k_candidates
                 self._gen_params_recursion_tree_fix(node.children[i],feature_fix)
 
-    def _set_params_recursion(self,node,original_tree_node):
+    def _set_params_recursion(self,node:_Node,original_tree_node:_Node):
         """ copy parameters from a fixed tree
 
         Parameters
@@ -248,7 +267,7 @@ class GenModel(base.Generative):
         original_tree_node : object
                 a object form GenNode class
         """
-        if original_tree_node.leaf:  # 葉ノード
+        if original_tree_node.leaf:  # leaf node
             node.sub_model = copy.deepcopy(original_tree_node.sub_model)
             if node.depth == self.c_d_max:
                 node.h_g = 0
@@ -258,10 +277,10 @@ class GenModel(base.Generative):
             child_k_candidates = copy.copy(node.k_candidates)
             child_k_candidates.remove(node.k)
             for i in range(self.c_num_children):
-                node.children[i] = _GenNode(node.depth+1,child_k_candidates,self.c_num_children,self.h_g,None,None)
+                node.children[i] = _Node(node.depth+1,child_k_candidates,self.c_num_children,self.h_g,None,None)
                 self._set_params_recursion(node.children[i],original_tree_node.children[i])
     
-    def _gen_sample_recursion(self,node,x):
+    def _gen_sample_recursion(self,node:_Node,x):
         """Generate a sample from the stochastic data generative model.
 
         Parameters
@@ -272,7 +291,7 @@ class GenModel(base.Generative):
         x : numpy ndarray
             1 dimensional array whose elements are 0 or 1.
         """
-        if node.leaf:  # 葉ノード
+        if node.leaf:  # leaf node
             try:
                 y = node.sub_model.gen_sample(sample_size=1,x=x)
             except:
@@ -281,23 +300,21 @@ class GenModel(base.Generative):
         else:
             return self._gen_sample_recursion(node.children[x[node.k]],x)
     
-    def _visualize_model_recursion(self,tree_graph,node,node_id,parent_id,sibling_num,p_v):
-        """Visualize the stochastic data generative model and generated samples.
-
-        """
+    def _visualize_model_recursion(self,tree_graph,node:_Node,node_id,parent_id,sibling_num,p_v):
+        """Visualize the stochastic data generative model and generated samples."""
         tmp_id = node_id
         tmp_p_v = p_v
         
         # add node information
         label_string = f'k={node.k}\\lh_g={node.h_g:.2f}\\lp_v={tmp_p_v:.2f}\\lsub_params={{'
-        if node.sub_model is not None:
+        if node.leaf:
             sub_params = node.sub_model.get_params()
             for key,value in sub_params.items():
                 try:
                     label_string += f'\\l{key}:{value:.2f}'
                 except:
                     label_string += f'\\l{key}:{value}'
-                label_string += '}'
+            label_string += '}'
         else:
             label_string += '\\lNone}'
             
@@ -333,7 +350,7 @@ class GenModel(base.Generative):
         h_g : float, optional
             A real number in :math:`[0, 1]`, by default None
         sub_h_params : dict, optional
-            h_params for self.SubModel, by default None
+            h_params for self.SubModel.GenModel, by default None
         h_metatree_list : list of metatree._LearnNode, optional
             Root nodes of meta-trees, by default None
         h_metatree_prob_vec : numpy.ndarray, optional
@@ -356,7 +373,7 @@ class GenModel(base.Generative):
 
         if sub_h_params is not None:
             self.sub_h_params = copy.deepcopy(sub_h_params)
-            self.SubModel(**self.sub_h_params)
+            self.SubModel.GenModel(**self.sub_h_params)
 
         if h_metatree_list is not None:
             self.h_metatree_list = copy.deepcopy(h_metatree_list)
@@ -409,31 +426,6 @@ class GenModel(base.Generative):
                 "h_metatree_list":self.h_metatree_list,
                 "h_metatree_prob_vec":self.h_metatree_prob_vec}
     
-    # def save_h_params(self,filename):
-    #     """Save the parameter with pickle format.
-
-    #     Parameters
-    #     ----------
-    #     filename : str
-    #         The filename to which the hyperparameters are saved.
-
-    #     """
-
-    #     with open(filename,'wb') as f:
-    #         pickle.dump(self.get_h_params(), f)
-
-    # def load_h_params(self,filename):
-    #     """Load the parameter saved by ``save_h_params``.
-
-    #     Parameters
-    #     ----------
-    #     filename : str
-    #         The filename to be loaded. 
-    #     """
-    #     with open(filename, 'rb') as f:
-    #         h_params = pickle.load(f)
-    #     self.set_h_params(**h_params)
-        
     def gen_params(self,feature_fix=False,tree_fix=False,from_list=False):
         """Generate the parameter from the prior distribution.
 
@@ -459,13 +451,13 @@ class GenModel(base.Generative):
 
         Parameters
         ----------
-        root : metatree._GenNode, optional
+        root : metatree._Node, optional
             A root node of a meta-tree, by default None.
         """
         if root is not None:
-            if type(root) is not _GenNode:
+            if type(root) is not _Node:
                 raise(ParameterFormatError(
-                    "root must be an instance of metatree._GenNode"
+                    "root must be an instance of metatree._Node"
                 ))
             self._set_params_recursion(self.root,root)
 
@@ -478,33 +470,6 @@ class GenModel(base.Generative):
             * ``"root"`` : The value of ``self.root``.
         """
         return {"root":self.root}
-
-    # def save_params(self,filename):
-    #     """Save the parameter with pickle
-
-    #     Parameters
-    #     ----------
-    #     filename : str
-    #         The filename to which the hyperparameters are saved.
-    #     ----------
-    #     numpy.savez_compressed
-    #     """
-    #     with open(filename,'wb') as f:
-    #         pickle.dump(self.get_params(), f)
-
-    # def load_params(self,filename):
-    #     """Load the parameter saved by ``save_h_params``.
-
-    #     Parameters
-    #     ----------
-    #     filename : str
-    #         The filename to be loaded. 
-    #     """
-    #     with open(filename, 'rb') as f:
-    #         params = pickle.load(f)
-    #     if "h_alpha" not in h_params.files or "h_beta" not in h_params.files:
-    #         raise(ParameterFormatError(filename+" must be a NpzFile with keywords: \"h_alpha\" and \"h_beta\"."))
-    #     self.set_params(**params)
 
     def gen_sample(self,sample_size,x=None):
         """Generate a sample from the stochastic data generative model.
@@ -530,9 +495,9 @@ class GenModel(base.Generative):
         if x is None:
             x = self.rng.choice(self.c_num_children,(sample_size,self.c_k))
         
-        if self.SubModel in DISCRETE_GEN_MODELS:
+        if self.SubModel in DISCRETE_MODELS:
             y = np.empty(sample_size,dtype=int)
-        elif self.SubModel in CONTINUOUS_GEN_MODELS:
+        elif self.SubModel in CONTINUOUS_MODELS:
             y = np.empty(sample_size,dtype=float)
         
         for i in range(sample_size):
@@ -598,7 +563,6 @@ class GenModel(base.Generative):
         --------
         graphviz.Digraph
         """
-        #例外処理
         _check.pos_int(sample_size,'sample_size',DataFormatError)
 
         try:
@@ -606,13 +570,13 @@ class GenModel(base.Generative):
             tree_graph = graphviz.Digraph(filename=filename,format=format)
             tree_graph.attr("node",shape="box",fontname="helvetica",style="rounded,filled")
             self._visualize_model_recursion(tree_graph, self.root, 0, None, None, 1.0)        
-            # コンソール上で表示できるようにした方がいいかもしれない．
+            # Can we show the image on the console without saving the file?
             tree_graph.view()
         except ImportError as e:
             print(e)
         except graphviz.CalledProcessError as e:
             print(e)
-        # 以下のサンプルの可視化は要改善．jitter plotで3次元散布図を書くのが良いか．
+        # The following visualization should be modified. Jitter plot may be useful．
         x,y = self.gen_sample(sample_size)
         print(x)
         print(y)
@@ -965,7 +929,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
     #     self.calc_pred_dist(np.zeros(self.c_k))
 
     def _copy_tree_from_sklearn_tree(self,new_node, original_tree,node_id):
-        if original_tree.children_left[node_id] != sklearn_tree._tree.TREE_LEAF:  # 内部ノード
+        if original_tree.children_left[node_id] != sklearn_tree._tree.TREE_LEAF:  # inner node
             new_node.k = original_tree.feature[node_id]
             new_node.children[0] = _LearnNode(depth=new_node.depth+1,
                                               c_num_children=2,
@@ -1003,12 +967,12 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                 return pred_dist.pmf(y)
 
     def _update_posterior_recursion(self,node,x,y):
-        if node.leaf == False:  # 内部ノード
+        if node.leaf == False:  # inner node
             tmp1 = self._update_posterior_recursion(node.children[x[node.k]],x,y)
             tmp2 = (1 - node.hn_g) * self._update_posterior_leaf(node,x,y) + node.hn_g * tmp1
             node.hn_g = node.hn_g * tmp1 / tmp2
             return tmp2
-        else:  # 葉ノード
+        else:  # leaf node
             return self._update_posterior_leaf(node,x,y)
 
     def _compare_metatree_recursion(self,node1,node2):
@@ -1136,11 +1100,11 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             self.hn_metatree_list, self.hn_metatree_prob_vec = self._given_MT(x,y)
 
     def _map_recursion_add_nodes(self,node):
-        if node.depth == self.c_d_max or node.depth == self.c_k:  # 葉ノード
+        if node.depth == self.c_d_max or node.depth == self.c_k:  # leaf node
             node.hn_g = 0.0
             node.leaf = True
             node.map_leaf = True
-        else:  # 内部ノード
+        else:  # inner node
             for i in range(self.c_num_children):
                 node.children[i] = _LearnNode(depth=node.depth+1,
                                               c_num_children=self.c_num_children,
@@ -1328,9 +1292,9 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                 node.sub_model.calc_pred_dist()
 
     def _calc_pred_dist_recursion(self,node,x):
-        if node.leaf == False:  # 内部ノード
+        if node.leaf == False:  # inner node
             self._calc_pred_dist_recursion(node.children[x[node.k]],x)
-        else:  # 葉ノード
+        else:  # leaf node
             return self._calc_pred_dist_leaf(node,x)
 
     def calc_pred_dist(self,x):
@@ -1351,10 +1315,10 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             self._calc_pred_dist_recursion(root,self._tmp_x)
 
     def _make_prediction_recursion_squared(self,node):
-            if node.leaf == False:  # 内部ノード
+            if node.leaf == False:  # inner node
                 return ((1 - node.hn_g) * node.sub_model.make_prediction(loss='squared')
                         + node.hn_g * self._make_prediction_recursion_squared(node.children[self._tmp_x[node.k]]))
-            else:  # 葉ノード
+            else:  # leaf node
                 return node.sub_model.make_prediction(loss='squared')
 
     def _make_prediction_leaf_01(self,node):
@@ -1375,14 +1339,14 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         return mode, mode_prob
 
     def _make_prediction_recursion_01(self,node):
-        if node.leaf == False:  # 内部ノード
+        if node.leaf == False:  # inner node
             mode1,mode_prob1 = self._make_prediction_leaf_01(node)
             mode2,mode_prob2 = self._make_prediction_recursion_01(node.children[self._tmp_x[node.k]])
             if (1 - node.hn_g) * mode_prob1 > node.hn_g * mode_prob2:
                 return mode1,mode_prob1
             else:
                 return mode2,mode_prob2
-        else:  # 葉ノード
+        else:  # leaf node
             return self._make_prediction_leaf_01(node)
 
     def make_prediction(self,loss="0-1"):
