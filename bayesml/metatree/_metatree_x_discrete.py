@@ -317,6 +317,45 @@ class GenModel(base.Generative):
         
         return node_id
 
+    def _set_h_params_recursion(self,node:_Node,original_tree_node:_Node):
+        """ copy parameters from a fixed tree
+
+        Parameters
+        ----------
+        node : object
+                a object from _Node class
+        original_tree_node : object
+                a object from _Node class
+        """
+        if original_tree_node is None:
+            if node.depth == self.c_d_max:
+                node.h_g = 0
+            else:
+                node.h_g = self.h_g
+            node.sub_model.set_h_params(**self.sub_h_params)
+            for i in range(self.c_k):
+                if node.children[i] is not None:
+                    self._set_h_params_recursion(node.children[i],None)
+        else:
+            node.h_g = original_tree_node.h_g
+            try:
+                sub_h_params = node.sub_model.get_h_params()
+            except:
+                sub_h_params = node.sub_model.get_hn_params()
+            node.sub_model.set_h_params(
+                *sub_h_params.values()
+                )
+            if original_tree_node.leaf or node.depth == self.c_d_max:  # leaf node
+                node.leaf = True
+                if node.depth == self.c_d_max:
+                    node.h_g = 0
+            else:
+                node.leaf = False
+                for i in range(self.c_k):
+                    if node.children[i] is None:
+                        node.children[i] = _Node(node.depth+1,self.c_k)
+                    self._set_h_params_recursion(node.children[i],original_tree_node.children[i])
+
     def set_h_params(self,
             h_k_prob_vec = None,
             h_g=None,
@@ -355,12 +394,29 @@ class GenModel(base.Generative):
 
         if h_g is not None:
             self.h_g = _check.float_in_closed01(h_g,'h_g',ParameterFormatError)
+            if self.h_metatree_list:
+                for h_root in self.h_metatree_list:
+                    self._set_h_params_recursion(h_root,None)
+
 
         if sub_h_params is not None:
+            self.SubModel.GenModel(**sub_h_params)
             self.sub_h_params = copy.deepcopy(sub_h_params)
-            self.SubModel.GenModel(**self.sub_h_params)
+            if self.h_metatree_list:
+                for h_root in self.h_metatree_list:
+                    self._set_h_params_recursion(h_root,None)
 
         if h_metatree_list is not None:
+            if not isinstance(h_metatree_list,list):
+                raise(ParameterFormatError(
+                    "h_metatree_list must be a list"
+                ))
+            if h_metatree_list:
+                for h_root in h_metatree_list:
+                    if type(h_root) is not _Node:
+                        raise(ParameterFormatError(
+                            "all elements of h_metatree_list must be instances of metatree._Node or empty"
+                        ))
             self.h_metatree_list = copy.deepcopy(h_metatree_list)
             if h_metatree_prob_vec is not None:
                 self.h_metatree_prob_vec = np.copy(
@@ -370,9 +426,12 @@ class GenModel(base.Generative):
                         ParameterFormatError
                     )
                 )
-            elif len(self.h_metatree_list) > 0:
-                metatree_num = len(self.h_metatree_list)
-                self.h_metatree_prob_vec = np.ones(metatree_num) / metatree_num
+            else:
+                if h_metatree_list:
+                    metatree_num = len(self.h_metatree_list)
+                    self.h_metatree_prob_vec = np.ones(metatree_num) / metatree_num
+                else:
+                    self.h_metatree_prob_vec = None
         elif h_metatree_prob_vec is not None:
             self.h_metatree_prob_vec = np.copy(
                 _check.float_vec_sum_1(
@@ -387,11 +446,15 @@ class GenModel(base.Generative):
                 raise(ParameterFormatError(
                     "Length of h_metatree_list and dimension of h_metatree_prob_vec must be the same."
                 ))
-        else:
+        elif self.h_metatree_prob_vec is None:
             if len(self.h_metatree_list) > 0:
                 raise(ParameterFormatError(
                     "Length of h_metatree_list must be zero when self.h_metatree_prob_vec is None."
                 ))
+        else:
+            raise(ParameterFormatError(
+                "self.h_metatree_prob_vec must be None or a numpy.ndarray."
+            ))
 
     def get_h_params(self):
         """Get the hyperparameters of the prior distribution.
