@@ -411,7 +411,7 @@ class GenModel(base.Generative):
                 node.h_g = self.h_g
             # node.sub_model.set_h_params(**self.sub_h_params)
             node.sub_model = self.SubModel.GenModel(**self.sub_h_params)
-            for i in range(self.c_k):
+            for i in range(self.c_num_children):
                 if node.children[i] is not None:
                     self._set_h_params_recursion(node.children[i],None)
         else:
@@ -428,7 +428,7 @@ class GenModel(base.Generative):
                 node.leaf = True
             else:
                 node.leaf = False
-                for i in range(self.c_k):
+                for i in range(self.c_num_children):
                     if node.children[i] is None:
                         node.children[i] = _Node(
                             node.depth+1,
@@ -611,7 +611,7 @@ class GenModel(base.Generative):
         """
         return {"root":self.root}
 
-    def gen_sample(self,sample_size,x=None):
+    def gen_sample(self,sample_size=None,x=None):
         """Generate a sample from the stochastic data generative model.
 
         Parameters
@@ -630,10 +630,20 @@ class GenModel(base.Generative):
         y : numpy ndarray
             1 dimensional array whose size is ``sammple_size``.
         """
-        _check.pos_int(sample_size,'sample_size',DataFormatError)
-
-        if x is None:
+        if x is not None:
+            _check.int_vecs(x,'x',DataFormatError)
+            _check.shape_consistency(
+                x.shape[-1],'x.shape[-1]',
+                self.c_k,'self.c_k',
+                ParameterFormatError
+                )
+            x = x.reshape(-1,self.c_k)
+            sample_size = x.shape[0]
+        elif sample_size is not None:
+            _check.pos_int(sample_size,'sample_size',DataFormatError)
             x = self.rng.choice(self.c_num_children,(sample_size,self.c_k))
+        else:
+            raise(DataFormatError("Either of the sample_size and the x must be given as a input."))
         
         if self.SubModel in DISCRETE_MODELS:
             y = np.empty(sample_size,dtype=int)
