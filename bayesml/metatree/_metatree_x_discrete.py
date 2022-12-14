@@ -79,15 +79,21 @@ class _Node:
     def __init__(self,
                  depth,
                  c_num_children,
+                 k_candidates=None,
+                 h_g=0.5,
+                 k=None,
+                 sub_model=None,
+                 leaf=False,
+                 map_leaf=False
                  ):
         self.depth = depth
         self.children = [None for i in range(c_num_children)]  # child nodes
-        self.k_candidates = None
-        self.h_g = 0.5
-        self.k = None
-        self.sub_model = None
-        self.leaf = False
-        self.map_leaf = False
+        self.k_candidates = k_candidates
+        self.h_g = h_g
+        self.k = k
+        self.sub_model = sub_model
+        self.leaf = leaf
+        self.map_leaf = map_leaf
 
 class GenModel(base.Generative):
     """ The stochastice data generative model and the prior distribution
@@ -168,16 +174,18 @@ class GenModel(base.Generative):
         )
 
         # params
-        self.root = _Node(0,self.c_num_children)
-        self.root.k_candidates = list(range(self.c_k))
-        self.root.h_g = self.h_g
-        self.root.k = 0
-        self.root.sub_model = self.SubModel.GenModel(**self.sub_h_params)
-        self.root.leaf = True
+        self.root = _Node(
+            0,
+            self.c_num_children,
+            list(range(self.c_k)),
+            self.h_g,
+            sub_model=self.SubModel.GenModel(**self.sub_h_params),
+            leaf=True
+            )
 
         self.set_params(root)
 
-    def _gen_params_recursion(self,node:_Node,feature_fix):
+    def _gen_params_recursion(self,node:_Node,h_node:_Node,feature_fix):
         """ generate parameters recursively
 
         Parameters
@@ -187,29 +195,65 @@ class GenModel(base.Generative):
         feature_fix : bool
                 a bool parameter show the feature is fixed or not
         """
-        if node.depth == self.c_d_max or node.depth == self.c_k or self.rng.random() > node.h_g:  # leaf node
-            node.sub_model = self.SubModel.GenModel(**self.sub_h_params)
-            node.sub_model.gen_params()
+        if h_node is None:
             if node.depth == self.c_d_max:
                 node.h_g = 0
-            node.leaf = True
-        else:  # inner node
-            if feature_fix == False or node.k is None:
-                node.k = self.rng.choice(node.k_candidates,
-                                         p=self.h_k_prob_vec[node.k_candidates]/self.h_k_prob_vec[node.k_candidates].sum())
-            child_k_candidates = copy.copy(node.k_candidates)
-            child_k_candidates.remove(node.k)
-            node.leaf = False
-            for i in range(self.c_num_children):
-                if feature_fix == False or node.children[i] is None:
-                    node.children[i] = _Node(node.depth+1,self.c_num_children)
+            else:
+                node.h_g = self.h_g
+            # node.sub_model.set_h_params(**self.sub_h_params)
+            node.sub_model = self.SubModel.GenModel(**self.sub_h_params)
+            if node.depth == self.c_d_max or node.depth == self.c_k or self.rng.random() > self.h_g:  # leaf node
+                node.sub_model.gen_params()
+                node.leaf = True
+            else:  # inner node
+                if feature_fix == False or node.k is None:
+                    node.k = self.rng.choice(node.k_candidates,
+                                             p=self.h_k_prob_vec[node.k_candidates]/self.h_k_prob_vec[node.k_candidates].sum())
+                child_k_candidates = copy.copy(node.k_candidates)
+                child_k_candidates.remove(node.k)
+                node.leaf = False
+                for i in range(self.c_num_children):
+                    if node.children[i] is None:
+                        node.children[i] = _Node(
+                            node.depth+1,
+                            self.c_num_children,
+                            h_g=self.h_g,
+                            sub_model=self.SubModel.GenModel(**self.sub_h_params),
+                            )
                     node.children[i].k_candidates = child_k_candidates
-                    node.children[i].h_g = self.h_g
-                else:
+                    self._gen_params_recursion(node.children[i],None,feature_fix)
+        else:
+            if node.depth == self.c_d_max:
+                node.h_g = 0
+            else:
+                node.h_g = h_node.h_g
+            try:
+                sub_h_params = h_node.sub_model.get_h_params()
+            except:
+                sub_h_params = h_node.sub_model.get_hn_params()
+            node.sub_model.set_h_params(*sub_h_params.values())
+            if node.depth == self.c_d_max or node.depth == self.c_k or self.rng.random() > h_node.h_g:  # leaf node
+                node.sub_model.gen_params()
+                node.leaf = True
+            else:  # inner node
+                if feature_fix == False or node.k is None:
+                    node.k = self.rng.choice(node.k_candidates,
+                                             p=self.h_k_prob_vec[node.k_candidates]/self.h_k_prob_vec[node.k_candidates].sum())
+                child_k_candidates = copy.copy(node.k_candidates)
+                child_k_candidates.remove(node.k)
+                node.leaf = False
+                for i in range(self.c_num_children):
+                    if node.children[i] is None:
+                        node.children[i] = _Node(
+                            node.depth+1,
+                            self.c_num_children,
+                            h_g=self.h_g,
+                            sub_model=self.SubModel.GenModel(**self.sub_h_params),
+                            )
                     node.children[i].k_candidates = child_k_candidates
-                self._gen_params_recursion(node.children[i],feature_fix)
+                    self._gen_params_recursion(node.children[i],h_node.children[i],feature_fix)
 
-    def _gen_params_recursion_tree_fix(self,node:_Node,feature_fix):
+    def _gen_params_recursion_tree_fix(self,node:_Node,h_node:_Node,feature_fix):
         """ generate parameters recursively for fixed tree
 
         Parameters
@@ -219,27 +263,51 @@ class GenModel(base.Generative):
         feature_fix : bool
                 a bool parameter show the feature is fixed or not
         """
-        if node.leaf:  # leaf node
-            node.sub_model = self.SubModel.GenModel(**self.sub_h_params)
-            node.sub_model.gen_params()
+        if h_node is None:
             if node.depth == self.c_d_max:
                 node.h_g = 0
-            node.leaf = True
-        else:  # inner node
-            if feature_fix == False or node.k is None:
-                node.k = self.rng.choice(node.k_candidates,
-                                         p=self.h_k_prob_vec[node.k_candidates]/self.h_k_prob_vec[node.k_candidates].sum())
-            child_k_candidates = copy.copy(node.k_candidates)
-            child_k_candidates.remove(node.k)
-            node.leaf = False
-            for i in range(self.c_num_children):
-                if feature_fix == False or node.children[i] is None:
-                    node.children[i] = _Node(node.depth+1,self.c_num_children)
-                    node.children[i].k_candidates = child_k_candidates
-                    node.children[i].h_g = self.h_g
-                else:
-                    node.children[i].k_candidates = child_k_candidates
-                self._gen_params_recursion_tree_fix(node.children[i],feature_fix)
+            else:
+                node.h_g = self.h_g
+            # node.sub_model.set_h_params(**self.sub_h_params)
+            node.sub_model = self.SubModel.GenModel(**self.sub_h_params)
+            if node.leaf:  # leaf node
+                node.sub_model.gen_params()
+                node.leaf = True
+            else:  # inner node
+                if feature_fix == False or node.k is None:
+                    node.k = self.rng.choice(node.k_candidates,
+                                             p=self.h_k_prob_vec[node.k_candidates]/self.h_k_prob_vec[node.k_candidates].sum())
+                child_k_candidates = copy.copy(node.k_candidates)
+                child_k_candidates.remove(node.k)
+                node.leaf = False
+                for i in range(self.c_num_children):
+                    if node.children[i] is not None:
+                        node.children[i].k_candidates = child_k_candidates
+                        self._gen_params_recursion_tree_fix(node.children[i],None,feature_fix)
+        else:
+            if node.depth == self.c_d_max:
+                node.h_g = 0
+            else:
+                node.h_g = h_node.h_g
+            try:
+                sub_h_params = h_node.sub_model.get_h_params()
+            except:
+                sub_h_params = h_node.sub_model.get_hn_params()
+            node.sub_model.set_h_params(*sub_h_params.values())
+            if node.leaf:  # leaf node
+                node.sub_model.gen_params()
+                node.leaf = True
+            else:  # inner node
+                if feature_fix == False or node.k is None:
+                    node.k = self.rng.choice(node.k_candidates,
+                                             p=self.h_k_prob_vec[node.k_candidates]/self.h_k_prob_vec[node.k_candidates].sum())
+                child_k_candidates = copy.copy(node.k_candidates)
+                child_k_candidates.remove(node.k)
+                node.leaf = False
+                for i in range(self.c_num_children):
+                    if node.children[i] is not None:
+                        node.children[i].k_candidates = child_k_candidates
+                        self._gen_params_recursion_tree_fix(node.children[i],h_node,feature_fix)
 
     def _set_params_recursion(self,node:_Node,original_tree_node:_Node):
         """ copy parameters from a fixed tree
@@ -260,9 +328,14 @@ class GenModel(base.Generative):
             node.k = original_tree_node.k
             child_k_candidates = copy.copy(node.k_candidates)
             child_k_candidates.remove(node.k)
+            node.leaf = False
             for i in range(self.c_num_children):
-                node.children[i] = _Node(node.depth+1,self.c_num_children)
-                node.children[i].k_candidates = child_k_candidates
+                node.children[i] = _Node(
+                    node.depth+1,
+                    self.c_num_children,
+                    child_k_candidates,
+                    self.h_g,
+                    )
                 self._set_params_recursion(node.children[i],original_tree_node.children[i])
     
     def _gen_sample_recursion(self,node:_Node,x):
@@ -291,7 +364,11 @@ class GenModel(base.Generative):
         tmp_p_v = p_v
         
         # add node information
-        label_string = f'k={node.k}\\lh_g={node.h_g:.2f}\\lp_v={tmp_p_v:.2f}\\lsub_params={{'
+        if node.leaf:
+            label_string = 'k=None\\l'
+        else:
+            label_string = f'k={node.k}\\l'
+        label_string += f'h_g={node.h_g:.2f}\\lp_v={tmp_p_v:.2f}\\lsub_params={{'
         if node.leaf:
             sub_params = node.sub_model.get_params()
             for key,value in sub_params.items():
@@ -332,28 +409,32 @@ class GenModel(base.Generative):
                 node.h_g = 0
             else:
                 node.h_g = self.h_g
-            node.sub_model.set_h_params(**self.sub_h_params)
+            # node.sub_model.set_h_params(**self.sub_h_params)
+            node.sub_model = self.SubModel.GenModel(**self.sub_h_params)
             for i in range(self.c_k):
                 if node.children[i] is not None:
                     self._set_h_params_recursion(node.children[i],None)
         else:
-            node.h_g = original_tree_node.h_g
+            if node.depth == self.c_d_max:
+                node.h_g = 0
+            else:
+                node.h_g = original_tree_node.h_g
             try:
                 sub_h_params = node.sub_model.get_h_params()
             except:
                 sub_h_params = node.sub_model.get_hn_params()
-            node.sub_model.set_h_params(
-                *sub_h_params.values()
-                )
+            node.sub_model.set_h_params(*sub_h_params.values())
             if original_tree_node.leaf or node.depth == self.c_d_max:  # leaf node
                 node.leaf = True
-                if node.depth == self.c_d_max:
-                    node.h_g = 0
             else:
                 node.leaf = False
                 for i in range(self.c_k):
                     if node.children[i] is None:
-                        node.children[i] = _Node(node.depth+1,self.c_k)
+                        node.children[i] = _Node(
+                            node.depth+1,
+                            self.c_k,
+                            sub_model=self.SubModel.GenModel(**self.sub_h_params),
+                            )
                     self._set_h_params_recursion(node.children[i],original_tree_node.children[i])
 
     def set_h_params(self,
@@ -397,7 +478,6 @@ class GenModel(base.Generative):
             if self.h_metatree_list:
                 for h_root in self.h_metatree_list:
                     self._set_h_params_recursion(h_root,None)
-
 
         if sub_h_params is not None:
             self.SubModel.GenModel(**sub_h_params)
@@ -474,7 +554,7 @@ class GenModel(base.Generative):
                 "h_metatree_list":self.h_metatree_list,
                 "h_metatree_prob_vec":self.h_metatree_prob_vec}
     
-    def gen_params(self,feature_fix=False,tree_fix=False,from_list=False):
+    def gen_params(self,feature_fix=False,tree_fix=False):
         """Generate the parameter from the prior distribution.
 
         The generated vaule is set at ``self.root``.
@@ -486,13 +566,17 @@ class GenModel(base.Generative):
         tree_fix : bool
             If ``True``, tree shape will be fixed, by default ``False``.
         """
-        if from_list == True and len(self.h_metatree_list) > 0:
+        if self.h_metatree_list:
             tmp_root = self.rng.choice(self.h_metatree_list,p=self.h_metatree_prob_vec)
-            self.set_params(tmp_root)
-        elif tree_fix:
-            self._gen_params_recursion_tree_fix(self.root,feature_fix)
+            if tree_fix:
+                self._gen_params_recursion_tree_fix(self.root,tmp_root,feature_fix)
+            else:
+                self._gen_params_recursion(self.root,tmp_root,feature_fix)
         else:
-            self._gen_params_recursion(self.root,feature_fix)
+            if tree_fix:
+                self._gen_params_recursion_tree_fix(self.root,None,feature_fix)
+            else:
+                self._gen_params_recursion(self.root,None,feature_fix)
     
     def set_params(self,root=None):
         """Set the parameter of the sthocastic data generative model.
@@ -507,6 +591,14 @@ class GenModel(base.Generative):
                 raise(ParameterFormatError(
                     "root must be an instance of metatree._Node"
                 ))
+            self.root = _Node(
+                0,
+                self.c_num_children,
+                list(range(self.c_k)),
+                self.h_g,
+                sub_model=self.SubModel.GenModel(**self.sub_h_params),
+                leaf=True
+                )
             self._set_params_recursion(self.root,root)
 
     def get_params(self):
