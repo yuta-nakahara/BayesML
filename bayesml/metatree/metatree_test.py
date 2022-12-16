@@ -1,20 +1,21 @@
-from bayesml import metatree
-from bayesml import normal
+from bayesml.metatree import GenModel
+from bayesml.metatree import LearnModel
+from bayesml import poisson
+from bayesml import bernoulli
 import numpy as np
 import copy
 
-gen_model = metatree.GenModel(4,3,2,h_g=0.75,SubModel=normal)
+gen_model = GenModel(4,3,2,h_g=0.75)
 gen_model.gen_params()
 gen_model.visualize_model('tree.pdf')
 x,y = gen_model.gen_sample(1000)
 
-learn_model = metatree.LearnModel(4,3,2,h0_g=0.75,SubModel=normal)
-learn_model.update_posterior(x,y)
+learn_model = LearnModel(4,3,2)
+learn_model.update_posterior(x,y,n_estimators=1)
 learn_model.visualize_posterior('tree2.pdf')
-params = learn_model.estimate_params(filename='tree3.pdf')
 
-gen_model2 = metatree.GenModel(4,3,2,h_g=0.1,SubModel=normal)
-gen_model2.visualize_model('tree4.pdf')
-gen_model2.set_params(params)
-# gen_model2.gen_params()
-gen_model2.visualize_model('tree5.pdf')
+learn_model.calc_pred_dist(np.zeros(4,dtype=int))
+print(learn_model.make_prediction(loss='squared'))
+
+learn_model.calc_pred_dist(np.ones(4,dtype=int))
+print(learn_model.make_prediction(loss='squared'))

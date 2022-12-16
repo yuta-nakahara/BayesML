@@ -423,7 +423,7 @@ class GenModel(base.Generative):
                     if node.children[i] is None:
                         node.children[i] = _Node(
                             node.depth+1,
-                            self.c_k,
+                            self.c_num_children,
                             sub_model=self.SubModel.GenModel(**self.sub_h_params),
                             )
                     self._set_h_params_recursion(node.children[i],original_tree_node.children[i])
@@ -818,6 +818,22 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             h0_metatree_prob_vec,
         )
 
+    def _set_h0_g_recursion(self,node:_Node):
+        if node.depth == self.c_d_max:
+            node.h_g = 0
+        else:
+            node.h_g = self.h0_g
+        for i in range(self.c_num_children):
+            if node.children[i] is not None:
+                self._set_h0_g_recursion(node.children[i])
+
+    def _set_sub_h0_params_recursion(self,node:_Node):
+        # node.sub_model.set_h0_params(**self.sub_h0_params)
+        node.sub_model = self.SubModel.LearnModel(**self.sub_h0_params)
+        for i in range(self.c_num_children):
+            if node.children[i] is not None:
+                self._set_sub_h0_params_recursion(node.children[i])
+
     def _set_h0_params_recursion(self,node:_Node,original_tree_node:_Node):
         """ copy parameters from a fixed tree
 
@@ -851,15 +867,35 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             if original_tree_node.leaf or node.depth == self.c_d_max:  # leaf node
                 node.leaf = True
             else:
+                node.k = original_tree_node.k
+                child_k_candidates = copy.copy(node.k_candidates)
+                child_k_candidates.remove(node.k)
                 node.leaf = False
                 for i in range(self.c_num_children):
                     if node.children[i] is None:
                         node.children[i] = _Node(
                             node.depth+1,
-                            self.c_k,
+                            self.c_num_children,
+                            child_k_candidates,
                             sub_model=self.SubModel.LearnModel(**self.sub_h0_params),
                             )
                     self._set_h0_params_recursion(node.children[i],original_tree_node.children[i])
+
+    def _set_hn_g_recursion(self,node:_Node):
+        if node.depth == self.c_d_max:
+            node.h_g = 0
+        else:
+            node.h_g = self.hn_g
+        for i in range(self.c_num_children):
+            if node.children[i] is not None:
+                self._set_hn_g_recursion(node.children[i])
+
+    def _set_sub_hn_params_recursion(self,node:_Node):
+        # node.sub_model.set_hn_params(**self.sub_hn_params)
+        node.sub_model = self.SubModel.LearnModel(**self.sub_hn_params)
+        for i in range(self.c_num_children):
+            if node.children[i] is not None:
+                self._set_sub_hn_params_recursion(node.children[i])
 
     def _set_hn_params_recursion(self,node:_Node,original_tree_node:_Node):
         """ copy parameters from a fixed tree
@@ -894,12 +930,16 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             if original_tree_node.leaf or node.depth == self.c_d_max:  # leaf node
                 node.leaf = True
             else:
+                node.k = original_tree_node.k
+                child_k_candidates = copy.copy(node.k_candidates)
+                child_k_candidates.remove(node.k)
                 node.leaf = False
                 for i in range(self.c_num_children):
                     if node.children[i] is None:
                         node.children[i] = _Node(
                             node.depth+1,
-                            self.c_k,
+                            self.c_num_children,
+                            child_k_candidates,
                             sub_model=self.SubModel.LearnModel(**self.sub_hn_params),
                             )
                     self._set_hn_params_recursion(node.children[i],original_tree_node.children[i])
@@ -944,14 +984,14 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             self.h0_g = _check.float_in_closed01(h0_g,'h0_g',ParameterFormatError)
             if self.h0_metatree_list:
                 for h0_root in self.h0_metatree_list:
-                    self._set_h0_params_recursion(h0_root,None)
+                    self._set_h0_g_recursion(h0_root)
 
         if sub_h0_params is not None:
             self.SubModel.LearnModel(**sub_h0_params)
             self.sub_h0_params = copy.deepcopy(sub_h0_params)
             if self.h0_metatree_list:
                 for h0_root in self.h0_metatree_list:
-                    self._set_h0_params_recursion(h0_root,None)
+                    self._set_sub_h0_params_recursion(h0_root)
 
         if h0_metatree_list is not None:
             if not isinstance(h0_metatree_list,list):
@@ -964,7 +1004,22 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                         raise(ParameterFormatError(
                             "all elements of h0_metatree_list must be instances of metatree._Node or empty"
                         ))
-            self.h0_metatree_list = copy.deepcopy(h0_metatree_list)
+            diff = len(h0_metatree_list) - len(self.h0_metatree_list)
+            if diff < 0:
+                del self.h0_metatree_list[diff:]
+            elif diff > 0:
+                for i in range(diff):
+                    self.h0_metatree_list.append(
+                        _Node(
+                            0,
+                            self.c_num_children,
+                            list(range(self.c_k)),
+                            self.h0_g,
+                            sub_model=self.SubModel.LearnModel(**self.sub_h0_params),
+                            )
+                    )
+            for i in range(len(self.h0_metatree_list)):
+                self._set_h0_params_recursion(self.h0_metatree_list[i],h0_metatree_list[i])
             if h0_metatree_prob_vec is not None:
                 self.h0_metatree_prob_vec = np.copy(
                     _check.float_vec_sum_1(
@@ -1063,14 +1118,14 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             self.hn_g = _check.float_in_closed01(hn_g,'hn_g',ParameterFormatError)
             if self.hn_metatree_list:
                 for hn_root in self.hn_metatree_list:
-                    self._set_hn_params_recursion(hn_root,None)
+                    self._set_hn_g_recursion(hn_root)
 
         if sub_hn_params is not None:
             self.SubModel.LearnModel(**sub_hn_params)
             self.sub_hn_params = copy.deepcopy(sub_hn_params)
             if self.hn_metatree_list:
                 for hn_root in self.hn_metatree_list:
-                    self._set_hn_params_recursion(hn_root,None)
+                    self._set_sub_hn_params_recursion(hn_root)
 
         if hn_metatree_list is not None:
             if not isinstance(hn_metatree_list,list):
@@ -1083,7 +1138,22 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                         raise(ParameterFormatError(
                             "all elements of hn_metatree_list must be instances of metatree._Node or empty"
                         ))
-            self.hn_metatree_list = copy.deepcopy(hn_metatree_list)
+            diff = len(hn_metatree_list) - len(self.hn_metatree_list)
+            if diff < 0:
+                del self.hn_metatree_list[diff:]
+            elif diff > 0:
+                for i in range(diff):
+                    self.hn_metatree_list.append(
+                        _Node(
+                            0,
+                            self.c_num_children,
+                            list(range(self.c_k)),
+                            self.hn_g,
+                            sub_model=self.SubModel.LearnModel(**self.sub_hn_params),
+                            )
+                    )
+            for i in range(len(self.hn_metatree_list)):
+                self._set_hn_params_recursion(self.hn_metatree_list[i],hn_metatree_list[i])
             if hn_metatree_prob_vec is not None:
                 self.hn_metatree_prob_vec = np.copy(
                     _check.float_vec_sum_1(
@@ -1610,13 +1680,14 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         pred_dist = node.sub_model.make_prediction(loss='KL')
         if type(pred_dist) is np.ndarray:
             mode_prob = pred_dist[mode]
-        try:
-            mode_prob = pred_dist.pdf(mode)
-        except:
+        else:
             try:
-                mode_prob = pred_dist.pmf(mode)
+                mode_prob = pred_dist.pdf(mode)
             except:
-                mode_prob = None
+                try:
+                    mode_prob = pred_dist.pmf(mode)
+                except:
+                    mode_prob = None
         # elif hasattr(pred_dist,'pdf'):
         #     mode_prob = pred_dist.pdf(mode)
         # elif hasattr(pred_dist,'pmf'):
