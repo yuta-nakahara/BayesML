@@ -300,7 +300,17 @@ class GenModel(base.Generative):
                 a object form GenNode class
         """
         if original_tree_node.leaf:  # leaf node
-            node.sub_model = copy.deepcopy(original_tree_node.sub_model)
+            try:
+                sub_params = original_tree_node.sub_model.get_params()
+                node.sub_model.set_params(**sub_params)
+            except:
+                try:
+                    sub_params = original_tree_node.sub_model.estimate_params(loss='0-1',dict_out=True)
+                    node.sub_model.set_params(**sub_params)
+                except:
+                    sub_params = original_tree_node.sub_model.estimate_params(dict_out=True)
+                    node.sub_model.set_params(**sub_params)
+
             if node.depth == self.c_d_max:
                 node.h_g = 0
             node.leaf = True
@@ -315,6 +325,7 @@ class GenModel(base.Generative):
                     self.c_num_children,
                     child_k_candidates,
                     self.h_g,
+                    sub_model=self.SubModel.GenModel(**self.sub_h_params)
                     )
                 self._set_params_recursion(node.children[i],original_tree_node.children[i])
     
@@ -1416,7 +1427,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                 tree_graph.attr("node",shape="box",fontname="helvetica",style="rounded,filled")
                 self._visualize_model_recursion(tree_graph, map_root, 0, None, None, 1.0)
                 tree_graph.view()
-            return map_root
+            return {'root':map_root}
         else:
             raise(CriteriaError("Unsupported loss function! "
                                 +"This function supports only \"0-1\"."))
@@ -1537,7 +1548,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                 self._visualize_model_recursion_none(tree_graph, 0, list(range(self.c_k)), 0, None, None, 1.0)
             else:
                 MAP_index = np.argmax(self.hn_metatree_prob_vec)
-                print(f'MAP probability of metatree:{self.hn_metatree_prob_vec[MAP_index]}')
+                print(f'Approximate MAP probability of metatree:{self.hn_metatree_prob_vec[MAP_index]}')
                 self._visualize_model_recursion(tree_graph, self.hn_metatree_list[MAP_index], 0, None, None, 1.0)
             # Can we show the image on the console without saving the file?
             tree_graph.view()
