@@ -59,6 +59,12 @@ def nonneg_int_vec(val,val_name,exception_class):
             return val
     raise(exception_class(val_name + " must be a 1-dimensional numpy.ndarray whose dtype is int. Its values must be non-negative (including 0)."))
 
+def pos_int_vec(val,val_name,exception_class):
+    if type(val) is np.ndarray:
+        if np.issubdtype(val.dtype,np.integer) and val.ndim == 1 and np.all(val>0):
+            return val
+    raise(exception_class(val_name + " must be a 1-dimensional numpy.ndarray whose dtype is int. Its values must be positive (not including 0)."))
+
 def nonneg_int_vecs(val,val_name,exception_class):
     if type(val) is np.ndarray:
         if np.issubdtype(val.dtype,np.integer) and val.ndim >= 1 and np.all(val>=0):
