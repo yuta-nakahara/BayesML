@@ -5,17 +5,15 @@ from bayesml import bernoulli
 import numpy as np
 import copy
 
-gen_model = GenModel(4,3,2,h_g=0.75)
-gen_model.gen_params()
-gen_model.visualize_model('tree.pdf')
-x,y = gen_model.gen_sample(1000)
+gen_model1 = GenModel(4,3,2,h_g=0.75,seed=0)
+gen_model1.gen_params()
+gen_model1.visualize_model('tree.pdf')
+x1,y1 = gen_model1.gen_sample(10)
 
-learn_model = LearnModel(4,3,2)
-learn_model.update_posterior(x,y,n_estimators=1)
-learn_model.visualize_posterior('tree2.pdf')
+gen_model2 = GenModel(4,3,2,h_g=0.75,seed=0)
+gen_model2.gen_params()
+gen_model2.visualize_model('tree2.pdf')
+x2,y2 = gen_model2.gen_sample(10)
 
-learn_model.calc_pred_dist(np.zeros(4,dtype=int))
-print(learn_model.make_prediction(loss='squared'))
-
-learn_model.calc_pred_dist(np.ones(4,dtype=int))
-print(learn_model.make_prediction(loss='squared'))
+print(x1-x2)
+print(y1-y2)

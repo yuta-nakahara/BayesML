@@ -159,7 +159,7 @@ class GenModel(base.Generative):
             self.c_num_children,
             list(range(self.c_k)),
             self.h_g,
-            sub_model=self.SubModel.GenModel(**self.sub_h_params),
+            sub_model=self.SubModel.GenModel(seed=self.rng,**self.sub_h_params),
             leaf=True
             )
 
@@ -181,7 +181,7 @@ class GenModel(base.Generative):
             else:
                 node.h_g = self.h_g
             # node.sub_model.set_h_params(**self.sub_h_params)
-            node.sub_model = self.SubModel.GenModel(**self.sub_h_params)
+            node.sub_model = self.SubModel.GenModel(seed=self.rng,**self.sub_h_params)
             if node.depth == self.c_d_max or node.depth == self.c_k or self.rng.random() > self.h_g:  # leaf node
                 node.sub_model.gen_params()
                 node.leaf = True
@@ -198,7 +198,7 @@ class GenModel(base.Generative):
                             node.depth+1,
                             self.c_num_children,
                             h_g=self.h_g,
-                            sub_model=self.SubModel.GenModel(**self.sub_h_params),
+                            sub_model=self.SubModel.GenModel(seed=self.rng,**self.sub_h_params),
                             )
                     node.children[i].k_candidates = child_k_candidates
                     self._gen_params_recursion(node.children[i],None,feature_fix)
@@ -228,7 +228,7 @@ class GenModel(base.Generative):
                             node.depth+1,
                             self.c_num_children,
                             h_g=self.h_g,
-                            sub_model=self.SubModel.GenModel(**self.sub_h_params),
+                            sub_model=self.SubModel.GenModel(seed=self.rng,**self.sub_h_params),
                             )
                     node.children[i].k_candidates = child_k_candidates
                     self._gen_params_recursion(node.children[i],h_node.children[i],feature_fix)
@@ -249,7 +249,7 @@ class GenModel(base.Generative):
             else:
                 node.h_g = self.h_g
             # node.sub_model.set_h_params(**self.sub_h_params)
-            node.sub_model = self.SubModel.GenModel(**self.sub_h_params)
+            node.sub_model = self.SubModel.GenModel(seed=self.rng,**self.sub_h_params)
             if node.leaf:  # leaf node
                 node.sub_model.gen_params()
                 node.leaf = True
@@ -325,7 +325,7 @@ class GenModel(base.Generative):
                     self.c_num_children,
                     child_k_candidates,
                     self.h_g,
-                    sub_model=self.SubModel.GenModel(**self.sub_h_params)
+                    sub_model=self.SubModel.GenModel(seed=self.rng,**self.sub_h_params)
                     )
                 self._set_params_recursion(node.children[i],original_tree_node.children[i])
     
@@ -401,7 +401,7 @@ class GenModel(base.Generative):
             else:
                 node.h_g = self.h_g
             # node.sub_model.set_h_params(**self.sub_h_params)
-            node.sub_model = self.SubModel.GenModel(**self.sub_h_params)
+            node.sub_model = self.SubModel.GenModel(seed=self.rng,**self.sub_h_params)
             for i in range(self.c_num_children):
                 if node.children[i] is not None:
                     self._set_h_params_recursion(node.children[i],None)
@@ -424,7 +424,7 @@ class GenModel(base.Generative):
                         node.children[i] = _Node(
                             node.depth+1,
                             self.c_num_children,
-                            sub_model=self.SubModel.GenModel(**self.sub_h_params),
+                            sub_model=self.SubModel.GenModel(seed=self.rng,**self.sub_h_params),
                             )
                     self._set_h_params_recursion(node.children[i],original_tree_node.children[i])
 
@@ -471,7 +471,7 @@ class GenModel(base.Generative):
                     self._set_h_params_recursion(h_root,None)
 
         if sub_h_params is not None:
-            self.SubModel.GenModel(**sub_h_params)
+            self.SubModel.GenModel(seed=self.rng,**sub_h_params)
             self.sub_h_params = copy.deepcopy(sub_h_params)
             if self.h_metatree_list:
                 for h_root in self.h_metatree_list:
@@ -587,7 +587,7 @@ class GenModel(base.Generative):
                 self.c_num_children,
                 list(range(self.c_k)),
                 self.h_g,
-                sub_model=self.SubModel.GenModel(**self.sub_h_params),
+                sub_model=self.SubModel.GenModel(seed=self.rng,**self.sub_h_params),
                 leaf=True
                 )
             self._set_params_recursion(self.root,root)
