@@ -385,6 +385,22 @@ class GenModel(base.Generative):
         
         return node_id
 
+    def _set_h_g_recursion(self,node:_Node):
+        if node.depth == self.c_d_max:
+            node.h_g = 0
+        else:
+            node.h_g = self.h_g
+        for i in range(self.c_num_children):
+            if node.children[i] is not None:
+                self._set_h_g_recursion(node.children[i])
+
+    def _set_sub_h_params_recursion(self,node:_Node):
+        # node.sub_model.set_h_params(**self.sub_h_params)
+        node.sub_model = self.SubModel.GenModel(seed=self.rng,**self.sub_h_params)
+        for i in range(self.c_num_children):
+            if node.children[i] is not None:
+                self._set_sub_h_params_recursion(node.children[i])
+
     def _set_h_params_recursion(self,node:_Node,original_tree_node:_Node):
         """ copy parameters from a fixed tree
 
@@ -418,12 +434,16 @@ class GenModel(base.Generative):
             if original_tree_node.leaf or node.depth == self.c_d_max:  # leaf node
                 node.leaf = True
             else:
+                node.k = original_tree_node.k
+                child_k_candidates = copy.copy(node.k_candidates)
+                child_k_candidates.remove(node.k)
                 node.leaf = False
                 for i in range(self.c_num_children):
                     if node.children[i] is None:
                         node.children[i] = _Node(
                             node.depth+1,
                             self.c_num_children,
+                            child_k_candidates,
                             sub_model=self.SubModel.GenModel(seed=self.rng,**self.sub_h_params),
                             )
                     self._set_h_params_recursion(node.children[i],original_tree_node.children[i])
@@ -468,14 +488,14 @@ class GenModel(base.Generative):
             self.h_g = _check.float_in_closed01(h_g,'h_g',ParameterFormatError)
             if self.h_metatree_list:
                 for h_root in self.h_metatree_list:
-                    self._set_h_params_recursion(h_root,None)
+                    self._set_h_g_recursion(h_root)
 
         if sub_h_params is not None:
             self.SubModel.GenModel(seed=self.rng,**sub_h_params)
             self.sub_h_params = copy.deepcopy(sub_h_params)
             if self.h_metatree_list:
                 for h_root in self.h_metatree_list:
-                    self._set_h_params_recursion(h_root,None)
+                    self._set_sub_h_params_recursion(h_root)
 
         if h_metatree_list is not None:
             if not isinstance(h_metatree_list,list):
@@ -488,7 +508,22 @@ class GenModel(base.Generative):
                         raise(ParameterFormatError(
                             "all elements of h_metatree_list must be instances of metatree._Node or empty"
                         ))
-            self.h_metatree_list = copy.deepcopy(h_metatree_list)
+            diff = len(h_metatree_list) - len(self.h_metatree_list)
+            if diff < 0:
+                del self.h_metatree_list[diff:]
+            elif diff > 0:
+                for i in range(diff):
+                    self.h_metatree_list.append(
+                        _Node(
+                            0,
+                            self.c_num_children,
+                            list(range(self.c_k)),
+                            self.h_g,
+                            sub_model=self.SubModel.GenModel(seed=self.rng,**self.sub_h_params),
+                            )
+                    )
+            for i in range(len(self.h_metatree_list)):
+                self._set_h_params_recursion(self.h_metatree_list[i],h_metatree_list[i])
             if h_metatree_prob_vec is not None:
                 self.h_metatree_prob_vec = np.copy(
                     _check.float_vec_sum_1(
@@ -962,7 +997,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         h0_g : float, optional
             A real number in :math:`[0, 1]`, by default None
         sub_h0_params : dict, optional
-            h0_params for self.SubModel, by default None
+            h0_params for self.SubModel.LearnModel, by default None
         h0_metatree_list : list of metatree._Node, optional
             Root nodes of meta-trees, by default None
         h0_metatree_prob_vec : numpy.ndarray, optional
@@ -1096,7 +1131,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         hn_g : float, optional
             A real number in :math:`[0, 1]`, by default None
         sub_hn_params : dict, optional
-            hn_params for self.SubModel, by default None
+            hn_params for self.SubModel.LearnModel, by default None
         hn_metatree_list : list of metatree._Node, optional
             Root nodes of meta-trees, by default None
         hn_metatree_prob_vec : numpy.ndarray, optional
