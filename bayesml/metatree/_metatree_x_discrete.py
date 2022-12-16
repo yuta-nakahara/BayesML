@@ -446,6 +446,7 @@ class GenModel(base.Generative):
                             child_k_candidates,
                             sub_model=self.SubModel.GenModel(seed=self.rng,**self.sub_h_params),
                             )
+                    node.children[i].k_candidates = child_k_candidates
                     self._set_h_params_recursion(node.children[i],original_tree_node.children[i])
 
     def set_h_params(self,
@@ -914,6 +915,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                             child_k_candidates,
                             sub_model=self.SubModel.LearnModel(**self.sub_h0_params),
                             )
+                    node.children[i].k_candidates = child_k_candidates
                     self._set_h0_params_recursion(node.children[i],original_tree_node.children[i])
 
     def _set_hn_g_recursion(self,node:_Node):
@@ -977,6 +979,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                             child_k_candidates,
                             sub_model=self.SubModel.LearnModel(**self.sub_hn_params),
                             )
+                    node.children[i].k_candidates = child_k_candidates
                     self._set_hn_params_recursion(node.children[i],original_tree_node.children[i])
 
     def set_h0_params(self,
