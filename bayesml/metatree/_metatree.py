@@ -125,7 +125,7 @@ class GenModel(base.Generative):
             self,
             c_dim_continuous,
             c_dim_categorical,
-            c_max_depth=10,
+            c_max_depth=2,
             c_num_children_vec=2,
             c_num_assignment_vec=None,
             c_ranges=None,
@@ -1002,26 +1002,20 @@ class GenModel(base.Generative):
         format : str, optional
             Rendering output format (``\"pdf\"``, ``\"png\"``, ...).
         sample_size : int, optional
-            A positive integer, by default 10
+            A positive integer, by default 100
 
         Examples
         --------
         >>> from bayesml import metatree
-        >>> model = metatree.GenModel(c_k=3,h_g=0.75)
+        >>> model = metatree.GenModel(
+        >>>     c_dim_continuous=1,
+        >>>     c_dim_categorical=1)
+        >>> model.gen_params(threshold_type='random')
         >>> model.visualize_model()
-        [[1 1 0]
-         [1 0 0]
-         [0 0 0]
-         [1 0 0]
-         [1 1 1]
-         [0 0 1]
-         [1 1 1]
-         [1 0 1]
-         [0 1 1]
-         [0 1 0]]
-        [0 1 0 1 0 0 0 1 0 0]
 
-        .. image:: ./images/metatree_example.png
+        .. image:: ./images/metatree_example1.png
+
+        .. image:: ./images/metatree_example2.png
 
         See Also
         --------
