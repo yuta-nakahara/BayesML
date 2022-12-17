@@ -75,8 +75,22 @@ class GenModel(base.Generative):
         A non-negative integer
     c_max_depth : int, optional
         A positive integer, by default 10
-    c_num_children_vec : int, optional
-        A positive integer, by default 2
+    c_num_children_vec : numpy.ndarray, optional
+        A vector of positive integers whose length is 
+        ``c_dim_continuous+c_dim_categorical``, by default [2,2,...,2].
+    c_num_assignment_vec : numpy.ndarray, optional
+        A vector of positive integers whose length is 
+        ``c_dim_continuous+c_dim_categorical``. 
+        The first ``c_dim_continuous`` elements represent 
+        the maximum assignment numbers of continuous features 
+        on a path. The rest ``c_dim_categorial`` elements 
+        represent those of categorical features.
+        By default [c_max_depth,...,c_max_depth,1,...,1].
+    c_ranges : numpy.ndarray, optional
+        A numpy.ndarray whose size is (c_dim_continuous,2).
+        A threshold for the ``k``-th continuous feature will be 
+        generated between ``c_ranges[k,0]`` and ``c_ranges[k,1]``. 
+        By default, [[-3,3],[-3,3],...,[-3,3]].
     SubModel : class, optional
         bernoulli, poisson, normal, or exponential, 
         by default bernoulli
@@ -85,7 +99,7 @@ class GenModel(base.Generative):
         by default a tree consists of only one node.
     h_k_prob_vec : numpy.ndarray, optional
         A vector of real numbers in :math:`[0, 1]`, 
-        by default [1/c_k, 1/c_k, ... , 1/c_k]
+        by default [1/c_num_assignment_vec.sum(),...,1/c_num_assignment_vec.sum()]
         Sum of its elements must be 1.0.
     h_g : float, optional
         A real number in :math:`[0, 1]`, by default 0.5
@@ -101,12 +115,20 @@ class GenModel(base.Generative):
     seed : {None, int}, optional
         A seed to initialize numpy.random.default_rng(),
         by default None
+
+    Attributes
+    ----------
+    c_dim_features: int
+        c_dim_continuous + c_dim_categorical
     """
     def __init__(
             self,
-            c_k,
+            c_dim_continuous,
+            c_dim_categorical,
             c_max_depth=10,
-            c_num_children=2,
+            c_num_children_vec=2,
+            c_num_assignment_vec=None,
+            c_ranges=None,
             *,
             SubModel=bernoulli,
             root=None,
@@ -118,19 +140,58 @@ class GenModel(base.Generative):
             seed=None,
             ):
         # constants
+        self.c_dim_continuous = _check.nonneg_int(c_dim_continuous,'c_dim_continuous',ParameterFormatError)
+        self.c_dim_categorical = _check.nonneg_int(c_dim_categorical,'c_dim_categorical',ParameterFormatError)
+        _check.pos_int(
+            self.c_dim_continuous+self.c_dim_categorical,
+            'c_dim_continuous+c_dim_categorical',
+            ParameterFormatError)
+        self.c_dim_features = self.c_dim_continuous+self.c_dim_categorical
+        
         self.c_max_depth = _check.pos_int(c_max_depth,'c_max_depth',ParameterFormatError)
-        self.c_num_children = _check.pos_int(c_num_children,'c_num_children',ParameterFormatError)
-        self.c_k = _check.pos_int(c_k,'c_k',ParameterFormatError)
+        
+        _check.pos_ints(c_num_children_vec,'c_num_children_vec',ParameterFormatError)
+        if np.any(c_num_children_vec<2):
+            raise(ParameterFormatError(
+                'All the elements of c_num_children_vec must be greater than or equal to 2: '
+                +f'c_num_children_vec={c_num_children_vec}.'
+            ))
+        self.c_num_children_vec = np.ones(self.c_dim_continuous+self.c_dim_categorical,dtype=int)*2
+        self.c_num_children_vec[:] = c_num_children_vec
+        
+        self.c_num_assignment_vec = np.ones(self.c_dim_features,dtype=int)
+        self.c_num_assignment_vec[:self.c_dim_continuous] *= self.c_max_depth
+        if c_num_assignment_vec is not None:
+            _check.pos_ints(c_num_assignment_vec,'c_num_assignment_vec',ParameterFormatError)
+            if np.any(c_num_assignment_vec>self.c_max_depth):
+                raise(ParameterFormatError(
+                    'All the elements of c_num_assignment_vec must be less than or equal to self.c_max_depth: '
+                    +f'c_num_assignment_vec={c_num_assignment_vec}.'
+                ))
+            self.c_num_assignment_vec[:] = c_num_assignment_vec
+        
+        self.c_ranges = np.zeros([self.c_dim_continuous,2])
+        self.c_ranges[:,0] -= 3
+        self.c_ranges[:,1] += 3
+        if c_ranges is not None:
+            _check.float_vecs(c_ranges,'c_ranges',ParameterFormatError)
+            self.c_ranges[:] = c_ranges
+            if np.any(self.c_ranges[:,0] > self.c_ranges[:,1]):
+                raise(ParameterFormatError(
+                    'self.c_ranges[:,1] must be greater than or equal to self.c_ranges[:,0]'
+                ))
+        
         if SubModel not in MODELS:
             raise(ParameterFormatError(
                 "SubModel must be bernoulli, "
                 +"poisson, normal, or exponential."
             ))
         self.SubModel = SubModel
+        
         self.rng = np.random.default_rng(seed)
 
         # h_params
-        self.h_k_prob_vec = np.ones(self.c_k) / self.c_k
+        self.h_k_prob_vec = np.ones(self.c_num_assignment_vec.sum()) / self.c_num_assignment_vec.sum()
         self.h_g = 0.5
         self.sub_h_params = {}
         self.h_metatree_list = []
@@ -145,27 +206,42 @@ class GenModel(base.Generative):
         )
 
         # params
+        self._root_k_candidates = []
+        for i in range(self.c_dim_features):
+            for j in range(self.c_num_assignment_vec[i]):
+                self._root_k_candidates.append(i)
         self.root = _Node(
             0,
-            self.c_num_children,
-            list(range(self.c_k)),
+            self._root_k_candidates,
             self.h_g,
             sub_model=self.SubModel.GenModel(seed=self.rng,**self.sub_h_params),
+            ranges=self.c_ranges,
             leaf=True
             )
 
         self.set_params(root)
 
-    def _gen_params_recursion(self,node:_Node,h_node:_Node,feature_fix):
-        """ generate parameters recursively
+    def get_constants(self):
+        """Get constants of GenModel.
 
-        Parameters
-        ----------
-        node : object
-                a object form GenNode class
-        feature_fix : bool
-                a bool parameter show the feature is fixed or not
+        Returns
+        -------
+        constants : dict of {str: int, numpy.ndarray}
+            * ``"c_dim_continuous"`` : the value of ``self.c_dim_continuous``
+            * ``"c_dim_categorical"`` : the value of ``self.c_dim_categorical``
+            * ``"c_max_depth"`` : the value of ``self.c_max_depth``
+            * ``"c_num_children_vec"`` : the value of ``self.c_num_children_vec``
+            * ``"c_num_assignment_vec"`` : the value of ``self.c_num_assignment_vec``
+            * ``"c_ranges"`` : the value of ``self.c_ranges``
         """
+        return {"c_dim_continuous":self.c_dim_continuous,
+                "c_dim_categorical":self.c_dim_categorical,
+                "c_max_depth":self.c_max_depth,
+                "c_num_children_vec":self.c_num_children_vec,
+                "c_num_assignment_vec":self.c_num_assignment_vec,
+                "c_ranges":self.c_ranges}
+
+    def _gen_params_recursion(self,node:_Node,h_node:_Node,feature_fix,threshold_fix,threshold_type):
         if h_node is None:
             if node.depth == self.c_max_depth:
                 node.h_g = 0
@@ -173,26 +249,44 @@ class GenModel(base.Generative):
                 node.h_g = self.h_g
             # node.sub_model.set_h_params(**self.sub_h_params)
             node.sub_model = self.SubModel.GenModel(seed=self.rng,**self.sub_h_params)
-            if node.depth == self.c_max_depth or node.depth == self.c_k or self.rng.random() > self.h_g:  # leaf node
+            if node.depth == self.c_max_depth or not node.k_candidates or self.rng.random() > self.h_g:  # leaf node
                 node.sub_model.gen_params()
                 node.leaf = True
             else:  # inner node
-                if feature_fix == False or node.k is None:
+                flag = node.k is None
+                if not feature_fix or flag:
                     node.k = self.rng.choice(node.k_candidates,
                                              p=self.h_k_prob_vec[node.k_candidates]/self.h_k_prob_vec[node.k_candidates].sum())
+                    node.children = [None for i in range(self.c_num_children_vec[node.k])]
+                if node.k < self.c_dim_continuous:
+                    if not threshold_fix or flag:
+                        node.thresholds = np.empty(self.c_num_children_vec[node.k]+1)
+                        if threshold_type == 'random':
+                            tmp = self.rng.dirichlet(np.ones(self.c_num_children_vec[node.k]))
+                            tmp *= (node.ranges[node.k,1] - node.ranges[node.k,0])
+                            node.thresholds[0] = node.ranges[node.k,0]
+                            for i in range(self.c_num_children_vec[node.k]):
+                                node.thresholds[i+1] = node.thresholds[i]+tmp[i]
+                        if threshold_type == 'even':
+                            node.thresholds[:] = np.linspace(node.ranges[node.k,0],node.ranges[node.k,1],self.c_num_children_vec[node.k]+1)
+                else:
+                    node.thresholds = None
                 child_k_candidates = copy.copy(node.k_candidates)
                 child_k_candidates.remove(node.k)
                 node.leaf = False
-                for i in range(self.c_num_children):
+                for i in range(self.c_num_children_vec[node.k]):
                     if node.children[i] is None:
                         node.children[i] = _Node(
                             node.depth+1,
-                            self.c_num_children,
-                            h_g=self.h_g,
                             sub_model=self.SubModel.GenModel(seed=self.rng,**self.sub_h_params),
                             )
                     node.children[i].k_candidates = child_k_candidates
-                    self._gen_params_recursion(node.children[i],None,feature_fix)
+                    node.children[i].ranges = np.empty([self.c_dim_continuous,2])
+                    node.children[i].ranges[:] = node.ranges
+                    if node.thresholds is not None:
+                        node.children[i].ranges[node.k,0] = node.thresholds[i]
+                        node.children[i].ranges[node.k,1] = node.thresholds[i+1]
+                    self._gen_params_recursion(node.children[i],None,feature_fix,threshold_fix,threshold_type)
         else:
             if node.depth == self.c_max_depth:
                 node.h_g = 0
@@ -203,93 +297,72 @@ class GenModel(base.Generative):
             except:
                 sub_h_params = h_node.sub_model.get_hn_params()
             node.sub_model.set_h_params(*sub_h_params.values())
-            if node.depth == self.c_max_depth or node.depth == self.c_k or self.rng.random() > h_node.h_g:  # leaf node
+            if node.depth == self.c_max_depth or not node.k_candidates or self.rng.random() > h_node.h_g:  # leaf node
                 node.sub_model.gen_params()
                 node.leaf = True
             else:  # inner node
-                if feature_fix == False or node.k is None:
-                    node.k = self.rng.choice(node.k_candidates,
-                                             p=self.h_k_prob_vec[node.k_candidates]/self.h_k_prob_vec[node.k_candidates].sum())
+                node.k = h_node.k
+                node.children = [None for i in range(self.c_num_children_vec[node.k])]
+                if node.k < self.c_dim_continuous:
+                    node.thresholds = np.empty(self.c_num_children_vec[node.k]+1)
+                    node.thresholds[:] = h_node.thresholds
+                else:
+                    node.thresholds = None
                 child_k_candidates = copy.copy(node.k_candidates)
                 child_k_candidates.remove(node.k)
                 node.leaf = False
-                for i in range(self.c_num_children):
+                for i in range(self.c_num_children_vec[node.k]):
                     if node.children[i] is None:
                         node.children[i] = _Node(
                             node.depth+1,
-                            self.c_num_children,
-                            h_g=self.h_g,
                             sub_model=self.SubModel.GenModel(seed=self.rng,**self.sub_h_params),
                             )
                     node.children[i].k_candidates = child_k_candidates
-                    self._gen_params_recursion(node.children[i],h_node.children[i],feature_fix)
+                    node.children[i].ranges = np.empty([self.c_dim_continuous,2])
+                    node.children[i].ranges[:] = node.ranges
+                    if node.thresholds is not None:
+                        node.children[i].ranges[node.k,0] = node.thresholds[i]
+                        node.children[i].ranges[node.k,1] = node.thresholds[i+1]
+                    self._gen_params_recursion(node.children[i],h_node.children[i],feature_fix,threshold_fix,threshold_type)
 
-    def _gen_params_recursion_tree_fix(self,node:_Node,h_node:_Node,feature_fix):
-        """ generate parameters recursively for fixed tree
-
-        Parameters
-        ----------
-        node : object
-                a object form GenNode class
-        feature_fix : bool
-                a bool parameter show the feature is fixed or not
-        """
-        if h_node is None:
-            if node.depth == self.c_max_depth:
-                node.h_g = 0
-            else:
-                node.h_g = self.h_g
-            # node.sub_model.set_h_params(**self.sub_h_params)
-            node.sub_model = self.SubModel.GenModel(seed=self.rng,**self.sub_h_params)
-            if node.leaf:  # leaf node
-                node.sub_model.gen_params()
-                node.leaf = True
-            else:  # inner node
-                if feature_fix == False or node.k is None:
-                    node.k = self.rng.choice(node.k_candidates,
-                                             p=self.h_k_prob_vec[node.k_candidates]/self.h_k_prob_vec[node.k_candidates].sum())
-                child_k_candidates = copy.copy(node.k_candidates)
-                child_k_candidates.remove(node.k)
-                node.leaf = False
-                for i in range(self.c_num_children):
-                    if node.children[i] is not None:
-                        node.children[i].k_candidates = child_k_candidates
-                        self._gen_params_recursion_tree_fix(node.children[i],None,feature_fix)
+    def _gen_params_recursion_feature_and_tree_fix(self,node:_Node,threshold_fix,threshold_type):
+        if node.depth == self.c_max_depth:
+            node.h_g = 0
         else:
-            if node.depth == self.c_max_depth:
-                node.h_g = 0
+            node.h_g = self.h_g
+        # node.sub_model.set_h_params(**self.sub_h_params)
+        node.sub_model = self.SubModel.GenModel(seed=self.rng,**self.sub_h_params)
+        if node.leaf:  # leaf node
+            node.sub_model.gen_params()
+            node.leaf = True
+        else:  # inner node
+            if node.k < self.c_dim_continuous:
+                if not threshold_fix:
+                    node.thresholds = np.empty(self.c_num_children_vec[node.k]+1)
+                    if threshold_type == 'random':
+                        tmp = self.rng.dirichlet(np.ones(self.c_num_children_vec[node.k]))
+                        tmp *= (node.ranges[node.k,1] - node.ranges[node.k,0])
+                        node.thresholds[0] = node.ranges[node.k,0]
+                        for i in range(self.c_num_children_vec[node.k]):
+                            node.thresholds[i+1] = node.thresholds[i]+tmp[i]
+                    if threshold_type == 'even':
+                        node.thresholds[:] = np.linspace(node.ranges[node.k,0],node.ranges[node.k,1],self.c_num_children_vec[node.k]+1)
             else:
-                node.h_g = h_node.h_g
-            try:
-                sub_h_params = h_node.sub_model.get_h_params()
-            except:
-                sub_h_params = h_node.sub_model.get_hn_params()
-            node.sub_model.set_h_params(*sub_h_params.values())
-            if node.leaf:  # leaf node
-                node.sub_model.gen_params()
-                node.leaf = True
-            else:  # inner node
-                if feature_fix == False or node.k is None:
-                    node.k = self.rng.choice(node.k_candidates,
-                                             p=self.h_k_prob_vec[node.k_candidates]/self.h_k_prob_vec[node.k_candidates].sum())
-                child_k_candidates = copy.copy(node.k_candidates)
-                child_k_candidates.remove(node.k)
-                node.leaf = False
-                for i in range(self.c_num_children):
-                    if node.children[i] is not None:
-                        node.children[i].k_candidates = child_k_candidates
-                        self._gen_params_recursion_tree_fix(node.children[i],h_node,feature_fix)
+                node.thresholds = None
+            child_k_candidates = copy.copy(node.k_candidates)
+            child_k_candidates.remove(node.k)
+            node.leaf = False
+            for i in range(self.c_num_children_vec[node.k]):
+                if node.children[i] is not None:
+                    node.children[i].k_candidates = child_k_candidates
+                    node.children[i].ranges = np.empty([self.c_dim_continuous,2])
+                    node.children[i].ranges[:] = node.ranges
+                    if node.thresholds is not None:
+                        node.children[i].ranges[node.k,0] = node.thresholds[i]
+                        node.children[i].ranges[node.k,1] = node.thresholds[i+1]
+                    self._gen_params_recursion_feature_and_tree_fix(node.children[i],threshold_fix,threshold_type)
 
     def _set_params_recursion(self,node:_Node,original_tree_node:_Node):
-        """ copy parameters from a fixed tree
-
-        Parameters
-        ----------
-        node : object
-                a object form GenNode class
-        original_tree_node : object
-                a object form GenNode class
-        """
         if original_tree_node.leaf:  # leaf node
             try:
                 sub_params = original_tree_node.sub_model.get_params()
@@ -307,49 +380,64 @@ class GenModel(base.Generative):
             node.leaf = True
         else:
             node.k = original_tree_node.k
+            node.children = [None for i in range(self.c_num_children_vec[node.k])]
+            if node.k < self.c_dim_continuous:
+                node.thresholds = np.empty(self.c_num_children_vec[node.k]+1)
+                node.thresholds[:] = original_tree_node.thresholds
+            else:
+                node.thresholds = None
             child_k_candidates = copy.copy(node.k_candidates)
             child_k_candidates.remove(node.k)
             node.leaf = False
-            for i in range(self.c_num_children):
-                node.children[i] = _Node(
-                    node.depth+1,
-                    self.c_num_children,
-                    child_k_candidates,
-                    self.h_g,
-                    sub_model=self.SubModel.GenModel(seed=self.rng,**self.sub_h_params)
-                    )
+            for i in range(self.c_num_children_vec[node.k]):
+                if node.children[i] is None:
+                    node.children[i] = _Node(
+                        node.depth+1,
+                        h_g=self.h_g,
+                        sub_model=self.SubModel.GenModel(seed=self.rng,**self.sub_h_params)
+                        )
+                node.children[i].k_candidates = child_k_candidates
+                node.children[i].ranges = np.empty([self.c_dim_continuous,2])
+                node.children[i].ranges[:] = node.ranges
+                if node.thresholds is not None:
+                    node.children[i].ranges[node.k,0] = node.thresholds[i]
+                    node.children[i].ranges[node.k,1] = node.thresholds[i+1]
                 self._set_params_recursion(node.children[i],original_tree_node.children[i])
     
-    def _gen_sample_recursion(self,node:_Node,x):
-        """Generate a sample from the stochastic data generative model.
-
-        Parameters
-        ----------
-        node : object
-                a object form GenNode class
-
-        x : numpy ndarray
-            1 dimensional array whose elements are 0 or 1.
-        """
+    def _gen_sample_recursion(self,node:_Node,x_continuous,x_categorical):
         if node.leaf:  # leaf node
             try:
-                y = node.sub_model.gen_sample(sample_size=1,x=x)
+                y = node.sub_model.gen_sample(sample_size=1,x=x_continuous)
             except:
                 y = node.sub_model.gen_sample(sample_size=1)
             return y
         else:
-            return self._gen_sample_recursion(node.children[x[node.k]],x)
+            if node.k < self.c_dim_continuous:
+                for i in range(self.c_num_children_vec[node.k]):
+                    if node.thresholds[i] < x_continuous[node.k] and x_continuous[node.k] < node.thresholds[i+1]:
+                        index = i
+                        break
+            else:
+                index = x_categorical[node.k-self.c_dim_continuous]
+            return self._gen_sample_recursion(node.children[index],x_continuous,x_categorical)
     
-    def _visualize_model_recursion(self,tree_graph,node:_Node,node_id,parent_id,sibling_num,p_v):
-        """Visualize the stochastic data generative model and generated samples."""
+    def _visualize_model_recursion(self,tree_graph,node:_Node,node_id,parent_id,parent_k,sibling_num,p_v):
         tmp_id = node_id
         tmp_p_v = p_v
-        
+
         # add node information
         if node.leaf:
             label_string = 'k=None\\l'
         else:
             label_string = f'k={node.k}\\l'
+            if node.k < self.c_dim_continuous:
+                label_string += 'thresholds=\\l{'
+                for i in range(self.c_num_children_vec[node.k]-1):
+                    if i == 0:
+                        label_string += f'{node.thresholds[i+1]:.2f}'
+                    else:
+                        label_string += f',{node.thresholds[i+1]:.2f}'
+                label_string += '}\\l'
         label_string += f'h_g={node.h_g:.2f}\\lp_v={tmp_p_v:.2f}\\lsub_params={{'
         if node.leaf:
             sub_params = node.sub_model.get_params()
@@ -368,24 +456,39 @@ class GenModel(base.Generative):
         
         # add edge information
         if parent_id is not None:
-            tree_graph.edge(f'{parent_id}', f'{tmp_id}', label=f'{sibling_num}')
+            if parent_k < self.c_dim_continuous:
+                if node.ranges[parent_k,0] <= self.c_ranges[parent_k,0] + 1.0E-8:
+                    tree_graph.edge(f'{parent_id}', f'{tmp_id}', label=f'[*,{node.ranges[parent_k,1]:.2f})')
+                elif node.ranges[parent_k,1] >= self.c_ranges[parent_k,1] - 1.0E-8:
+                    tree_graph.edge(f'{parent_id}', f'{tmp_id}', label=f'[{node.ranges[parent_k,0]:.2f},*)')
+                else:
+                    tree_graph.edge(f'{parent_id}', f'{tmp_id}', label=f'[{node.ranges[parent_k,0]:.2f},{node.ranges[parent_k,1]:.2f})')
+            else:
+                tree_graph.edge(f'{parent_id}', f'{tmp_id}', label=f'{sibling_num}')
         
         if node.leaf != True:
-            for i in range(self.c_num_children):
-                node_id = self._visualize_model_recursion(tree_graph,node.children[i],node_id+1,tmp_id,i,tmp_p_v*node.h_g)
+            for i in range(self.c_num_children_vec[node.k]):
+                node_id = self._visualize_model_recursion(tree_graph,node.children[i],node_id+1,tmp_id,node.k,i,tmp_p_v*node.h_g)
         
         return node_id
 
-    def _set_h_params_recursion(self,node:_Node,original_tree_node:_Node):
-        """ copy parameters from a fixed tree
+    def _set_h_g_recursion(self,node:_Node):
+        if node.depth == self.c_max_depth:
+            node.h_g = 0
+        else:
+            node.h_g = self.h_g
+        for i in range(self.c_num_children_vec[node.k]):
+            if node.children[i] is not None:
+                self._set_h_g_recursion(node.children[i])
 
-        Parameters
-        ----------
-        node : object
-                a object from _Node class
-        original_tree_node : object
-                a object from _Node class
-        """
+    def _set_sub_h_params_recursion(self,node:_Node):
+        # node.sub_model.set_h_params(**self.sub_h_params)
+        node.sub_model = self.SubModel.GenModel(seed=self.rng,**self.sub_h_params)
+        for i in range(self.c_num_children_vec[node.k]):
+            if node.children[i] is not None:
+                self._set_sub_h_params_recursion(node.children[i])
+
+    def _set_h_params_recursion(self,node:_Node,original_tree_node:_Node):
         if original_tree_node is None:
             if node.depth == self.c_max_depth:
                 node.h_g = 0
@@ -393,7 +496,7 @@ class GenModel(base.Generative):
                 node.h_g = self.h_g
             # node.sub_model.set_h_params(**self.sub_h_params)
             node.sub_model = self.SubModel.GenModel(seed=self.rng,**self.sub_h_params)
-            for i in range(self.c_num_children):
+            for i in range(self.c_num_children_vec[node.k]):
                 if node.children[i] is not None:
                     self._set_h_params_recursion(node.children[i],None)
         else:
@@ -409,14 +512,28 @@ class GenModel(base.Generative):
             if original_tree_node.leaf or node.depth == self.c_max_depth:  # leaf node
                 node.leaf = True
             else:
+                node.k = original_tree_node.k
+                node.children = [None for i in range(self.c_num_children_vec[node.k])]
+                if node.k < self.c_dim_continuous:
+                    node.thresholds = np.empty(self.c_num_children_vec[node.k]+1)
+                    node.thresholds[:] = original_tree_node.thresholds
+                else:
+                    node.thresholds = None
+                child_k_candidates = copy.copy(node.k_candidates)
+                child_k_candidates.remove(node.k)
                 node.leaf = False
-                for i in range(self.c_num_children):
+                for i in range(self.c_num_children_vec[node.k]):
                     if node.children[i] is None:
                         node.children[i] = _Node(
                             node.depth+1,
-                            self.c_num_children,
                             sub_model=self.SubModel.GenModel(seed=self.rng,**self.sub_h_params),
                             )
+                    node.children[i].k_candidates = child_k_candidates
+                    node.children[i].ranges = np.empty([self.c_dim_continuous,2])
+                    node.children[i].ranges[:] = node.ranges
+                    if node.thresholds is not None:
+                        node.children[i].ranges[node.k,0] = node.thresholds[i]
+                        node.children[i].ranges[node.k,1] = node.thresholds[i+1]
                     self._set_h_params_recursion(node.children[i],original_tree_node.children[i])
 
     def set_h_params(self,
@@ -450,7 +567,7 @@ class GenModel(base.Generative):
             _check.float_vec_sum_1(h_k_prob_vec,'h_k_prob_vec',ParameterFormatError)
             _check.shape_consistency(
                 h_k_prob_vec.shape[0],'h_k_prob_vec',
-                self.c_k,'self.c_k',
+                self.c_dim_features,'self.c_dim_features',
                 ParameterFormatError
                 )
             self.h_k_prob_vec[:] = h_k_prob_vec
@@ -459,14 +576,14 @@ class GenModel(base.Generative):
             self.h_g = _check.float_in_closed01(h_g,'h_g',ParameterFormatError)
             if self.h_metatree_list:
                 for h_root in self.h_metatree_list:
-                    self._set_h_params_recursion(h_root,None)
+                    self._set_h_g_recursion(h_root)
 
         if sub_h_params is not None:
             self.SubModel.GenModel(seed=self.rng,**sub_h_params)
             self.sub_h_params = copy.deepcopy(sub_h_params)
             if self.h_metatree_list:
                 for h_root in self.h_metatree_list:
-                    self._set_h_params_recursion(h_root,None)
+                    self._set_sub_h_params_recursion(h_root)
 
         if h_metatree_list is not None:
             if not isinstance(h_metatree_list,list):
@@ -479,7 +596,22 @@ class GenModel(base.Generative):
                         raise(ParameterFormatError(
                             "all elements of h_metatree_list must be instances of metatree._Node or empty"
                         ))
-            self.h_metatree_list = copy.deepcopy(h_metatree_list)
+            diff = len(h_metatree_list) - len(self.h_metatree_list)
+            if diff < 0:
+                del self.h_metatree_list[diff:]
+            elif diff > 0:
+                for i in range(diff):
+                    self.h_metatree_list.append(
+                        _Node(
+                            0,
+                            self._root_k_candidates,
+                            self.h_g,
+                            sub_model=self.SubModel.GenModel(seed=self.rng,**self.sub_h_params),
+                            ranges=self.c_ranges,
+                            )
+                    )
+            for i in range(len(self.h_metatree_list)):
+                self._set_h_params_recursion(self.h_metatree_list[i],h_metatree_list[i])
             if h_metatree_prob_vec is not None:
                 self.h_metatree_prob_vec = np.copy(
                     _check.float_vec_sum_1(
@@ -523,7 +655,7 @@ class GenModel(base.Generative):
 
         Returns
         -------
-        hn_params : dict of {str: float, list, dict, numpy.ndarray}
+        h_params : dict of {str: float, list, dict, numpy.ndarray}
             * ``"h_k_prob_vec"`` : the value of ``self.h_k_prob_vec``
             * ``"h_g"`` : the value of ``self.h_g``
             * ``"sub_h_params"`` : the value of ``self.sub_h_params``
@@ -536,29 +668,42 @@ class GenModel(base.Generative):
                 "h_metatree_list":self.h_metatree_list,
                 "h_metatree_prob_vec":self.h_metatree_prob_vec}
     
-    def gen_params(self,feature_fix=False,tree_fix=False):
+    def gen_params(self,feature_fix=False,threshold_fix=False,tree_fix=False,threshold_type='even'):
         """Generate the parameter from the prior distribution.
 
         The generated vaule is set at ``self.root``.
 
         Parameters
         ----------
-        feature_fix : bool
+        feature_fix : bool, optional
             If ``True``, feature assignment indices will be fixed, by default ``False``.
-        tree_fix : bool
-            If ``True``, tree shape will be fixed, by default ``False``.
+        threshold_fix : bool, optional
+            If ``True``, thresholds for continuous features will be fixed, by default ``False``. 
+            If ``feature_fix`` is ``False``, ``threshold_fix`` must be ``False``. 
+        tree_fix : bool, optional
+            If ``True``, tree shape will be fixed, by default ``False``. 
+            If ``feature_fix`` is ``False``, ``tree_fix`` must be ``False``.
+        threshold_type : {'even', 'random'}, optional
+            A type of threshold generating procedure, by default ``'even'``
+            If ``'even'``, self.c_ranges will be recursively divided by equal intervals. 
+            if ``'random'``, self.c_ranges will be recursively divided by at random intervals.
         """
-        if self.h_metatree_list:
-            tmp_root = self.rng.choice(self.h_metatree_list,p=self.h_metatree_prob_vec)
+        if feature_fix:
+            warnings.warn(
+                "If feature_fix=True, tree will be generated according to "
+                +"self.h_g not any element of self.h_metatree_list.",ResultWarning)
             if tree_fix:
-                self._gen_params_recursion_tree_fix(self.root,tmp_root,feature_fix)
+                self._gen_params_recursion_feature_and_tree_fix(self.root,threshold_fix,threshold_type)
             else:
-                self._gen_params_recursion(self.root,tmp_root,feature_fix)
+                self._gen_params_recursion(self.root,None,True,threshold_fix,threshold_type)
         else:
-            if tree_fix:
-                self._gen_params_recursion_tree_fix(self.root,None,feature_fix)
+            if threshold_fix or tree_fix:
+                warnings.warn("If feature_fix=False, threshold and tree cannot be fixed.",ResultWarning)
+            if self.h_metatree_list:
+                tmp_root = self.rng.choice(self.h_metatree_list,p=self.h_metatree_prob_vec)
+                self._gen_params_recursion(self.root,tmp_root,False,False,threshold_type)
             else:
-                self._gen_params_recursion(self.root,None,feature_fix)
+                self._gen_params_recursion(self.root,None,False,False,threshold_type)
     
     def set_params(self,root=None):
         """Set the parameter of the sthocastic data generative model.
@@ -573,14 +718,6 @@ class GenModel(base.Generative):
                 raise(ParameterFormatError(
                     "root must be an instance of metatree._Node"
                 ))
-            self.root = _Node(
-                0,
-                self.c_num_children,
-                list(range(self.c_k)),
-                self.h_g,
-                sub_model=self.SubModel.GenModel(seed=self.rng,**self.sub_h_params),
-                leaf=True
-                )
             self._set_params_recursion(self.root,root)
 
     def get_params(self):
@@ -588,56 +725,153 @@ class GenModel(base.Generative):
 
         Returns
         -------
-        params : dict of {str:float}
+        params : dict of {str:metatree._Node}
             * ``"root"`` : The value of ``self.root``.
         """
         return {"root":self.root}
 
-    def gen_sample(self,sample_size=None,x=None):
+    def gen_sample(self,sample_size=None,x_continuous=None,x_categorical=None):
         """Generate a sample from the stochastic data generative model.
 
         Parameters
         ----------
-        sample_size : int
-            A positive integer
-        x : numpy ndarray, optional
-            2 dimensional array whose size is ``(sammple_size,c_k)``, by default None.
-            Each element x[i,j] must satisfy 0 <= x[i,j] < c_num_children.
+        sample_size : int, optional
+            A positive integer, by default ``None``
+        x_continuous : numpy ndarray, optional
+            2 dimensional float array whose size is ``(sammple_size,c_dim_continuous)``, 
+            by default None.
+        x_categorical : numpy ndarray, optional
+            2 dimensional int array whose size is ``(sammple_size,c_dim_categorical)``, 
+            by default None. Each element x[i,j] must satisfy 
+            0 <= x[i,j] < self.c_num_children_vec[self.c_dim_continuous+i].
 
         Returns
         -------
-        x : numpy ndarray
-            2 dimensional array whose size is ``(sammple_size,c_k)``.
-            Each element x[i,j] satisfies 0 <= x[i,j] < c_num_children.
+        x_continuous : numpy ndarray
+            2 dimensional float array whose size is ``(sammple_size,c_dim_continuous)``.
+        x_categorical : numpy ndarray, optional
+            2 dimensional int array whose size is ``(sammple_size,c_dim_categorical)``.
+            Each element x[i,j] must satisfies 
+            0 <= x[i,j] < self.c_num_children_vec[self.c_dim_continuous+i].
         y : numpy ndarray
             1 dimensional array whose size is ``sammple_size``.
         """
-        if x is not None:
-            _check.int_vecs(x,'x',DataFormatError)
+        if sample_size is not None:
+            sample_size = _check.pos_int(sample_size,'sample_size',DataFormatError)
+
+            if x_continuous is not None:
+                _check.float_vecs(x_continuous,'x_continuous',DataFormatError)
+                _check.shape_consistency(
+                    x_continuous.shape[-1],'x_continuous.shape[-1]',
+                    self.c_dim_continuous,'self.c_dim_continuous',
+                    ParameterFormatError
+                    )
+                _check.shape_consistency(
+                    x_continuous.shape[0],'x_continuous.shape[0]',
+                    sample_size,'sample_size',
+                    ParameterFormatError
+                    )
+            else:
+                x_continuous = np.empty([sample_size,self.c_dim_continuous],dtype=float)
+                for i in range(self.c_dim_continuous):
+                    x_continuous[:,i] = ((self.c_ranges[i,1]-self.c_ranges[i,0])
+                                         * self.rng.random(sample_size)
+                                         + self.c_ranges[i,0])
+            if x_categorical is not None:
+                _check.int_vecs(x_categorical,'x_categorical',DataFormatError)
+                _check.shape_consistency(
+                    x_categorical.shape[-1],'x_categorical.shape[-1]',
+                    self.c_dim_categorical,'self.c_dim_categorical',
+                    ParameterFormatError
+                    )
+                _check.shape_consistency(
+                    x_categorical.shape[0],'x_categorical.shape[0]',
+                    sample_size,'sample_size',
+                    ParameterFormatError
+                    )
+                for i in range(self.c_dim_categorical):
+                    if x_categorical[:,i].max() >= self.c_num_children_vec[self.c_dim_continuous+i]:
+                        raise(DataFormatError(
+                            f"x_categorical[{i}].max() must smaller than "
+                            +f"self.c_num_children_vec[{self.c_dim_continuous+i}]: "
+                            +f"{self.c_num_children_vec[self.c_dim_continuous+i]}"))
+            else:
+                x_categorical = np.empty([sample_size,self.c_dim_categorical],dtype=int)
+                for i in range(self.c_dim_categorical):
+                    x_categorical[:,i] = self.rng.choice(
+                        self.c_num_children_vec[self.c_dim_continuous+i],
+                        sample_size)
+                        
+        elif x_continuous is not None:
+            _check.float_vecs(x_continuous,'x_continuous',DataFormatError)
             _check.shape_consistency(
-                x.shape[-1],'x.shape[-1]',
-                self.c_k,'self.c_k',
+                x_continuous.shape[-1],'x_continuous.shape[-1]',
+                self.c_dim_continuous,'self.c_dim_continuous',
                 ParameterFormatError
                 )
-            if x.max() >= self.c_num_children:
-                raise(DataFormatError(f"x.max() must smaller than c_num_children:{self.c_num_children}"))
-            x = x.reshape(-1,self.c_k)
-            sample_size = x.shape[0]
-        elif sample_size is not None:
-            _check.pos_int(sample_size,'sample_size',DataFormatError)
-            x = self.rng.choice(self.c_num_children,(sample_size,self.c_k))
+            x_continuous = x_continuous.reshape(-1,self.c_dim_continuous)
+
+            sample_size = x_continuous.shape[0]
+
+            if x_categorical is not None:
+                _check.int_vecs(x_categorical,'x_categorical',DataFormatError)
+                _check.shape_consistency(
+                    x_categorical.shape[-1],'x_categorical.shape[-1]',
+                    self.c_dim_categorical,'self.c_dim_categorical',
+                    ParameterFormatError
+                    )
+                _check.shape_consistency(
+                    x_categorical.shape[0],'x_categorical.shape[0]',
+                    x_continuous.shape[0],'x_continuous.shape[0]',
+                    ParameterFormatError
+                    )
+                for i in range(self.c_dim_categorical):
+                    if x_categorical[:,i].max() >= self.c_num_children_vec[self.c_dim_continuous+i]:
+                        raise(DataFormatError(
+                            f"x_categorical[{i}].max() must smaller than "
+                            +f"self.c_num_children_vec[{self.c_dim_continuous+i}]: "
+                            +f"{self.c_num_children_vec[self.c_dim_continuous+i]}"))
+            else:
+                x_categorical = np.empty([sample_size,self.c_dim_categorical],dtype=int)
+                for i in range(self.c_dim_categorical):
+                    x_categorical[:,i] = self.rng.choice(
+                        self.c_num_children_vec[self.c_dim_continuous+i],
+                        sample_size)
+
+        elif x_categorical is not None:
+            _check.int_vecs(x_categorical,'x_categorical',DataFormatError)
+            _check.shape_consistency(
+                x_categorical.shape[-1],'x_categorical.shape[-1]',
+                self.c_dim_categorical,'self.c_dim_categorical',
+                ParameterFormatError
+                )
+            x_categorical = x_categorical.reshape(-1,self.c_dim_categorical)
+            for i in range(self.c_dim_categorical):
+                if x_categorical[i].max() >= self.c_num_children_vec[self.c_dim_continuous+i]:
+                    raise(DataFormatError(
+                        f"x_categorical[{i}].max() must smaller than "
+                        +f"self.c_num_children_vec[{self.c_dim_continuous+i}]: "
+                        +f"{self.c_num_children_vec[self.c_dim_continuous+i]}"))
+
+            sample_size = x_categorical.shape[0]
+            
+            x_continuous = np.empty([sample_size,self.c_dim_continuous],dtype=float)
+            for i in range(self.c_dim_continuous):
+                x_continuous[:,i] = ((self.c_ranges[i,1]-self.c_ranges[i,0])
+                                        * self.rng.random(sample_size)
+                                        + self.c_ranges[i,0])
         else:
-            raise(DataFormatError("Either of the sample_size and the x must be given as a input."))
-        
+            raise(DataFormatError("Either of sample_size, x_continuous, and x_categorical must be given as a input."))
+
         if self.SubModel in DISCRETE_MODELS:
             y = np.empty(sample_size,dtype=int)
         elif self.SubModel in CONTINUOUS_MODELS:
             y = np.empty(sample_size,dtype=float)
         
         for i in range(sample_size):
-            y[i] = self._gen_sample_recursion(self.root,x[i])
+            y[i] = self._gen_sample_recursion(self.root,x_continuous[i],x_categorical[i])
 
-        return x,y
+        return x_continuous,x_categorical,y
         
     def save_sample(self,filename,sample_size,x=None):
         """Save the generated sample as NumPy ``.npz`` format.
@@ -649,20 +883,116 @@ class GenModel(base.Generative):
         filename : str
             The filename to which the sample is saved.
             ``.npz`` will be appended if it isn't there.
-        sample_size : int
-            A positive integer
-        x : numpy ndarray, optional
-            2 dimensional array whose size is ``(sammple_size,c_k)``, by default None.
-            Each element x[i,j] must satisfy 0 <= x[i,j] < c_num_children.
+        sample_size : int, optional
+            A positive integer, by default ``None``
+        x_continuous : numpy ndarray, optional
+            2 dimensional float array whose size is ``(sammple_size,c_dim_continuous)``, 
+            by default None.
+        x_categorical : numpy ndarray, optional
+            2 dimensional int array whose size is ``(sammple_size,c_dim_categorical)``, 
+            by default None. Each element x[i,j] must satisfy 
+            0 <= x[i,j] < self.c_num_children_vec[self.c_dim_continuous+i].
         
         See Also
         --------
         numpy.savez_compressed
         """
-        x,y = self.gen_sample(sample_size,x)
-        np.savez_compressed(filename,x=x,y=y)
+        x_continuous,x_categorical,y = self.gen_sample(sample_size,x_continuous,x_categorical)
+        np.savez_compressed(filename,x_continuous=x_continuous,x_categorical=x_categorical,y=y)
 
-    def visualize_model(self,filename=None,format=None,sample_size=10):
+    def _plot_2d_threshold_recursion_continuous(self,ax,node:_Node):
+        if not node.leaf:
+            if node.k == 0:
+                ax.vlines(x=node.thresholds[1:-1],ymin=node.ranges[1,0],ymax=node.ranges[1,1],colors='red')
+            else:
+                ax.hlines(y=node.thresholds[1:-1],xmin=node.ranges[0,0],xmax=node.ranges[0,1],colors='red')
+            for i in range(self.c_num_children_vec[node.k]):
+                if node.children[i] is not None:
+                    self._plot_2d_threshold_recursion_continuous(ax,node.children[i])
+
+    def _plot_1d_threshold_recursion_continuous(self,ax,node:_Node,ymin,ymax):
+        if not node.leaf:
+            ax.vlines(x=node.thresholds[1:-1],ymin=ymin,ymax=ymax,colors='red')
+            for i in range(self.c_num_children_vec[node.k]):
+                if node.children[i] is not None:
+                    self._plot_1d_threshold_recursion_continuous(ax,node.children[i],ymin,ymax)
+
+    def _plot_1d_threshold_recursion_categorical(self,ax,node:_Node,ymin,ymax):
+        if not node.leaf:
+            ax.vlines(
+                x=np.linspace(0,
+                    self.c_num_children_vec[node.k]-1,
+                    2*(self.c_num_children_vec[node.k]-1)+1)[1:-1:2],
+                ymin=ymin,
+                ymax=ymax,
+                colors='red')
+            for i in range(self.c_num_children_vec[node.k]):
+                if node.children[i] is not None:
+                    self._plot_1d_threshold_recursion_categorical(ax,node.children[i],ymin,ymax)
+
+    def _plot_2d_threshold_recursion_mix(self,ax,node:_Node,categorical_index):
+        if not node.leaf:
+            if node.k == 0:
+                if categorical_index is None:
+                    ax.vlines(x=node.thresholds[1:-1],ymin=0-0.2,ymax=self.c_num_children_vec[1]-1+0.2,colors='red')
+                else:
+                    ax.vlines(x=node.thresholds[1:-1],ymin=categorical_index-0.2,ymax=categorical_index+0.2,colors='red')
+                for i in range(self.c_num_children_vec[node.k]):
+                    if node.children[i] is not None:
+                        self._plot_2d_threshold_recursion_mix(ax,node.children[i],categorical_index)
+            else:
+                ax.hlines(
+                    y=np.linspace(0,
+                        self.c_num_children_vec[node.k]-1,
+                        2*(self.c_num_children_vec[node.k]-1)+1)[1:-1:2],
+                    xmin=node.ranges[0,0],
+                    xmax=node.ranges[0,1],
+                    colors='red')
+                for i in range(self.c_num_children_vec[node.k]):
+                    if node.children[i] is not None:
+                        self._plot_2d_threshold_recursion_mix(ax,node.children[i],i)
+
+    def _plot_2d_threshold_recursion_categorical(self,ax,node:_Node,categorical_index):
+        if not node.leaf:
+            if node.k == 0:
+                if categorical_index is None:
+                    ax.vlines(
+                        x=np.linspace(0,
+                            self.c_num_children_vec[node.k]-1,
+                            2*(self.c_num_children_vec[node.k]-1)+1)[1:-1:2],
+                        ymin=-0.2,
+                        ymax=self.c_num_children_vec[1]-1+0.2,
+                        colors='red')
+                else:
+                    ax.vlines(
+                        x=np.linspace(0,
+                            self.c_num_children_vec[node.k]-1,
+                            2*(self.c_num_children_vec[node.k]-1)+1)[1:-1:2],
+                        ymin=max(categorical_index-0.5,-0.2),
+                        ymax=min(categorical_index+0.5,self.c_num_children_vec[1]-1+0.2),
+                        colors='red')
+            else:
+                if categorical_index is None:
+                    ax.hlines(
+                        y=np.linspace(0,
+                            self.c_num_children_vec[node.k]-1,
+                            2*(self.c_num_children_vec[node.k]-1)+1)[1:-1:2],
+                        xmin=-0.2,
+                        xmax=self.c_num_children_vec[0]-1+0.2,
+                        colors='red')
+                else:
+                    ax.hlines(
+                        y=np.linspace(0,
+                            self.c_num_children_vec[node.k]-1,
+                            2*(self.c_num_children_vec[node.k]-1)+1)[1:-1:2],
+                        xmin=max(categorical_index-0.5,-0.2),
+                        xmax=min(categorical_index+0.5,self.c_num_children_vec[0]-1+0.2),
+                        colors='red')
+            for i in range(self.c_num_children_vec[node.k]):
+                if node.children[i] is not None:
+                    self._plot_2d_threshold_recursion_categorical(ax,node.children[i],i)
+
+    def visualize_model(self,filename=None,format=None,sample_size=100):
         """Visualize the stochastic data generative model and generated samples.
 
         Parameters
@@ -703,17 +1033,64 @@ class GenModel(base.Generative):
             import graphviz
             tree_graph = graphviz.Digraph(filename=filename,format=format)
             tree_graph.attr("node",shape="box",fontname="helvetica",style="rounded,filled")
-            self._visualize_model_recursion(tree_graph, self.root, 0, None, None, 1.0)        
+            self._visualize_model_recursion(tree_graph, self.root, 0, None, None, None, 1.0)
             # Can we show the image on the console without saving the file?
             tree_graph.view()
         except ImportError as e:
             print(e)
         except graphviz.CalledProcessError as e:
             print(e)
-        # The following visualization should be modified. Jitter plot may be useful．
-        x,y = self.gen_sample(sample_size)
-        print(x)
-        print(y)
+
+        fig, ax = plt.subplots()
+        x_continuous,x_categorical,y = self.gen_sample(sample_size)
+        if self.c_dim_categorical > 0:
+            x_categorical_jitter = x_categorical + 0.2*(self.rng.random(x_categorical.shape)-0.5)
+
+        if self.SubModel in DISCRETE_MODELS:
+            y_jitter = y + 0.2*(self.rng.random(y.shape)-0.5)
+
+        if self.c_dim_features == 1:
+            if self.c_dim_categorical == 1:
+                if self.SubModel in DISCRETE_MODELS:
+                    ax.scatter(x_categorical_jitter,y_jitter)
+                else:
+                    ax.scatter(x_categorical_jitter,y)
+                ymin, ymax = ax.get_ylim()
+                self._plot_1d_threshold_recursion_categorical(ax,self.root,ymin,ymax)
+                ax.set_xlabel('x_categorical[0]')
+                ax.set_ylabel('y')
+            else:
+                if self.SubModel in DISCRETE_MODELS:
+                    ax.scatter(x_continuous,y_jitter)
+                else:
+                    ax.scatter(x_continuous,y)
+                ymin, ymax = ax.get_ylim()
+                self._plot_1d_threshold_recursion_continuous(ax,self.root,ymin,ymax)
+                ax.set_xlabel('x_continuous[0]')
+                ax.set_ylabel('y')
+            plt.show()
+        elif self.c_dim_features == 2:
+            if self.c_dim_categorical == 2:
+                mappable = ax.scatter(x_categorical_jitter[:,0],x_categorical_jitter[:,1],c=y)
+                self._plot_2d_threshold_recursion_categorical(ax,self.root,None)
+                ax.set_xlabel('x_categorical[0]')
+                ax.set_ylabel('x_categorical[1]')
+            elif self.c_dim_categorical == 1:
+                mappable = ax.scatter(x_continuous,x_categorical_jitter,c=y)
+                self._plot_2d_threshold_recursion_mix(ax,self.root,None)
+                ax.set_xlabel('x_continuous[0]')
+                ax.set_ylabel('x_categorical[0]')
+            else:
+                mappable = ax.scatter(x_continuous[:,0],x_continuous[:,1],c=y)
+                self._plot_2d_threshold_recursion_continuous(ax,self.root)
+                ax.set_xlabel('x_continuous[0]')
+                ax.set_ylabel('x_continuous[1]')
+            fig.colorbar(mappable,label='y')
+            plt.show()
+        else:
+            print(x_continuous)
+            print(x_categorical)
+            print(y)
 
 class LearnModel(base.Posterior,base.PredictiveMixin):
     """The posterior distribution and the predictive distribution.
@@ -736,7 +1113,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
     h0_g : float, optional
         A real number in :math:`[0, 1]`, by default 0.5
     sub_h0_params : dict, optional
-        h0_params for self.SubModel, by default {}
+        h0_params for self.SubModel.LearnModel, by default {}
     h0_metatree_list : list of metatree._Node, optional
         Root nodes of meta-trees, by default []
     h0_metatree_prob_vec : numpy.ndarray, optional
@@ -753,7 +1130,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
     hn_g : float
         A real number in :math:`[0, 1]`
     sub_hn_params : dict
-        hn_params for self.SubModel
+        hn_params for self.SubModel.LearnModel
     hn_metatree_list : list of metatree._Node
         Root nodes of meta-trees
     hn_metatree_prob_vec : numpy.ndarray
@@ -870,6 +1247,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                             child_k_candidates,
                             sub_model=self.SubModel.LearnModel(**self.sub_h0_params),
                             )
+                    node.children[i].k_candidates = child_k_candidates
                     self._set_h0_params_recursion(node.children[i],original_tree_node.children[i])
 
     def _set_hn_g_recursion(self,node:_Node):
@@ -933,6 +1311,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                             child_k_candidates,
                             sub_model=self.SubModel.LearnModel(**self.sub_hn_params),
                             )
+                    node.children[i].k_candidates = child_k_candidates
                     self._set_hn_params_recursion(node.children[i],original_tree_node.children[i])
 
     def set_h0_params(self,
@@ -953,7 +1332,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         h0_g : float, optional
             A real number in :math:`[0, 1]`, by default None
         sub_h0_params : dict, optional
-            h0_params for self.SubModel, by default None
+            h0_params for self.SubModel.LearnModel, by default None
         h0_metatree_list : list of metatree._Node, optional
             Root nodes of meta-trees, by default None
         h0_metatree_prob_vec : numpy.ndarray, optional
@@ -1087,7 +1466,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         hn_g : float, optional
             A real number in :math:`[0, 1]`, by default None
         sub_hn_params : dict, optional
-            hn_params for self.SubModel, by default None
+            hn_params for self.SubModel.LearnModel, by default None
         hn_metatree_list : list of metatree._Node, optional
             Root nodes of meta-trees, by default None
         hn_metatree_prob_vec : numpy.ndarray, optional
@@ -1381,7 +1760,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             self.hn_metatree_list, self.hn_metatree_prob_vec = self._given_MT(x,y)
 
     def _map_recursion_add_nodes(self,node:_Node):
-        if node.depth == self.c_max_depth or node.depth == self.c_k:  # leaf node
+        if node.depth == self.c_max_depth or not node.k_candidates:  # leaf node
             node.h_g = 0.0
             node.leaf = True
             node.map_leaf = True
@@ -1401,7 +1780,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
 
     def _map_recursion(self,node:_Node):
         if node.leaf:
-            if node.depth == self.c_max_depth or node.depth == self.c_k:
+            if node.depth == self.c_max_depth or not node.k_candidates:
                 node.map_leaf = True
                 return 1.0
             elif 1.0 - self.hn_g > self.hn_g ** ((self.c_num_children ** (self.c_max_depth - node.depth) - 1)/(self.c_num_children-1)):

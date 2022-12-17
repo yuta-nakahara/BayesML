@@ -125,7 +125,7 @@ References
 * Dobashi, N.; Saito, S.; Nakahara, Y.; Matsushima, T. Meta-Tree Random Forest: Probabilistic Data-Generative Model and Bayes Optimal Prediction. *Entropy* 2021, 23, 768. https://doi.org/10.3390/e23060768
 * Nakahara, Y.; Saito, S.; Kamatsuka, A.; Matsushima, T. Probability Distribution on Full Rooted Trees. *Entropy* 2022, 24, 328. https://doi.org/10.3390/e24030328
 """
-from ._metatree_x_discrete import GenModel
-from ._metatree_x_discrete import LearnModel
+from ._metatree import GenModel
+from ._metatree import LearnModel
 
 __all__ = ["GenModel", "LearnModel"]
