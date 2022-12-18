@@ -276,7 +276,7 @@ class GenModel(base.Generative):
                             node.thresholds[:] = np.linspace(node.ranges[node.k,0],node.ranges[node.k,1],self.c_num_children_vec[node.k]+1)
                 else:
                     node.thresholds = None
-                child_k_candidates = node.k_candidates + []
+                child_k_candidates = node.k_candidates.copy()
                 child_k_candidates.remove(node.k)
                 node.leaf = False
                 for i in range(self.c_num_children_vec[node.k]):
@@ -286,8 +286,7 @@ class GenModel(base.Generative):
                             sub_model=self.SubModel.GenModel(seed=self.rng,**self.sub_h_params),
                             )
                     node.children[i].k_candidates = child_k_candidates
-                    node.children[i].ranges = np.empty([self.c_dim_continuous,2])
-                    node.children[i].ranges[:] = node.ranges
+                    node.children[i].ranges = np.array(node.ranges)
                     if node.thresholds is not None:
                         node.children[i].ranges[node.k,0] = node.thresholds[i]
                         node.children[i].ranges[node.k,1] = node.thresholds[i+1]
@@ -309,11 +308,10 @@ class GenModel(base.Generative):
                 node.k = h_node.k
                 node.children = [None for i in range(self.c_num_children_vec[node.k])]
                 if node.k < self.c_dim_continuous:
-                    node.thresholds = np.empty(self.c_num_children_vec[node.k]+1)
-                    node.thresholds[:] = h_node.thresholds
+                    node.thresholds = np.array(h_node.thresholds)
                 else:
                     node.thresholds = None
-                child_k_candidates = node.k_candidates + []
+                child_k_candidates = node.k_candidates.copy()
                 child_k_candidates.remove(node.k)
                 node.leaf = False
                 for i in range(self.c_num_children_vec[node.k]):
@@ -323,8 +321,7 @@ class GenModel(base.Generative):
                             sub_model=self.SubModel.GenModel(seed=self.rng,**self.sub_h_params),
                             )
                     node.children[i].k_candidates = child_k_candidates
-                    node.children[i].ranges = np.empty([self.c_dim_continuous,2])
-                    node.children[i].ranges[:] = node.ranges
+                    node.children[i].ranges = np.array(node.ranges)
                     if node.thresholds is not None:
                         node.children[i].ranges[node.k,0] = node.thresholds[i]
                         node.children[i].ranges[node.k,1] = node.thresholds[i+1]
@@ -354,14 +351,13 @@ class GenModel(base.Generative):
                         node.thresholds[:] = np.linspace(node.ranges[node.k,0],node.ranges[node.k,1],self.c_num_children_vec[node.k]+1)
             else:
                 node.thresholds = None
-            child_k_candidates = node.k_candidates + []
+            child_k_candidates = node.k_candidates.copy()
             child_k_candidates.remove(node.k)
             node.leaf = False
             for i in range(self.c_num_children_vec[node.k]):
                 if node.children[i] is not None:
                     node.children[i].k_candidates = child_k_candidates
-                    node.children[i].ranges = np.empty([self.c_dim_continuous,2])
-                    node.children[i].ranges[:] = node.ranges
+                    node.children[i].ranges = np.array(node.ranges)
                     if node.thresholds is not None:
                         node.children[i].ranges[node.k,0] = node.thresholds[i]
                         node.children[i].ranges[node.k,1] = node.thresholds[i+1]
@@ -387,11 +383,10 @@ class GenModel(base.Generative):
             node.k = original_tree_node.k
             node.children = [None for i in range(self.c_num_children_vec[node.k])]
             if node.k < self.c_dim_continuous:
-                node.thresholds = np.empty(self.c_num_children_vec[node.k]+1)
-                node.thresholds[:] = original_tree_node.thresholds
+                node.thresholds = np.array(original_tree_node.thresholds)
             else:
                 node.thresholds = None
-            child_k_candidates = node.k_candidates + []
+            child_k_candidates = node.k_candidates.copy()
             child_k_candidates.remove(node.k)
             node.leaf = False
             for i in range(self.c_num_children_vec[node.k]):
@@ -402,8 +397,7 @@ class GenModel(base.Generative):
                         sub_model=self.SubModel.GenModel(seed=self.rng,**self.sub_h_params)
                         )
                 node.children[i].k_candidates = child_k_candidates
-                node.children[i].ranges = np.empty([self.c_dim_continuous,2])
-                node.children[i].ranges[:] = node.ranges
+                node.children[i].ranges = np.array(node.ranges)
                 if node.thresholds is not None:
                     node.children[i].ranges[node.k,0] = node.thresholds[i]
                     node.children[i].ranges[node.k,1] = node.thresholds[i+1]
@@ -520,11 +514,10 @@ class GenModel(base.Generative):
                 node.k = original_tree_node.k
                 node.children = [None for i in range(self.c_num_children_vec[node.k])]
                 if node.k < self.c_dim_continuous:
-                    node.thresholds = np.empty(self.c_num_children_vec[node.k]+1)
-                    node.thresholds[:] = original_tree_node.thresholds
+                    node.thresholds = np.array(original_tree_node.thresholds)
                 else:
                     node.thresholds = None
-                child_k_candidates = node.k_candidates + []
+                child_k_candidates = node.k_candidates.copy()
                 child_k_candidates.remove(node.k)
                 node.leaf = False
                 for i in range(self.c_num_children_vec[node.k]):
@@ -534,8 +527,7 @@ class GenModel(base.Generative):
                             sub_model=self.SubModel.GenModel(seed=self.rng,**self.sub_h_params),
                             )
                     node.children[i].k_candidates = child_k_candidates
-                    node.children[i].ranges = np.empty([self.c_dim_continuous,2])
-                    node.children[i].ranges[:] = node.ranges
+                    node.children[i].ranges = np.array(node.ranges)
                     if node.thresholds is not None:
                         node.children[i].ranges[node.k,0] = node.thresholds[i]
                         node.children[i].ranges[node.k,1] = node.thresholds[i+1]
@@ -618,7 +610,7 @@ class GenModel(base.Generative):
             for i in range(len(self.h_metatree_list)):
                 self._set_h_params_recursion(self.h_metatree_list[i],h_metatree_list[i])
             if h_metatree_prob_vec is not None:
-                self.h_metatree_prob_vec = np.copy(
+                self.h_metatree_prob_vec = np.array(
                     _check.float_vec_sum_1(
                         h_metatree_prob_vec,
                         'h_metatree_prob_vec',
@@ -632,7 +624,7 @@ class GenModel(base.Generative):
                 else:
                     self.h_metatree_prob_vec = None
         elif h_metatree_prob_vec is not None:
-            self.h_metatree_prob_vec = np.copy(
+            self.h_metatree_prob_vec = np.array(
                 _check.float_vec_sum_1(
                     h_metatree_prob_vec,
                     'h_metatree_prob_vec',
@@ -1318,11 +1310,10 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                 node.k = original_tree_node.k
                 node.children = [None for i in range(self.c_num_children_vec[node.k])]
                 if node.k < self.c_dim_continuous:
-                    node.thresholds = np.empty(self.c_num_children_vec[node.k]+1)
-                    node.thresholds[:] = original_tree_node.thresholds
+                    node.thresholds = np.array(original_tree_node.thresholds)
                 else:
                     node.thresholds = None
-                child_k_candidates = node.k_candidates + []
+                child_k_candidates = node.k_candidates.copy()
                 child_k_candidates.remove(node.k)
                 node.leaf = False
                 for i in range(self.c_num_children_vec[node.k]):
@@ -1332,8 +1323,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                             sub_model=self.SubModel.LearnModel(**self.sub_h0_params),
                             )
                     node.children[i].k_candidates = child_k_candidates
-                    node.children[i].ranges = np.empty([self.c_dim_continuous,2])
-                    node.children[i].ranges[:] = node.ranges
+                    node.children[i].ranges = np.array(node.ranges)
                     if node.thresholds is not None:
                         node.children[i].ranges[node.k,0] = node.thresholds[i]
                         node.children[i].ranges[node.k,1] = node.thresholds[i+1]
@@ -1382,11 +1372,10 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                 node.k = original_tree_node.k
                 node.children = [None for i in range(self.c_num_children_vec[node.k])]
                 if node.k < self.c_dim_continuous:
-                    node.thresholds = np.empty(self.c_num_children_vec[node.k]+1)
-                    node.thresholds[:] = original_tree_node.thresholds
+                    node.thresholds = np.array(original_tree_node.thresholds)
                 else:
                     node.thresholds = None
-                child_k_candidates = node.k_candidates + []
+                child_k_candidates = node.k_candidates.copy()
                 child_k_candidates.remove(node.k)
                 node.leaf = False
                 for i in range(self.c_num_children_vec[node.k]):
@@ -1396,8 +1385,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                             sub_model=self.SubModel.LearnModel(**self.sub_hn_params),
                             )
                     node.children[i].k_candidates = child_k_candidates
-                    node.children[i].ranges = np.empty([self.c_dim_continuous,2])
-                    node.children[i].ranges[:] = node.ranges
+                    node.children[i].ranges = np.array(node.ranges)
                     if node.thresholds is not None:
                         node.children[i].ranges[node.k,0] = node.thresholds[i]
                         node.children[i].ranges[node.k,1] = node.thresholds[i+1]
@@ -1480,7 +1468,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             for i in range(len(self.h0_metatree_list)):
                 self._set_h0_params_recursion(self.h0_metatree_list[i],h0_metatree_list[i])
             if h0_metatree_prob_vec is not None:
-                self.h0_metatree_prob_vec = np.copy(
+                self.h0_metatree_prob_vec = np.array(
                     _check.float_vec_sum_1(
                         h0_metatree_prob_vec,
                         'h0_metatree_prob_vec',
@@ -1494,7 +1482,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                 else:
                     self.h0_metatree_prob_vec = None
         elif h0_metatree_prob_vec is not None:
-            self.h0_metatree_prob_vec = np.copy(
+            self.h0_metatree_prob_vec = np.array(
                 _check.float_vec_sum_1(
                     h0_metatree_prob_vec,
                     'h0_metatree_prob_vec',
@@ -1614,7 +1602,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             for i in range(len(self.hn_metatree_list)):
                 self._set_hn_params_recursion(self.hn_metatree_list[i],hn_metatree_list[i])
             if hn_metatree_prob_vec is not None:
-                self.hn_metatree_prob_vec = np.copy(
+                self.hn_metatree_prob_vec = np.array(
                     _check.float_vec_sum_1(
                         hn_metatree_prob_vec,
                         'hn_metatree_prob_vec',
@@ -1628,7 +1616,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                 else:
                     self.hn_metatree_prob_vec = None
         elif hn_metatree_prob_vec is not None:
-            self.hn_metatree_prob_vec = np.copy(
+            self.hn_metatree_prob_vec = np.array(
                 _check.float_vec_sum_1(
                     hn_metatree_prob_vec,
                     'hn_metatree_prob_vec',
@@ -1676,7 +1664,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
     def _copy_tree_from_sklearn_tree(self,new_node:_Node, original_tree,node_id):
         if original_tree.children_left[node_id] != sklearn_tree._tree.TREE_LEAF:  # inner node
             new_node.k = original_tree.feature[node_id]
-            child_k_candidates = new_node.k_candidates + []
+            child_k_candidates = new_node.k_candidates.copy()
             child_k_candidates.remove(new_node.k)
             new_node.children[0] = _Node(
                 new_node.depth+1,
@@ -1857,7 +1845,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             node.map_leaf = True
         else:  # inner node
             node.k = node.k_candidates[0]
-            child_k_candidates = node.k_candidates + []
+            child_k_candidates = node.k_candidates.copy()
             child_k_candidates.remove(node.k)
             for i in range(self.c_num_children):
                 node.children[i] = _Node(
@@ -1896,7 +1884,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         copyed_node.h_g = original_node.h_g
         if original_node.map_leaf == False:
             copyed_node.k = original_node.k
-            child_k_candidates = copyed_node.k_candidates + []
+            child_k_candidates = copyed_node.k_candidates.copy()
             child_k_candidates.remove(copyed_node.k)
             for i in range(self.c_num_children):
                 copyed_node.children[i] = _Node(
@@ -2026,8 +2014,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             k = k_candidates[self.hn_k_weight_vec[k_candidates].argmax()]
             label_string = f'k={k}\\l'
             if k < self.c_dim_continuous:
-                thresholds = np.empty(self.c_num_children_vec[k]+1)
-                thresholds[:] = np.linspace(ranges[k,0],ranges[k,1],self.c_num_children_vec[k]+1)
+                thresholds = np.linspace(ranges[k,0],ranges[k,1],self.c_num_children_vec[k]+1)
                 label_string += 'thresholds=\\l{'
                 for i in range(self.c_num_children_vec[k]-1):
                     if i == 0:
@@ -2037,7 +2024,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                 label_string += '}\\l'
             else:
                 thresholds = None
-            child_k_candidates = k_candidates + []
+            child_k_candidates = k_candidates.copy()
             child_k_candidates.remove(k)
         label_string += f'hn_g={self.hn_g:.2f}\\lp_v={tmp_p_v:.2f}\\lsub_params={{'
 
@@ -2072,8 +2059,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         
         if depth < self.c_max_depth and k_candidates:
             for i in range(self.c_num_children_vec[k]):
-                child_ranges = np.empty([self.c_dim_continuous,2])
-                child_ranges[:] = ranges
+                child_ranges = np.array(ranges)
                 if thresholds is not None:
                     child_ranges[k,0] = thresholds[i]
                     child_ranges[k,1] = thresholds[i+1]
