@@ -103,23 +103,6 @@ where the expectation for :math:`\tilde{q}` is recursively given as follows.
     \qquad + g_{n,s} \mathbb{E}_{\tilde{q}_{s_{\mathrm{child}}}(y_{n+1} | \boldsymbol{x}_{n+1}, \boldsymbol{x}^n, y^n, M_{T_b, \boldsymbol{k}_b})} [Y_{n+1} | \boldsymbol{x}_{n+1}, \boldsymbol{x}^n, y^n, \boldsymbol{k}_b] ,& ({\rm otherwise}).
     \end{cases}
 
-The maximum value of the predictive distribution can be calculated as follows.
-
-.. math::
-    \max_{y_{n+1}} p(y_{n+1}| \boldsymbol{x}_{n+1}, \boldsymbol{x}^n, y^n) = \max_{b = 1, \dots , B} \left\{ p(\boldsymbol{k}_b | \boldsymbol{x}^n, y^n) \max_{y_{n+1}} \tilde{q}_{s_{\lambda}}(y_{n+1}|\boldsymbol{x}_{n+1},\boldsymbol{x}^n, y^n, M_{T_b, \boldsymbol{k}_b}) \right\},
-
-where the maximum value of :math:`\tilde{q}` is recursively given as follows.
-
-.. math::
-    &\max_{y_{n+1}} \tilde{q}_s(y_{n+1} | \boldsymbol{x}_{n+1}, \boldsymbol{x}^n, y^n, M_{T_b, \boldsymbol{k}_b}) \\
-    &= \begin{cases}
-    \max_{y_{n+1}} q_s(y_{n+1} | \boldsymbol{x}_{n+1}, \boldsymbol{x}^n, y^n, \boldsymbol{k}_b),& (s \ {\rm is \ the \ leaf \ node \ of} \ M_{T_b, \boldsymbol{k}_b}),\\
-    \max \{ (1-g_{n,s}) \max_{y_{n+1}} q_s(y_{n+1} | \boldsymbol{x}_{n+1}, \boldsymbol{x}^n, y^n, \boldsymbol{k}_b), \\
-    \qquad \qquad g_{n,s} \max_{y_{n+1}} \tilde{q}_{s_{\mathrm{child}}}(y_{n+1} | \boldsymbol{x}_{n+1}, \boldsymbol{x}^n, y^n, M_{T_b, \boldsymbol{k}_b}) \} ,& ({\rm otherwise}).
-    \end{cases}
-
-The mode of the predictive distribution can be also calculated by using the above equation.
-
 References
 
 * Dobashi, N.; Saito, S.; Nakahara, Y.; Matsushima, T. Meta-Tree Random Forest: Probabilistic Data-Generative Model and Bayes Optimal Prediction. *Entropy* 2021, 23, 768. https://doi.org/10.3390/e23060768
