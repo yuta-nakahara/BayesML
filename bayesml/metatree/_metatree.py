@@ -1825,9 +1825,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         for i in range(n_estimators):
             self._copy_tree_from_sklearn_tree(tmp_metatree_list[i],randomforest.estimators_[i].tree_, 0)
 
-        print(f'before: {len(tmp_metatree_list)}')
         tmp_metatree_list,tmp_metatree_prob_vec = self._marge_metatrees(tmp_metatree_list,tmp_metatree_prob_vec)
-        print(f'after: {len(tmp_metatree_list)}')
 
         log_metatree_posteriors = np.log(tmp_metatree_prob_vec)
         if self.c_dim_continuous > 0 and self.c_dim_categorical > 0:            
@@ -1846,13 +1844,18 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         tmp_metatree_prob_vec[:] /= tmp_metatree_prob_vec.sum()
         return tmp_metatree_list,tmp_metatree_prob_vec
 
-    def _given_MT(self,x,y):
+    def _given_MT(self,x_continuous,x_categorical,y):
         """make metatrees
 
         Parameters
         ----------
-        x : numpy ndarray
-            values of explanatory variables whose dtype is int
+        x_continuous : numpy ndarray, optional
+            2 dimensional float array whose size is ``(sample_size,c_dim_continuous)``, 
+            by default None.
+        x_categorical : numpy ndarray, optional
+            2 dimensional int array whose size is ``(sample_size,c_dim_categorical)``, 
+            by default None. Each element x[i,j] must satisfy 
+            0 <= x[i,j] < self.c_num_children_vec[self.c_dim_continuous+i].
         y : numpy ndarray
             values of objective variable whose dtype may be int or float
 
@@ -1865,9 +1868,18 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         if not self.hn_metatree_list:
             raise(ParameterFormatError("given_MT is supported only when len(self.hn_metatree_list) > 0."))
         log_metatree_posteriors = np.log(self.hn_metatree_prob_vec)
-        for i,metatree in enumerate(self.hn_metatree_list):
-            for j in range(x.shape[0]):
-                log_metatree_posteriors[i] += np.log(self._update_posterior_recursion(metatree,x[j],y[j]))
+        if self.c_dim_continuous > 0 and self.c_dim_categorical > 0:            
+            for i,metatree in enumerate(self.hn_metatree_list):
+                for j in range(y.shape[0]):
+                    log_metatree_posteriors[i] += np.log(self._update_posterior_recursion(metatree,x_continuous[j],x_categorical[j],y[j]))
+        elif self.c_dim_continuous > 0:
+            for i,metatree in enumerate(self.hn_metatree_list):
+                for j in range(y.shape[0]):
+                    log_metatree_posteriors[i] += np.log(self._update_posterior_recursion(metatree,x_continuous[j],None,y[j]))
+        else:
+            for i,metatree in enumerate(self.hn_metatree_list):
+                for j in range(y.shape[0]):
+                    log_metatree_posteriors[i] += np.log(self._update_posterior_recursion(metatree,None,x_categorical[j],y[j]))
         self.hn_metatree_prob_vec[:] = np.exp(log_metatree_posteriors - log_metatree_posteriors.max())
         self.hn_metatree_prob_vec[:] /= self.hn_metatree_prob_vec.sum()
         return self.hn_metatree_list,self.hn_metatree_prob_vec
