@@ -377,6 +377,9 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self.p_r = self.hn_alpha
         self.p_theta = 1.0 / (1.0+self.hn_beta)
 
+    def _calc_pred_density(self,x):
+        return ss_nbinom.pmf(x,n=self.p_r,p=(1.0-self.p_theta))
+
     def make_prediction(self,loss="squared"):
         """Predict a new data point under the given criterion.
 

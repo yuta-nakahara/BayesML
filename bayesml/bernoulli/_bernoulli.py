@@ -386,6 +386,12 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         """Calculate the parameters of the predictive distribution."""
         self.p_theta = self.hn_alpha / (self.hn_alpha + self.hn_beta)
 
+    def _calc_pred_density(self,x):
+        if x:
+            return self.p_theta
+        else:
+            return 1.0-self.p_theta
+
     def make_prediction(self,loss="squared"):
         """Predict a new data point under the given criterion.
 

@@ -413,7 +413,7 @@ class GenModel(base.Generative):
         else:
             if node.k < self.c_dim_continuous:
                 for i in range(self.c_num_children_vec[node.k]):
-                    if node.thresholds[i] < x_continuous[node.k] and x_continuous[node.k] < node.thresholds[i+1]:
+                    if x_continuous[node.k] < node.thresholds[i+1]:
                         index = i
                         break
             else:
@@ -1698,40 +1698,26 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             new_node.h_g = 0.0
             new_node.leaf = True
 
-    def _update_posterior_leaf(self,node:_Node,x_continuous,y):
-            try:
-                node.sub_model.calc_pred_dist(x_continuous)
-            except:
-                node.sub_model.calc_pred_dist()
-            pred_dist = node.sub_model.make_prediction(loss='KL') # Futurework: direct method to get marginal likelihood is better
-
-            try:
-                node.sub_model.update_posterior(x_continuous,y)
-            except:
-                node.sub_model.update_posterior(y)
-
-            if type(pred_dist) is np.ndarray:
-                return pred_dist[y]
-            try:
-                return pred_dist.pdf(y)
-            except:
-                return pred_dist.pmf(y)
+    def _update_posterior_leaf(self,node:_Node,y):
+        node.sub_model.calc_pred_dist()
+        node.sub_model.update_posterior(y)
+        return node.sub_model._calc_pred_density(y)
 
     def _update_posterior_recursion(self,node:_Node,x_continuous,x_categorical,y):
         if not node.leaf:  # inner node
             if node.k < self.c_dim_continuous:
                 for i in range(self.c_num_children_vec[node.k]):
-                    if node.thresholds[i] < x_continuous[node.k] and x_continuous[node.k] < node.thresholds[i+1]:
+                    if x_continuous[node.k] < node.thresholds[i+1]:
                         index = i
                         break
             else:
                 index = x_categorical[node.k-self.c_dim_continuous]
             tmp1 = self._update_posterior_recursion(node.children[index],x_continuous,x_categorical,y)
-            tmp2 = (1 - node.h_g) * self._update_posterior_leaf(node,x_continuous,y) + node.h_g * tmp1
+            tmp2 = (1 - node.h_g) * self._update_posterior_leaf(node,y) + node.h_g * tmp1
             node.h_g = node.h_g * tmp1 / tmp2
             return tmp2
         else:  # leaf node
-            return self._update_posterior_leaf(node,x_continuous,y)
+            return self._update_posterior_leaf(node,y)
 
     def _compare_metatree_recursion(self,node1:_Node,node2:_Node):
         if node1.leaf:
@@ -2302,7 +2288,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         if not node.leaf:  # inner node
             if node.k < self.c_dim_continuous:
                 for i in range(self.c_num_children_vec[node.k]):
-                    if node.thresholds[i] < x_continuous[node.k] and x_continuous[node.k] < node.thresholds[i+1]:
+                    if x_continuous[node.k] < node.thresholds[i+1]:
                         index = i
                         break
             else:
@@ -2377,7 +2363,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         else:  # inner node
             if node.k < self.c_dim_continuous:
                 for i in range(self.c_num_children_vec[node.k]):
-                    if node.thresholds[i] < self._tmp_x_continuous[node.k] and self._tmp_x_continuous[node.k] < node.thresholds[i+1]:
+                    if self._tmp_x_continuous[node.k] < node.thresholds[i+1]:
                         index = i
                         break
             else:
@@ -2391,7 +2377,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         else:  # inner node
             if node.k < self.c_dim_continuous:
                 for i in range(self.c_num_children_vec[node.k]):
-                    if node.thresholds[i] < self._tmp_x_continuous[node.k] and self._tmp_x_continuous[node.k] < node.thresholds[i+1]:
+                    if self._tmp_x_continuous[node.k] < node.thresholds[i+1]:
                         index = i
                         break
             else:

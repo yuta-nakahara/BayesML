@@ -466,6 +466,9 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self.p_nu = 2*self.hn_alpha
         self.p_lambda = self.hn_kappa / (self.hn_kappa+1) * self.hn_alpha / self.hn_beta
 
+    def _calc_pred_density(self,x):
+        return ss_t.pdf(x,loc=self.p_mu,scale=1.0/np.sqrt(self.p_lambda),df=self.p_nu)
+
     def make_prediction(self,loss="squared"):
         """Predict a new data point under the given criterion.
 

@@ -382,6 +382,9 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self.p_kappa = self.hn_alpha
         self.p_lambda = self.hn_beta
 
+    def _calc_pred_density(self,x):
+        return ss_lomax.pdf(x,c=self.p_kappa,scale=self.p_lambda)
+
     def make_prediction(self,loss="squared"):
         """Predict a new data point under the given criterion.
 
