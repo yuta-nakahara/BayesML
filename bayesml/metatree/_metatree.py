@@ -1896,7 +1896,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                 self.c_dim_continuous,'self.c_dim_continuous',
                 ParameterFormatError
                 )
-            x_continuous.reshape([-1,self.c_dim_continuous])
+            x_continuous = x_continuous.reshape([-1,self.c_dim_continuous])
 
             _check.nonneg_int_vecs(x_categorical,'x_categorical',DataFormatError)
             _check.shape_consistency(
@@ -1904,13 +1904,13 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                 self.c_dim_categorical,'self.c_dim_categorical',
                 ParameterFormatError
                 )
+            x_categorical = x_categorical.reshape([-1,self.c_dim_categorical])
             for i in range(self.c_dim_categorical):
                 if x_categorical[:,i].max() >= self.c_num_children_vec[self.c_dim_continuous+i]:
                     raise(DataFormatError(
                         f"x_categorical[:,{i}].max() must smaller than "
                         +f"self.c_num_children_vec[{self.c_dim_continuous+i}]: "
                         +f"{self.c_num_children_vec[self.c_dim_continuous+i]}"))
-            x_categorical.reshape([-1,self.c_dim_categorical])
 
             _check.shape_consistency(
                 x_continuous.shape[0],'x_continuous.shape[0]',
@@ -1930,7 +1930,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                 self.c_dim_continuous,'self.c_dim_continuous',
                 ParameterFormatError
                 )
-            x_continuous.reshape([-1,self.c_dim_continuous])
+            x_continuous = x_continuous.reshape([-1,self.c_dim_continuous])
 
             _check.shape_consistency(
                 x_continuous.shape[0],'x_continuous.shape[0]',
@@ -1947,13 +1947,13 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                 self.c_dim_categorical,'self.c_dim_categorical',
                 ParameterFormatError
                 )
+            x_categorical = x_categorical.reshape([-1,self.c_dim_categorical])
             for i in range(self.c_dim_categorical):
                 if x_categorical[:,i].max() >= self.c_num_children_vec[self.c_dim_continuous+i]:
                     raise(DataFormatError(
                         f"x_categorical[:,{i}].max() must smaller than "
                         +f"self.c_num_children_vec[{self.c_dim_continuous+i}]: "
                         +f"{self.c_num_children_vec[self.c_dim_continuous+i]}"))
-            x_categorical.reshape([-1,self.c_dim_categorical])
 
             _check.shape_consistency(
                 x_categorical.shape[0],'x_categorical.shape[0]',
@@ -2372,52 +2372,41 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             self._calc_pred_dist_recursion(root,self._tmp_x_continuous,self._tmp_x_categorical)
 
     def _make_prediction_recursion_squared(self,node:_Node):
-        if node.leaf == False:  # inner node
-            return ((1 - node.h_g) * node.sub_model.make_prediction(loss='squared')
-                    + node.h_g * self._make_prediction_recursion_squared(node.children[self._tmp_x[node.k]]))
-        else:  # leaf node
+        if node.leaf:  # leaf node
             return node.sub_model.make_prediction(loss='squared')
-
-    def _make_prediction_leaf_01(self,node:_Node):
-        mode = node.sub_model.make_prediction(loss='0-1')
-        pred_dist = node.sub_model.make_prediction(loss='KL')
-        if type(pred_dist) is np.ndarray:
-            mode_prob = pred_dist[mode]
-        else:
-            try:
-                mode_prob = pred_dist.pdf(mode)
-            except:
-                try:
-                    mode_prob = pred_dist.pmf(mode)
-                except:
-                    mode_prob = None
-        # elif hasattr(pred_dist,'pdf'):
-        #     mode_prob = pred_dist.pdf(mode)
-        # elif hasattr(pred_dist,'pmf'):
-        #     mode_prob = pred_dist.pmf(mode)
-        # else:
-        #     mode_prob = None
-        return mode, mode_prob
-
-    def _make_prediction_recursion_01(self,node:_Node):
-        if node.leaf == False:  # inner node
-            mode1,mode_prob1 = self._make_prediction_leaf_01(node)
-            mode2,mode_prob2 = self._make_prediction_recursion_01(node.children[self._tmp_x[node.k]])
-            if (1 - node.h_g) * mode_prob1 > node.h_g * mode_prob2:
-                return mode1,mode_prob1
+        else:  # inner node
+            if node.k < self.c_dim_continuous:
+                for i in range(self.c_num_children_vec[node.k]):
+                    if node.thresholds[i] < self._tmp_x_continuous[node.k] and self._tmp_x_continuous[node.k] < node.thresholds[i+1]:
+                        index = i
+                        break
             else:
-                return mode2,mode_prob2
-        else:  # leaf node
-            return self._make_prediction_leaf_01(node)
+                index = self._tmp_x_categorical[node.k-self.c_dim_continuous]
+            return ((1 - node.h_g) * node.sub_model.make_prediction(loss='squared')
+                    + node.h_g * self._make_prediction_recursion_squared(node.children[index]))
 
-    def make_prediction(self,loss="0-1"):
+    def _make_prediction_recursion_kl(self,node:_Node):
+        if node.leaf:  # leaf node
+            return node.sub_model.make_prediction(loss='KL')
+        else:  # inner node
+            if node.k < self.c_dim_continuous:
+                for i in range(self.c_num_children_vec[node.k]):
+                    if node.thresholds[i] < self._tmp_x_continuous[node.k] and self._tmp_x_continuous[node.k] < node.thresholds[i+1]:
+                        index = i
+                        break
+            else:
+                index = self._tmp_x_categorical[node.k-self.c_dim_continuous]
+            return ((1 - node.h_g) * node.sub_model.make_prediction(loss='KL')
+                    + node.h_g * self._make_prediction_recursion_kl(node.children[index]))
+
+    def make_prediction(self,loss="squared"):
         """Predict a new data point under the given criterion.
 
         Parameters
         ----------
         loss : str, optional
-            Loss function underlying the Bayes risk function, by default \"0-1\".
-            This function supports \"squared\", \"0-1\".
+            Loss function underlying the Bayes risk function, by default \"squared\".
+            This function supports \"squared\", \"0-1\", and \"KL\".
 
         Returns
         -------
@@ -2430,26 +2419,41 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                 tmp_pred_vec[i] = self._make_prediction_recursion_squared(metatree)
             return self.hn_metatree_prob_vec @ tmp_pred_vec
         elif loss == "0-1":
-            tmp_mode = np.empty(len(self.hn_metatree_list))
-            tmp_mode_prob_vec = np.empty(len(self.hn_metatree_list))
+            if self.SubModel is not bernoulli:
+                raise(CriteriaError("Unsupported loss function! "
+                                    +"\"0-1\" is supported only when self.SubModel is bernoulli."))
+            tmp_pred_dist_vec = np.empty([len(self.hn_metatree_list),2])
             for i,metatree in enumerate(self.hn_metatree_list):
-                tmp_mode[i],tmp_mode_prob_vec[i] = self._make_prediction_recursion_01(metatree)
-            return tmp_mode[np.argmax(self.hn_metatree_prob_vec * tmp_mode_prob_vec)]
+                tmp_pred_dist_vec[i] = self._make_prediction_recursion_kl(metatree)
+            return np.argmax(self.hn_metatree_prob_vec @ tmp_pred_dist_vec)
+        elif loss == "KL":
+            if self.SubModel is not bernoulli:
+                raise(CriteriaError("Unsupported loss function! "
+                                    +"\"KL\" is supported only when self.SubModel is bernoulli."))
+            tmp_pred_dist_vec = np.empty([len(self.hn_metatree_list),2])
+            for i,metatree in enumerate(self.hn_metatree_list):
+                tmp_pred_dist_vec[i] = self._make_prediction_recursion_kl(metatree)
+            return self.hn_metatree_prob_vec @ tmp_pred_dist_vec
         else:
             raise(CriteriaError("Unsupported loss function! "
-                                +"This function supports \"squared\" and \"0-1\"."))
+                                +"This function supports \"squared\", \"0-1\", and \"KL\"."))
 
-    def pred_and_update(self,x,y,loss="0-1"):
+    def pred_and_update(self,x_continuous=None,x_categorical=None,y=None,loss="squared"):
         """Predict a new data point and update the posterior sequentially.
 
         Parameters
         ----------
-        x : numpy.ndarray
-            It must be a degree-dimensional vector
+        x_continuous : numpy ndarray, optional
+            A float vector whose length is ``self.c_dim_continuous``, 
+            by default None.
+        x_categorical : numpy ndarray, optional
+            A int vector whose length is ``self.c_dim_categorical``, 
+            by default None. Each element x_categorical[i] must satisfy 
+            0 <= x_categorical[i] < self.c_num_children_vec[self.c_dim_continuous+i].
         y : numpy ndarray
             values of objective variable whose dtype may be int or float
         loss : str, optional
-            Loss function underlying the Bayes risk function, by default \"0-1\".
+            Loss function underlying the Bayes risk function, by default \"squared\".
             This function supports \"squared\", \"0-1\", and \"KL\".
 
         Returns
@@ -2457,12 +2461,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         predicted_value : {float, numpy.ndarray}
             The predicted value under the given loss function. 
         """
-        _check.nonneg_int_vec(x,'x',DataFormatError)
-        if x.shape[-1] != self.c_k:
-            raise(DataFormatError(f"x.shape[-1] must equal to c_k:{self.c_k}"))
-        if x.max() >= self.c_num_children:
-            raise(DataFormatError(f"x.max() must smaller than c_num_children:{self.c_num_children}"))
-        self.calc_pred_dist(x)
+        self.calc_pred_dist(x_continuous,x_categorical)
         prediction = self.make_prediction(loss=loss)
-        self.update_posterior(x,y,alg_type='given_MT')
+        self.update_posterior(x_continuous,x_categorical,y,alg_type='given_MT')
         return prediction
