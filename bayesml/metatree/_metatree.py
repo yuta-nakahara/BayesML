@@ -1804,10 +1804,8 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             randomforest = RandomForestRegressor(n_estimators=n_estimators,max_depth=self.c_max_depth,**kwargs)
 
         x = np.empty([y.shape[0],self.c_dim_features])
-        if self.c_dim_continuous > 0:
-            x[:,:self.c_dim_continuous] = x_continuous
-        if self.c_dim_categorical > 0:
-            x[:,-self.c_dim_categorical:] = x_categorical
+        x[:,:self.c_dim_continuous] = x_continuous
+        x[:,self.c_dim_continuous:] = x_categorical
 
         randomforest.fit(x,y)
         
@@ -1828,18 +1826,9 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         tmp_metatree_list,tmp_metatree_prob_vec = self._marge_metatrees(tmp_metatree_list,tmp_metatree_prob_vec)
 
         log_metatree_posteriors = np.log(tmp_metatree_prob_vec)
-        if self.c_dim_continuous > 0 and self.c_dim_categorical > 0:            
-            for i,metatree in enumerate(tmp_metatree_list):
-                for j in range(y.shape[0]):
-                    log_metatree_posteriors[i] += np.log(self._update_posterior_recursion(metatree,x_continuous[j],x_categorical[j],y[j]))
-        elif self.c_dim_continuous > 0:
-            for i,metatree in enumerate(tmp_metatree_list):
-                for j in range(y.shape[0]):
-                    log_metatree_posteriors[i] += np.log(self._update_posterior_recursion(metatree,x_continuous[j],None,y[j]))
-        else:
-            for i,metatree in enumerate(tmp_metatree_list):
-                for j in range(y.shape[0]):
-                    log_metatree_posteriors[i] += np.log(self._update_posterior_recursion(metatree,None,x_categorical[j],y[j]))
+        for i,metatree in enumerate(tmp_metatree_list):
+            for j in range(y.shape[0]):
+                log_metatree_posteriors[i] += np.log(self._update_posterior_recursion(metatree,x_continuous[j],x_categorical[j],y[j]))
         tmp_metatree_prob_vec[:] = np.exp(log_metatree_posteriors - log_metatree_posteriors.max())
         tmp_metatree_prob_vec[:] /= tmp_metatree_prob_vec.sum()
         return tmp_metatree_list,tmp_metatree_prob_vec
@@ -1868,18 +1857,9 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         if not self.hn_metatree_list:
             raise(ParameterFormatError("given_MT is supported only when len(self.hn_metatree_list) > 0."))
         log_metatree_posteriors = np.log(self.hn_metatree_prob_vec)
-        if self.c_dim_continuous > 0 and self.c_dim_categorical > 0:            
-            for i,metatree in enumerate(self.hn_metatree_list):
-                for j in range(y.shape[0]):
-                    log_metatree_posteriors[i] += np.log(self._update_posterior_recursion(metatree,x_continuous[j],x_categorical[j],y[j]))
-        elif self.c_dim_continuous > 0:
-            for i,metatree in enumerate(self.hn_metatree_list):
-                for j in range(y.shape[0]):
-                    log_metatree_posteriors[i] += np.log(self._update_posterior_recursion(metatree,x_continuous[j],None,y[j]))
-        else:
-            for i,metatree in enumerate(self.hn_metatree_list):
-                for j in range(y.shape[0]):
-                    log_metatree_posteriors[i] += np.log(self._update_posterior_recursion(metatree,None,x_categorical[j],y[j]))
+        for i,metatree in enumerate(self.hn_metatree_list):
+            for j in range(y.shape[0]):
+                log_metatree_posteriors[i] += np.log(self._update_posterior_recursion(metatree,x_continuous[j],x_categorical[j],y[j]))
         self.hn_metatree_prob_vec[:] = np.exp(log_metatree_posteriors - log_metatree_posteriors.max())
         self.hn_metatree_prob_vec[:] /= self.hn_metatree_prob_vec.sum()
         return self.hn_metatree_list,self.hn_metatree_prob_vec
@@ -1958,7 +1938,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                 ParameterFormatError
                 )
             
-            x_categorical = None
+            x_categorical = np.empty([y.shape[0],0]) # dummy
 
         elif self.c_dim_categorical > 0:
             _check.nonneg_int_vecs(x_categorical,'x_categorical',DataFormatError)
@@ -1981,7 +1961,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                 ParameterFormatError
                 )
             
-            x_continuous = None
+            x_continuous = np.empty([y.shape[0],0]) # dummy
 
         if alg_type == 'MTRF':
             self.hn_metatree_list, self.hn_metatree_prob_vec = self._MTRF(x_continuous,x_categorical,y,**kwargs)
@@ -1991,20 +1971,33 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
     def _map_recursion_add_nodes(self,node:_Node):
         if node.depth == self.c_max_depth or not node.k_candidates:  # leaf node
             node.h_g = 0.0
+            node.sub_model = self.SubModel.LearnModel(**self.sub_hn_params)
             node.leaf = True
             node.map_leaf = True
         else:  # inner node
-            node.k = node.k_candidates[0]
+            node.k = node.k_candidates[self.hn_k_weight_vec[node.k_candidates].argmax()]
+            node.children = [None for i in range(self.c_num_children_vec[node.k])]
+            if node.k < self.c_dim_continuous:
+                node.thresholds = np.linspace(
+                    node.ranges[node.k,0],
+                    node.ranges[node.k,1],
+                    self.c_num_children_vec[node.k]+1
+                    )
+            else:
+                node.thresholds = None
             child_k_candidates = node.k_candidates.copy()
             child_k_candidates.remove(node.k)
-            for i in range(self.c_num_children):
+            node.leaf = False
+            for i in range(self.c_num_children_vec[node.k]):
                 node.children[i] = _Node(
                     node.depth+1,
-                    self.c_num_children,
                     child_k_candidates,
                     self.hn_g,
-                    sub_model=self.SubModel.LearnModel(**self.sub_h0_params)
+                    ranges=np.array(node.ranges)
                     )
+                if node.thresholds is not None:
+                    node.children[i].ranges[node.k,0] = node.thresholds[i]
+                    node.children[i].ranges[node.k,1] = node.thresholds[i+1]
                 self._map_recursion_add_nodes(node.children[i])
 
     def _map_recursion(self,node:_Node):
@@ -2012,16 +2005,23 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             if node.depth == self.c_max_depth or not node.k_candidates:
                 node.map_leaf = True
                 return 1.0
-            elif 1.0 - self.hn_g > self.hn_g ** ((self.c_num_children ** (self.c_max_depth - node.depth) - 1)/(self.c_num_children-1)):
-                node.map_leaf = True
-                return 1.0 - self.hn_g
             else:
-                self._map_recursion_add_nodes(node)
-                return self.hn_g ** ((self.c_num_children ** (self.c_max_depth - node.depth) - 1)/(self.c_num_children-1))
+                sum_nodes = 0
+                num_nodes = 1
+                rest_num_children_vec = np.sort(self.c_num_children_vec[node.k_candidates])
+                for i in range(min(self.c_max_depth-node.depth,len(node.k_candidates))):
+                    sum_nodes += num_nodes
+                    num_nodes *= rest_num_children_vec[i]
+                if 1.0 - node.h_g > node.h_g * self.hn_g ** (sum_nodes-1):
+                    node.map_leaf = True
+                    return 1.0 - node.h_g
+                else:
+                    self._map_recursion_add_nodes(node)
+                    return node.h_g * self.hn_g ** (sum_nodes-1)
         else:
             tmp1 = 1.0-node.h_g
-            tmp_vec = np.empty(self.c_num_children)
-            for i in range(self.c_num_children):
+            tmp_vec = np.empty(self.c_num_children_vec[node.k])
+            for i in range(self.c_num_children_vec[node.k]):
                 tmp_vec[i] = self._map_recursion(node.children[i])
             if tmp1 > node.h_g*tmp_vec.prod():
                 node.map_leaf = True
@@ -2030,22 +2030,31 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                 node.map_leaf = False
                 return node.h_g*tmp_vec.prod()
 
-    def _copy_map_tree_recursion(self,copyed_node:_Node,original_node:_Node):
-        copyed_node.h_g = original_node.h_g
-        if original_node.map_leaf == False:
-            copyed_node.k = original_node.k
-            child_k_candidates = copyed_node.k_candidates.copy()
-            child_k_candidates.remove(copyed_node.k)
-            for i in range(self.c_num_children):
-                copyed_node.children[i] = _Node(
-                    copyed_node.depth+1,
-                    self.c_num_children,
-                    child_k_candidates,
-                    )
-                self._copy_map_tree_recursion(copyed_node.children[i],original_node.children[i])
+    def _copy_map_tree_recursion(self,copied_node:_Node,original_node:_Node):
+        copied_node.h_g = original_node.h_g
+        if original_node.map_leaf:
+            copied_node.sub_model = copy.deepcopy(original_node.sub_model)
+            copied_node.leaf = True
         else:
-            copyed_node.sub_model = copy.deepcopy(original_node.sub_model)
-            copyed_node.leaf = True
+            copied_node.k = original_node.k
+            copied_node.children = [None for i in range(self.c_num_children_vec[copied_node.k])]
+            if copied_node.k < self.c_dim_continuous:
+                copied_node.thresholds = np.array(original_node.thresholds)
+            else:
+                copied_node.thresholds = None
+            child_k_candidates = copied_node.k_candidates.copy()
+            child_k_candidates.remove(copied_node.k)
+            copied_node.leaf = False
+            for i in range(self.c_num_children_vec[copied_node.k]):
+                copied_node.children[i] = _Node(
+                    copied_node.depth+1,
+                    child_k_candidates,
+                    ranges=np.array(copied_node.ranges),
+                    )
+                if copied_node.thresholds is not None:
+                    copied_node.children[i].ranges[copied_node.k,0] = copied_node.thresholds[i]
+                    copied_node.children[i].ranges[copied_node.k,1] = copied_node.thresholds[i+1]
+                self._copy_map_tree_recursion(copied_node.children[i],original_node.children[i])
 
     def estimate_params(self,loss="0-1",visualize=True,filename=None,format=None):
         """Estimate the parameter under the given criterion.
@@ -2088,13 +2097,18 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                 if prob > map_prob:
                     map_index = i
                     map_prob = prob
-            map_root = _Node(0,self.c_num_children,list(range(self.c_k)))
+            map_root = _Node(
+                0,
+                self._root_k_candidates,
+                self.hn_g,
+                ranges=self.c_ranges,
+                )
             self._copy_map_tree_recursion(map_root,self.hn_metatree_list[map_index])
             if visualize:
                 import graphviz
                 tree_graph = graphviz.Digraph(filename=filename,format=format)
                 tree_graph.attr("node",shape="box",fontname="helvetica",style="rounded,filled")
-                self._visualize_model_recursion(tree_graph, map_root, 0, None, None, 1.0)
+                self._visualize_model_recursion(tree_graph, map_root, 0, None, None, None, 1.0)
                 tree_graph.view()
             return {'root':map_root}
         else:
@@ -2119,17 +2133,20 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                         label_string += f',{node.thresholds[i+1]:.2f}'
                 label_string += '}\\l'
         label_string += f'hn_g={node.h_g:.2f}\\lp_v={tmp_p_v:.2f}\\lsub_params={{'
-        try:
-            sub_params = node.sub_model.estimate_params(loss='0-1',dict_out=True)
-        except:
-            sub_params = node.sub_model.estimate_params(dict_out=True)
-
-        for key,value in sub_params.items():
+        if node.sub_model is not None:
             try:
-                label_string += f'\\l{key}:{value:.2f}'
+                sub_params = node.sub_model.estimate_params(loss='0-1',dict_out=True)
             except:
-                label_string += f'\\l{key}:{value}'
-        label_string += '}'
+                sub_params = node.sub_model.estimate_params(dict_out=True)
+
+            for key,value in sub_params.items():
+                try:
+                    label_string += f'\\l{key}:{value:.2f}'
+                except:
+                    label_string += f'\\l{key}:{value}'
+            label_string += '}'
+        else:
+            label_string += '\\lNone}'
             
         tree_graph.node(name=f'{tmp_id}',label=label_string,fillcolor=f'{rgb2hex(_CMAP(tmp_p_v))}')
         if tmp_p_v > 0.65:
