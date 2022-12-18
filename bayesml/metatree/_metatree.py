@@ -735,23 +735,23 @@ class GenModel(base.Generative):
         sample_size : int, optional
             A positive integer, by default ``None``
         x_continuous : numpy ndarray, optional
-            2 dimensional float array whose size is ``(sammple_size,c_dim_continuous)``, 
+            2 dimensional float array whose size is ``(sample_size,c_dim_continuous)``, 
             by default None.
         x_categorical : numpy ndarray, optional
-            2 dimensional int array whose size is ``(sammple_size,c_dim_categorical)``, 
+            2 dimensional int array whose size is ``(sample_size,c_dim_categorical)``, 
             by default None. Each element x[i,j] must satisfy 
             0 <= x[i,j] < self.c_num_children_vec[self.c_dim_continuous+i].
 
         Returns
         -------
         x_continuous : numpy ndarray
-            2 dimensional float array whose size is ``(sammple_size,c_dim_continuous)``.
+            2 dimensional float array whose size is ``(sample_size,c_dim_continuous)``.
         x_categorical : numpy ndarray, optional
-            2 dimensional int array whose size is ``(sammple_size,c_dim_categorical)``.
+            2 dimensional int array whose size is ``(sample_size,c_dim_categorical)``.
             Each element x[i,j] must satisfies 
             0 <= x[i,j] < self.c_num_children_vec[self.c_dim_continuous+i].
         y : numpy ndarray
-            1 dimensional array whose size is ``sammple_size``.
+            1 dimensional array whose size is ``sample_size``.
         """
         if sample_size is not None:
             sample_size = _check.pos_int(sample_size,'sample_size',DataFormatError)
@@ -775,7 +775,7 @@ class GenModel(base.Generative):
                                          * self.rng.random(sample_size)
                                          + self.c_ranges[i,0])
             if x_categorical is not None:
-                _check.int_vecs(x_categorical,'x_categorical',DataFormatError)
+                _check.nonneg_int_vecs(x_categorical,'x_categorical',DataFormatError)
                 _check.shape_consistency(
                     x_categorical.shape[-1],'x_categorical.shape[-1]',
                     self.c_dim_categorical,'self.c_dim_categorical',
@@ -811,7 +811,7 @@ class GenModel(base.Generative):
             sample_size = x_continuous.shape[0]
 
             if x_categorical is not None:
-                _check.int_vecs(x_categorical,'x_categorical',DataFormatError)
+                _check.nonneg_int_vecs(x_categorical,'x_categorical',DataFormatError)
                 _check.shape_consistency(
                     x_categorical.shape[-1],'x_categorical.shape[-1]',
                     self.c_dim_categorical,'self.c_dim_categorical',
@@ -836,7 +836,7 @@ class GenModel(base.Generative):
                         sample_size)
 
         elif x_categorical is not None:
-            _check.int_vecs(x_categorical,'x_categorical',DataFormatError)
+            _check.nonneg_int_vecs(x_categorical,'x_categorical',DataFormatError)
             _check.shape_consistency(
                 x_categorical.shape[-1],'x_categorical.shape[-1]',
                 self.c_dim_categorical,'self.c_dim_categorical',
@@ -883,10 +883,10 @@ class GenModel(base.Generative):
         sample_size : int, optional
             A positive integer, by default ``None``
         x_continuous : numpy ndarray, optional
-            2 dimensional float array whose size is ``(sammple_size,c_dim_continuous)``, 
+            2 dimensional float array whose size is ``(sample_size,c_dim_continuous)``, 
             by default None.
         x_categorical : numpy ndarray, optional
-            2 dimensional int array whose size is ``(sammple_size,c_dim_categorical)``, 
+            2 dimensional int array whose size is ``(sample_size,c_dim_categorical)``, 
             by default None. Each element x[i,j] must satisfy 
             0 <= x[i,j] < self.c_num_children_vec[self.c_dim_continuous+i].
         
@@ -1664,37 +1664,49 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
     def _copy_tree_from_sklearn_tree(self,new_node:_Node, original_tree,node_id):
         if original_tree.children_left[node_id] != sklearn_tree._tree.TREE_LEAF:  # inner node
             new_node.k = original_tree.feature[node_id]
+            new_node.children = [None,None]
+            if new_node.k < self.c_dim_continuous:
+                new_node.thresholds = np.array(
+                    [new_node.ranges[new_node.k,0],
+                     original_tree.threshold[node_id],
+                     new_node.ranges[new_node.k,1]])
+            else:
+                new_node.thresholds = None
             child_k_candidates = new_node.k_candidates.copy()
             child_k_candidates.remove(new_node.k)
             new_node.children[0] = _Node(
                 new_node.depth+1,
-                2,
                 child_k_candidates,
                 h_g=self.h0_g,
                 sub_model=self.SubModel.LearnModel(**self.sub_h0_params),
+                ranges=np.array(new_node.ranges)
                 )
+            if new_node.thresholds is not None:
+                new_node.children[0].ranges[new_node.k,1] = new_node.thresholds[1]
             self._copy_tree_from_sklearn_tree(new_node.children[0],original_tree,original_tree.children_left[node_id])
             new_node.children[1] = _Node(
                 new_node.depth+1,
-                2,
                 child_k_candidates,
                 h_g=self.h0_g,
                 sub_model=self.SubModel.LearnModel(**self.sub_h0_params),
+                ranges=np.array(new_node.ranges)
                 )
+            if new_node.thresholds is not None:
+                new_node.children[1].ranges[new_node.k,0] = new_node.thresholds[1]
             self._copy_tree_from_sklearn_tree(new_node.children[1],original_tree,original_tree.children_right[node_id])
         else:
             new_node.h_g = 0.0
             new_node.leaf = True
 
-    def _update_posterior_leaf(self,node:_Node,x,y):
+    def _update_posterior_leaf(self,node:_Node,x_continuous,y):
             try:
-                node.sub_model.calc_pred_dist(x)
+                node.sub_model.calc_pred_dist(x_continuous)
             except:
                 node.sub_model.calc_pred_dist()
             pred_dist = node.sub_model.make_prediction(loss='KL') # Futurework: direct method to get marginal likelihood is better
 
             try:
-                node.sub_model.update_posterior(x,y)
+                node.sub_model.update_posterior(x_continuous,y)
             except:
                 node.sub_model.update_posterior(y)
 
@@ -1705,25 +1717,47 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             except:
                 return pred_dist.pmf(y)
 
-    def _update_posterior_recursion(self,node:_Node,x,y):
-        if node.leaf == False:  # inner node
-            tmp1 = self._update_posterior_recursion(node.children[x[node.k]],x,y)
-            tmp2 = (1 - node.h_g) * self._update_posterior_leaf(node,x,y) + node.h_g * tmp1
+    def _update_posterior_recursion(self,node:_Node,x_continuous,x_categorical,y):
+        if not node.leaf:  # inner node
+            if node.k < self.c_dim_continuous:
+                for i in range(self.c_num_children_vec[node.k]):
+                    if node.thresholds[i] < x_continuous[node.k] and x_continuous[node.k] < node.thresholds[i+1]:
+                        index = i
+                        break
+            else:
+                index = x_categorical[node.k-self.c_dim_continuous]
+            tmp1 = self._update_posterior_recursion(node.children[index],x_continuous,x_categorical,y)
+            tmp2 = (1 - node.h_g) * self._update_posterior_leaf(node,x_continuous,y) + node.h_g * tmp1
             node.h_g = node.h_g * tmp1 / tmp2
             return tmp2
         else:  # leaf node
-            return self._update_posterior_leaf(node,x,y)
+            return self._update_posterior_leaf(node,x_continuous,y)
 
     def _compare_metatree_recursion(self,node1:_Node,node2:_Node):
-        if node1.leaf == True and node2.leaf == True:
-            return True
-        elif node1.k == node2.k:
-            for i in range(self.c_num_children):
-                if self._compare_metatree_recursion(node1.children[i],node2.children[i]) == False:
-                    return False
-            return True
+        if node1.leaf:
+            if node2.leaf:
+                return True
+            else:
+                return False
         else:
-            return False
+            if node2.leaf:
+                return False
+            elif node1.k < self.c_dim_continuous:
+                if node1.k != node2.k or not np.allclose(node1.thresholds,node2.thresholds):
+                    return False
+                else:
+                    for i in range(self.c_num_children_vec[node1.k]):
+                        if not self._compare_metatree_recursion(node1.children[i],node2.children[i]):
+                            return False
+                    return True
+            else:
+                if node1.k != node2.k:
+                    return False
+                else:
+                    for i in range(self.c_num_children_vec[node1.k]):
+                        if not self._compare_metatree_recursion(node1.children[i],node2.children[i]):
+                            return False
+                    return True
     
     def _marge_metatrees(self,metatree_list,metatree_prob_vec):
         num_metatrees = len(metatree_list)
@@ -1738,17 +1772,23 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         metatree_prob_vec = metatree_prob_vec[metatree_prob_vec > -0.5]
         return metatree_list,metatree_prob_vec
 
-    def _MTRF(self,x,y,n_estimators=100,**kwargs):
+    def _MTRF(self,x_continuous,x_categorical,y,n_estimators=100,**kwargs):
         """make metatrees
 
         Parameters
         ----------
-        x : numpy ndarray
-            values of explanatory variables whose dtype is int
+        x_continuous : numpy ndarray, optional
+            2 dimensional float array whose size is ``(sample_size,c_dim_continuous)``, 
+            by default None.
+        x_categorical : numpy ndarray, optional
+            2 dimensional int array whose size is ``(sample_size,c_dim_categorical)``, 
+            by default None. Each element x[i,j] must satisfy 
+            0 <= x[i,j] < self.c_num_children_vec[self.c_dim_continuous+i].
         y : numpy ndarray
             values of objective variable whose dtype may be int or float
         n_estimators : int, optional
-            number of trees in sklearn.RandomForestClassifier, by default 100
+            number of trees in sklearn.RandomForestClassifier or 
+            sklearn.RandomForestRegressor, by default 100
 
         Returns
         -------
@@ -1756,24 +1796,52 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             Each element is a root node of metatree.
         metatree_prob_vec : numpy ndarray
         """
-        if self.c_num_children != 2:
-            raise(ParameterFormatError("MTRF is supported only when c_num_children == 2."))
+        if np.any(self.c_num_children_vec != 2):
+            raise(ParameterFormatError("MTRF is supported only when all the elements of c_num_children_vec is 2."))
         if self.SubModel in DISCRETE_MODELS:
             randomforest = RandomForestClassifier(n_estimators=n_estimators,max_depth=self.c_max_depth,**kwargs)
         if self.SubModel in CONTINUOUS_MODELS:
             randomforest = RandomForestRegressor(n_estimators=n_estimators,max_depth=self.c_max_depth,**kwargs)
+
+        x = np.empty([y.shape[0],self.c_dim_features])
+        if self.c_dim_continuous > 0:
+            x[:,:self.c_dim_continuous] = x_continuous
+        if self.c_dim_categorical > 0:
+            x[:,-self.c_dim_categorical:] = x_categorical
+
         randomforest.fit(x,y)
-        tmp_metatree_list = [_Node(0,2,list(range(self.c_k)),self.hn_g,sub_model=self.SubModel.LearnModel(**self.sub_hn_params)) for i in range(n_estimators)]
+        
+        tmp_metatree_list = [
+            _Node(
+                0,
+                self._root_k_candidates,
+                self.hn_g,
+                sub_model=self.SubModel.LearnModel(**self.sub_hn_params),
+                ranges=self.c_ranges,
+                )
+            for i in range(n_estimators)
+            ]
         tmp_metatree_prob_vec = np.ones(n_estimators) / n_estimators
         for i in range(n_estimators):
             self._copy_tree_from_sklearn_tree(tmp_metatree_list[i],randomforest.estimators_[i].tree_, 0)
 
+        print(f'before: {len(tmp_metatree_list)}')
         tmp_metatree_list,tmp_metatree_prob_vec = self._marge_metatrees(tmp_metatree_list,tmp_metatree_prob_vec)
+        print(f'after: {len(tmp_metatree_list)}')
 
         log_metatree_posteriors = np.log(tmp_metatree_prob_vec)
-        for i,metatree in enumerate(tmp_metatree_list):
-            for j in range(x.shape[0]):
-                log_metatree_posteriors[i] += np.log(self._update_posterior_recursion(metatree,x[j],y[j]))
+        if self.c_dim_continuous > 0 and self.c_dim_categorical > 0:            
+            for i,metatree in enumerate(tmp_metatree_list):
+                for j in range(y.shape[0]):
+                    log_metatree_posteriors[i] += np.log(self._update_posterior_recursion(metatree,x_continuous[j],x_categorical[j],y[j]))
+        elif self.c_dim_continuous > 0:
+            for i,metatree in enumerate(tmp_metatree_list):
+                for j in range(y.shape[0]):
+                    log_metatree_posteriors[i] += np.log(self._update_posterior_recursion(metatree,x_continuous[j],None,y[j]))
+        else:
+            for i,metatree in enumerate(tmp_metatree_list):
+                for j in range(y.shape[0]):
+                    log_metatree_posteriors[i] += np.log(self._update_posterior_recursion(metatree,None,x_categorical[j],y[j]))
         tmp_metatree_prob_vec[:] = np.exp(log_metatree_posteriors - log_metatree_posteriors.max())
         tmp_metatree_prob_vec[:] /= tmp_metatree_prob_vec.sum()
         return tmp_metatree_list,tmp_metatree_prob_vec
@@ -1804,13 +1872,18 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self.hn_metatree_prob_vec[:] /= self.hn_metatree_prob_vec.sum()
         return self.hn_metatree_list,self.hn_metatree_prob_vec
 
-    def update_posterior(self,x,y,alg_type='MTRF',**kwargs):
+    def update_posterior(self,x_continuous=None,x_categorical=None,y=None,alg_type='MTRF',**kwargs):
         """Update the hyperparameters of the posterior distribution using traning data.
 
         Parameters
         ----------
-        x : numpy ndarray
-            values of explanatory variables whose dtype is int
+        x_continuous : numpy ndarray, optional
+            2 dimensional float array whose size is ``(sample_size,c_dim_continuous)``, 
+            by default None.
+        x_categorical : numpy ndarray, optional
+            2 dimensional int array whose size is ``(sample_size,c_dim_categorical)``, 
+            by default None. Each element x[i,j] must satisfy 
+            0 <= x[i,j] < self.c_num_children_vec[self.c_dim_continuous+i].
         y : numpy ndarray
             values of objective variable whose dtype may be int or float
         alg_type : {'MTRF', 'given_MT'}, optional
@@ -1818,25 +1891,90 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         **kwargs : dict, optional
             optional parameters of algorithms, by default {}
         """
-        _check.nonneg_int_vecs(x,'x',DataFormatError)
-        if x.shape[-1] != self.c_k:
-            raise(DataFormatError(f"x.shape[-1] must equal to c_k:{self.c_k}"))
-        if x.max() >= self.c_num_children:
-            raise(DataFormatError(f"x.max() must smaller than c_num_children:{self.c_num_children}"))
-                
-        if type(y) is np.ndarray:
-            if x.shape[:-1] != y.shape: 
-                raise(DataFormatError(f"x.shape[:-1] and y.shape must be same."))
-        elif x.shape[:-1] != ():
-            raise(DataFormatError(f"If y is a scaler, x.shape[:-1] must be the empty tuple ()."))
-
-        x = x.reshape(-1,self.c_k)
+        if self.SubModel in DISCRETE_MODELS:
+            _check.nonneg_ints(y,'y',ParameterFormatError)
+        elif self.SubModel in CONTINUOUS_MODELS:
+            _check.floats(y,'y',ParameterFormatError)
         y = np.ravel(y)
 
+        if self.c_dim_continuous > 0 and self.c_dim_categorical > 0:
+            _check.float_vecs(x_continuous,'x_continuous',DataFormatError)
+            _check.shape_consistency(
+                x_continuous.shape[-1],'x_continuous.shape[-1]',
+                self.c_dim_continuous,'self.c_dim_continuous',
+                ParameterFormatError
+                )
+            x_continuous.reshape([-1,self.c_dim_continuous])
+
+            _check.nonneg_int_vecs(x_categorical,'x_categorical',DataFormatError)
+            _check.shape_consistency(
+                x_categorical.shape[-1],'x_categorical.shape[-1]',
+                self.c_dim_categorical,'self.c_dim_categorical',
+                ParameterFormatError
+                )
+            for i in range(self.c_dim_categorical):
+                if x_categorical[:,i].max() >= self.c_num_children_vec[self.c_dim_continuous+i]:
+                    raise(DataFormatError(
+                        f"x_categorical[{i}].max() must smaller than "
+                        +f"self.c_num_children_vec[{self.c_dim_continuous+i}]: "
+                        +f"{self.c_num_children_vec[self.c_dim_continuous+i]}"))
+            x_categorical.reshape([-1,self.c_dim_categorical])
+
+            _check.shape_consistency(
+                x_continuous.shape[0],'x_continuous.shape[0]',
+                x_categorical.shape[0],'x_categorical.shape[0]',
+                ParameterFormatError
+                )
+            _check.shape_consistency(
+                x_categorical.shape[0],'x_categorical.shape[0]',
+                y.shape[0],'y.shape[0]',
+                ParameterFormatError
+                )
+
+        elif self.c_dim_continuous > 0:
+            _check.float_vecs(x_continuous,'x_continuous',DataFormatError)
+            _check.shape_consistency(
+                x_continuous.shape[-1],'x_continuous.shape[-1]',
+                self.c_dim_continuous,'self.c_dim_continuous',
+                ParameterFormatError
+                )
+            x_continuous.reshape([-1,self.c_dim_continuous])
+
+            _check.shape_consistency(
+                x_continuous.shape[0],'x_continuous.shape[0]',
+                y.shape[0],'y.shape[0]',
+                ParameterFormatError
+                )
+            
+            x_categorical = None
+
+        elif self.c_dim_categorical > 0:
+            _check.nonneg_int_vecs(x_categorical,'x_categorical',DataFormatError)
+            _check.shape_consistency(
+                x_categorical.shape[-1],'x_categorical.shape[-1]',
+                self.c_dim_categorical,'self.c_dim_categorical',
+                ParameterFormatError
+                )
+            for i in range(self.c_dim_categorical):
+                if x_categorical[:,i].max() >= self.c_num_children_vec[self.c_dim_continuous+i]:
+                    raise(DataFormatError(
+                        f"x_categorical[{i}].max() must smaller than "
+                        +f"self.c_num_children_vec[{self.c_dim_continuous+i}]: "
+                        +f"{self.c_num_children_vec[self.c_dim_continuous+i]}"))
+            x_categorical.reshape([-1,self.c_dim_categorical])
+
+            _check.shape_consistency(
+                x_categorical.shape[0],'x_categorical.shape[0]',
+                y.shape[0],'y.shape[0]',
+                ParameterFormatError
+                )
+            
+            x_continuous = None
+
         if alg_type == 'MTRF':
-            self.hn_metatree_list, self.hn_metatree_prob_vec = self._MTRF(x,y,**kwargs)
+            self.hn_metatree_list, self.hn_metatree_prob_vec = self._MTRF(x_continuous,x_categorical,y,**kwargs)
         elif alg_type == 'given_MT':
-            self.hn_metatree_list, self.hn_metatree_prob_vec = self._given_MT(x,y)
+            self.hn_metatree_list, self.hn_metatree_prob_vec = self._given_MT(x_continuous,x_categorical,y)
 
     def _map_recursion_add_nodes(self,node:_Node):
         if node.depth == self.c_max_depth or not node.k_candidates:  # leaf node
