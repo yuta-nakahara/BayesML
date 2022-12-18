@@ -739,8 +739,8 @@ class GenModel(base.Generative):
             by default None.
         x_categorical : numpy ndarray, optional
             2 dimensional int array whose size is ``(sample_size,c_dim_categorical)``, 
-            by default None. Each element x[i,j] must satisfy 
-            0 <= x[i,j] < self.c_num_children_vec[self.c_dim_continuous+i].
+            by default None. Each element x_categorical[i,j] must satisfy 
+            0 <= x_categorical[i,j] < self.c_num_children_vec[self.c_dim_continuous+i].
 
         Returns
         -------
@@ -748,8 +748,8 @@ class GenModel(base.Generative):
             2 dimensional float array whose size is ``(sample_size,c_dim_continuous)``.
         x_categorical : numpy ndarray, optional
             2 dimensional int array whose size is ``(sample_size,c_dim_categorical)``.
-            Each element x[i,j] must satisfies 
-            0 <= x[i,j] < self.c_num_children_vec[self.c_dim_continuous+i].
+            Each element x_categorical[i,j] must satisfies 
+            0 <= x_categorical[i,j] < self.c_num_children_vec[self.c_dim_continuous+i].
         y : numpy ndarray
             1 dimensional array whose size is ``sample_size``.
         """
@@ -789,7 +789,7 @@ class GenModel(base.Generative):
                 for i in range(self.c_dim_categorical):
                     if x_categorical[:,i].max() >= self.c_num_children_vec[self.c_dim_continuous+i]:
                         raise(DataFormatError(
-                            f"x_categorical[{i}].max() must smaller than "
+                            f"x_categorical[:,{i}].max() must smaller than "
                             +f"self.c_num_children_vec[{self.c_dim_continuous+i}]: "
                             +f"{self.c_num_children_vec[self.c_dim_continuous+i]}"))
             else:
@@ -825,7 +825,7 @@ class GenModel(base.Generative):
                 for i in range(self.c_dim_categorical):
                     if x_categorical[:,i].max() >= self.c_num_children_vec[self.c_dim_continuous+i]:
                         raise(DataFormatError(
-                            f"x_categorical[{i}].max() must smaller than "
+                            f"x_categorical[:,{i}].max() must smaller than "
                             +f"self.c_num_children_vec[{self.c_dim_continuous+i}]: "
                             +f"{self.c_num_children_vec[self.c_dim_continuous+i]}"))
             else:
@@ -844,9 +844,9 @@ class GenModel(base.Generative):
                 )
             x_categorical = x_categorical.reshape(-1,self.c_dim_categorical)
             for i in range(self.c_dim_categorical):
-                if x_categorical[i].max() >= self.c_num_children_vec[self.c_dim_continuous+i]:
+                if x_categorical[:,i].max() >= self.c_num_children_vec[self.c_dim_continuous+i]:
                     raise(DataFormatError(
-                        f"x_categorical[{i}].max() must smaller than "
+                        f"x_categorical[:,{i}].max() must smaller than "
                         +f"self.c_num_children_vec[{self.c_dim_continuous+i}]: "
                         +f"{self.c_num_children_vec[self.c_dim_continuous+i]}"))
 
@@ -887,8 +887,8 @@ class GenModel(base.Generative):
             by default None.
         x_categorical : numpy ndarray, optional
             2 dimensional int array whose size is ``(sample_size,c_dim_categorical)``, 
-            by default None. Each element x[i,j] must satisfy 
-            0 <= x[i,j] < self.c_num_children_vec[self.c_dim_continuous+i].
+            by default None. Each element x_categorical[i,j] must satisfy 
+            0 <= x_categorical[i,j] < self.c_num_children_vec[self.c_dim_continuous+i].
         
         See Also
         --------
@@ -1782,8 +1782,8 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             by default None.
         x_categorical : numpy ndarray, optional
             2 dimensional int array whose size is ``(sample_size,c_dim_categorical)``, 
-            by default None. Each element x[i,j] must satisfy 
-            0 <= x[i,j] < self.c_num_children_vec[self.c_dim_continuous+i].
+            by default None. Each element x_categorical[i,j] must satisfy 
+            0 <= x_categorical[i,j] < self.c_num_children_vec[self.c_dim_continuous+i].
         y : numpy ndarray
             values of objective variable whose dtype may be int or float
         n_estimators : int, optional
@@ -1843,8 +1843,8 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             by default None.
         x_categorical : numpy ndarray, optional
             2 dimensional int array whose size is ``(sample_size,c_dim_categorical)``, 
-            by default None. Each element x[i,j] must satisfy 
-            0 <= x[i,j] < self.c_num_children_vec[self.c_dim_continuous+i].
+            by default None. Each element x_categorical[i,j] must satisfy 
+            0 <= x_categorical[i,j] < self.c_num_children_vec[self.c_dim_continuous+i].
         y : numpy ndarray
             values of objective variable whose dtype may be int or float
 
@@ -1874,8 +1874,8 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             by default None.
         x_categorical : numpy ndarray, optional
             2 dimensional int array whose size is ``(sample_size,c_dim_categorical)``, 
-            by default None. Each element x[i,j] must satisfy 
-            0 <= x[i,j] < self.c_num_children_vec[self.c_dim_continuous+i].
+            by default None. Each element x_categorical[i,j] must satisfy 
+            0 <= x_categorical[i,j] < self.c_num_children_vec[self.c_dim_continuous+i].
         y : numpy ndarray
             values of objective variable whose dtype may be int or float
         alg_type : {'MTRF', 'given_MT'}, optional
@@ -1907,7 +1907,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             for i in range(self.c_dim_categorical):
                 if x_categorical[:,i].max() >= self.c_num_children_vec[self.c_dim_continuous+i]:
                     raise(DataFormatError(
-                        f"x_categorical[{i}].max() must smaller than "
+                        f"x_categorical[:,{i}].max() must smaller than "
                         +f"self.c_num_children_vec[{self.c_dim_continuous+i}]: "
                         +f"{self.c_num_children_vec[self.c_dim_continuous+i]}"))
             x_categorical.reshape([-1,self.c_dim_categorical])
@@ -1950,7 +1950,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             for i in range(self.c_dim_categorical):
                 if x_categorical[:,i].max() >= self.c_num_children_vec[self.c_dim_continuous+i]:
                     raise(DataFormatError(
-                        f"x_categorical[{i}].max() must smaller than "
+                        f"x_categorical[:,{i}].max() must smaller than "
                         +f"self.c_num_children_vec[{self.c_dim_continuous+i}]: "
                         +f"{self.c_num_children_vec[self.c_dim_continuous+i]}"))
             x_categorical.reshape([-1,self.c_dim_categorical])
@@ -2292,33 +2292,84 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         return None
     
     def _calc_pred_dist_leaf(self,node:_Node,x):
-            try:
-                node.sub_model.calc_pred_dist(x)
-            except:
-                node.sub_model.calc_pred_dist()
+        try:
+            node.sub_model.calc_pred_dist(x)
+        except:
+            node.sub_model.calc_pred_dist()
 
-    def _calc_pred_dist_recursion(self,node:_Node,x):
-        self._calc_pred_dist_leaf(node,x)
+    def _calc_pred_dist_recursion(self,node:_Node,x_continuous,x_categorical):
+        self._calc_pred_dist_leaf(node,x_continuous)
         if not node.leaf:  # inner node
-            self._calc_pred_dist_recursion(node.children[x[node.k]],x)
+            if node.k < self.c_dim_continuous:
+                for i in range(self.c_num_children_vec[node.k]):
+                    if node.thresholds[i] < x_continuous[node.k] and x_continuous[node.k] < node.thresholds[i+1]:
+                        index = i
+                        break
+            else:
+                index = x_categorical[node.k-self.c_dim_continuous]
+            self._calc_pred_dist_recursion(node.children[index],x_continuous,x_categorical)
 
-    def calc_pred_dist(self,x_continuous,x_categorical):
+    def calc_pred_dist(self,x_continuous=None,x_categorical=None):
         """Calculate the parameters of the predictive distribution.
         
         Parameters
         ----------
-        x : numpy ndarray
-            values of explanatory variables whose dtype is int
+        x_continuous : numpy ndarray, optional
+            A float vector whose length is ``self.c_dim_continuous``, 
+            by default None.
+        x_categorical : numpy ndarray, optional
+            A int vector whose length is ``self.c_dim_categorical``, 
+            by default None. Each element x_categorical[i] must satisfy 
+            0 <= x_categorical[i] < self.c_num_children_vec[self.c_dim_continuous+i].
         """
-        pass
-        # _check.nonneg_int_vec(x,'x',DataFormatError)
-        # if x.shape[0] != self.c_k:
-        #     raise(DataFormatError(f"x.shape[0] must equal to c_k:{self.c_k}"))
-        # if x.max() >= self.c_num_children:
-        #     raise(DataFormatError(f"x.max() must smaller than c_num_children:{self.c_num_children}"))
-        # self._tmp_x[:] = x
-        # for root in self.hn_metatree_list:
-        #     self._calc_pred_dist_recursion(root,self._tmp_x)
+        if self.c_dim_continuous > 0 and self.c_dim_categorical > 0:
+            _check.float_vec(x_continuous,'x_continuous',DataFormatError)
+            _check.shape_consistency(
+                x_continuous.shape[0],'x_continuous.shape[0]',
+                self.c_dim_continuous,'self.c_dim_continuous',
+                ParameterFormatError
+                )
+            _check.nonneg_int_vec(x_categorical,'x_categorical',DataFormatError)
+            _check.shape_consistency(
+                x_categorical.shape[0],'x_categorical.shape[0]',
+                self.c_dim_categorical,'self.c_dim_categorical',
+                ParameterFormatError
+                )
+            for i in range(self.c_dim_categorical):
+                if x_categorical[i] >= self.c_num_children_vec[self.c_dim_continuous+i]:
+                    raise(DataFormatError(
+                        f"x_categorical[{i}] must smaller than "
+                        +f"self.c_num_children_vec[{self.c_dim_continuous+i}]: "
+                        +f"{self.c_num_children_vec[self.c_dim_continuous+i]}"))
+
+        elif self.c_dim_continuous > 0:
+            _check.float_vec(x_continuous,'x_continuous',DataFormatError)
+            _check.shape_consistency(
+                x_continuous.shape[0],'x_continuous.shape[0]',
+                self.c_dim_continuous,'self.c_dim_continuous',
+                ParameterFormatError
+                )
+            x_categorical = np.empty(0) # dummy
+
+        elif self.c_dim_categorical > 0:
+            _check.nonneg_int_vec(x_categorical,'x_categorical',DataFormatError)
+            _check.shape_consistency(
+                x_categorical.shape[0],'x_categorical.shape[0]',
+                self.c_dim_categorical,'self.c_dim_categorical',
+                ParameterFormatError
+                )
+            for i in range(self.c_dim_categorical):
+                if x_categorical[i] >= self.c_num_children_vec[self.c_dim_continuous+i]:
+                    raise(DataFormatError(
+                        f"x_categorical[{i}] must smaller than "
+                        +f"self.c_num_children_vec[{self.c_dim_continuous+i}]: "
+                        +f"{self.c_num_children_vec[self.c_dim_continuous+i]}"))
+            x_continuous = np.empty(0) # dummy
+
+        self._tmp_x_continuous[:] = x_continuous
+        self._tmp_x_categorical[:] = x_categorical
+        for root in self.hn_metatree_list:
+            self._calc_pred_dist_recursion(root,self._tmp_x_continuous,self._tmp_x_categorical)
 
     def _make_prediction_recursion_squared(self,node:_Node):
         if node.leaf == False:  # inner node
