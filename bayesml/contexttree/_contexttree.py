@@ -295,6 +295,7 @@ class GenModel(base.Generative):
                 ))
             self.h_root = _Node(0,self.c_k)
             self._set_h_params_recursion(self.h_root,h_root)
+        return self
 
     def get_h_params(self):
         """Get the hyperparameters of the prior distribution.
@@ -324,7 +325,8 @@ class GenModel(base.Generative):
             self._gen_params_recursion_tree_fix(self.root,self.h_root)
         else:
             self._gen_params_recursion(self.root,self.h_root)
-    
+        return self
+
     def set_params(self,root=None):
         """Set the parameter of the sthocastic data generative model.
 
@@ -339,6 +341,7 @@ class GenModel(base.Generative):
                     "root must be an instance of metatree._Node"
                 ))
             self._set_params_recursion(self.root,root)
+        return self
 
     def get_params(self):
         """Get the parameter of the sthocastic data generative model.
@@ -614,6 +617,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             self._set_h0_params_recursion(self.h0_root,h0_root)
 
         self.reset_hn_params()
+        return self
 
     def get_h0_params(self):
         """Get the hyperparameters of the prior distribution.
@@ -668,6 +672,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             self._set_hn_params_recursion(self.hn_root,hn_root)
 
         self.calc_pred_dist(np.zeros(self.c_d_max,dtype=int))
+        return self
 
     def get_hn_params(self):
         """Get the hyperparameters of the posterior distribution.
@@ -727,6 +732,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
 
         for i in range(x.shape[0]):
             self._update_posterior_recursion(self.hn_root,x,i)
+        return self
 
     def _map_recursion_add_nodes(self,node:_Node):
         if node.depth == self.c_d_max:  # leaf node
@@ -976,6 +982,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             self.p_theta_vec[:] = self.hn_beta_vec / self.hn_beta_vec.sum()
         else:
             self.p_theta_vec[:] = self._calc_pred_dist_recursion(self.hn_root,x,i)
+        return self
 
     def make_prediction(self,loss="KL"):
         """Predict a new data point under the given criterion.

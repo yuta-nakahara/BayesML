@@ -184,6 +184,7 @@ class GenModel(base.Generative):
                 ParameterFormatError
                 )
             self.lambda_mats[:] = lambda_mats
+        return self
 
     def set_h_params(
             self,
@@ -259,6 +260,7 @@ class GenModel(base.Generative):
                 ParameterFormatError
                 )
             self.h_w_mats[:] = h_w_mats
+        return self
 
     def get_params(self):
         """Get the parameter of the sthocastic data generative model.
@@ -307,6 +309,7 @@ class GenModel(base.Generative):
         for k in range(self.c_num_classes):
             self.lambda_mats[k] = ss_wishart.rvs(df=self.h_nus[k],scale=self.h_w_mats[k],random_state=self.rng)
             self.mu_vecs[k] = self.rng.multivariate_normal(mean=self.h_m_vecs[k],cov=np.linalg.inv(self.h_kappas[k]*self.lambda_mats[k]))
+        return self
 
     def gen_sample(self,sample_length):
         """Generate a sample from the stochastic data generative model.
@@ -671,6 +674,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
 
         self._calc_prior_char()
         self.reset_hn_params()
+        return self
 
     def get_h0_params(self):
         """Get the hyperparameters of the prior distribution.
@@ -775,6 +779,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self._calc_q_lambda_char()
 
         self.calc_pred_dist()
+        return self
 
     def get_hn_params(self):
         """Get the hyperparameters of the posterior distribution.
@@ -1108,6 +1113,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self._calc_q_a_char()
         self._calc_q_lambda_char()
         self._update_q_z(x)
+        return self
 
     def estimate_params(self,loss="squared"):
         """Estimate the parameter under the given criterion.
@@ -1311,6 +1317,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self.p_mu_vecs[:] = self.hn_m_vecs
         self.p_nus[:] = self.hn_nus - self.c_degree + 1
         self.p_lambda_mats[:] = (self.hn_kappas * self.p_nus / (self.hn_kappas + 1))[:,np.newaxis,np.newaxis] * self.hn_w_mats
+        return self
 
     def make_prediction(self,loss="squared"):
         """Predict a new data point under the given criterion.

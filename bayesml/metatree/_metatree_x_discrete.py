@@ -562,6 +562,7 @@ class GenModel(base.Generative):
             raise(ParameterFormatError(
                 "self.h_metatree_prob_vec must be None or a numpy.ndarray."
             ))
+        return self
 
     def get_h_params(self):
         """Get the hyperparameters of the prior distribution.
@@ -604,7 +605,8 @@ class GenModel(base.Generative):
                 self._gen_params_recursion_tree_fix(self.root,None,feature_fix)
             else:
                 self._gen_params_recursion(self.root,None,feature_fix)
-    
+        return self
+
     def set_params(self,root=None):
         """Set the parameter of the sthocastic data generative model.
 
@@ -627,6 +629,7 @@ class GenModel(base.Generative):
                 leaf=True
                 )
             self._set_params_recursion(self.root,root)
+        return self
 
     def get_params(self):
         """Get the parameter of the sthocastic data generative model.
@@ -1097,6 +1100,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             ))
 
         self.reset_hn_params()
+        return self
 
     def get_h0_params(self):
         """Get the hyperparameters of the prior distribution.
@@ -1231,6 +1235,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             ))
 
         self.calc_pred_dist(np.zeros(self.c_k,dtype=int))
+        return self
 
     def get_hn_params(self):
         """Get the hyperparameters of the posterior distribution.
@@ -1426,6 +1431,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             self.hn_metatree_list, self.hn_metatree_prob_vec = self._MTRF(x,y,**kwargs)
         elif alg_type == 'given_MT':
             self.hn_metatree_list, self.hn_metatree_prob_vec = self._given_MT(x,y)
+        return self
 
     def _map_recursion_add_nodes(self,node:_Node):
         if node.depth == self.c_d_max or node.depth == self.c_k:  # leaf node
@@ -1705,6 +1711,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self._tmp_x[:] = x
         for root in self.hn_metatree_list:
             self._calc_pred_dist_recursion(root,self._tmp_x)
+        return self
 
     def _make_prediction_recursion_squared(self,node:_Node):
             if node.leaf == False:  # inner node
