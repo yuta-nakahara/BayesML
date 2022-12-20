@@ -96,6 +96,7 @@ class GenModel(base.Generative):
         if self.degree != self.theta_vec.shape[0]:
             self.theta_vec = np.ones(self.degree) / self.degree
             warnings.warn("theta_vec is reinitialized to [1.0/self.degree, 1.0/self.degree, ..., 1.0/self.degree] because dimension of theta_vec and h_alpha_vec are mismatched.", ParameterFormatWarning)
+        return self
 
     def get_h_params(self):
         """Get the hyperparameters of the prior distribution.
@@ -113,6 +114,7 @@ class GenModel(base.Generative):
         The generated vaule is set at ``self.theta_vec``.
         """
         self.theta_vec[:] = self.rng.dirichlet(self.h_alpha_vec)
+        return self
 
     def set_params(self, theta_vec):
         """Set the parameter of the sthocastic data generative model.
@@ -128,6 +130,7 @@ class GenModel(base.Generative):
         if self.degree != self.h_alpha_vec.shape[0]:
             self.h_alpha_vec = np.ones(self.degree) / 2.0
             warnings.warn("h_alpha_vec is reinitialized to [1/2, 1/2, ..., 1/2] because dimension of h_m_vec and mu_vec are mismatched.", ParameterFormatWarning)
+        return self
 
     def get_params(self):
         """Get the parameter of the sthocastic data generative model.
@@ -289,6 +292,7 @@ class LearnModel(base.Posterior, base.PredictiveMixin):
         self.h0_alpha_vec = _check.pos_float_vec(h0_alpha_vec,'h0_alpha_vec',ParameterFormatError)
         self.degree = self.h0_alpha_vec.shape[0]
         self.reset_hn_params()
+        return self
 
     def get_h0_params(self):
         """Get the initial values of the hyperparameters of the posterior distribution.
@@ -311,6 +315,7 @@ class LearnModel(base.Posterior, base.PredictiveMixin):
         self.hn_alpha_vec = _check.pos_float_vec(hn_alpha_vec,'hn_alpha_vec',ParameterFormatError)
         self.degree = self.hn_alpha_vec.shape[0]
         self.calc_pred_dist()
+        return self
 
     def get_hn_params(self):
         """Get the hyperparameters of the posterior distribution.
@@ -330,6 +335,7 @@ class LearnModel(base.Posterior, base.PredictiveMixin):
         """
         self.hn_alpha_vec = np.copy(self.h0_alpha_vec)
         self.calc_pred_dist()
+        return self
 
     def overwrite_h0_params(self):
         """Overwrite the initial value of the hyperparameter of the posterior distribution by the learned values.
@@ -339,6 +345,7 @@ class LearnModel(base.Posterior, base.PredictiveMixin):
         """
         self.h0_alpha_vec = np.copy(self.hn_alpha_vec)
         self.calc_pred_dist()
+        return self
 
     def update_posterior(self, x):
         """Update the hyperparameters of the posterior distribution using traning data.
@@ -355,6 +362,7 @@ class LearnModel(base.Posterior, base.PredictiveMixin):
 
         for k in range(self.degree):
             self.hn_alpha_vec[k] += x[:,k].sum()
+        return self
 
     def estimate_params(self, loss="squared",dict_out=False):
         """Estimate the parameter of the stochastic data generative model under the given criterion.
@@ -471,6 +479,7 @@ class LearnModel(base.Posterior, base.PredictiveMixin):
     def calc_pred_dist(self):
         """Calculate the parameters of the predictive distribution."""
         self.p_theta_vec = self.hn_alpha_vec / self.hn_alpha_vec.sum()
+        return self
 
     def make_prediction(self, loss="squared"):
         """Predict a new data point under the given criterion.
