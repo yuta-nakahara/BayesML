@@ -143,6 +143,7 @@ class GenModel(base.Generative):
                     "h_w_mats.shape[-1] and h_w_mats.shape[-2] must coincide with self.c_degree: "
                     +f"h_w_mats.shape[-1] and h_w_mats.shape[-2] = {h_w_mats.shape[-1]}, self.c_degree = {self.c_degree}"))
             self.h_w_mats[:] = h_w_mats
+        return self
 
     def get_h_params(self):
         """Get the hyperparameters of the prior distribution.
@@ -171,7 +172,8 @@ class GenModel(base.Generative):
         for k in range(self.c_num_classes):
             self.lambda_mats[k] = ss_wishart.rvs(df=self.h_nus[k],scale=self.h_w_mats[k],random_state=self.rng)
             self.mu_vecs[k] = self.rng.multivariate_normal(mean=self.h_m_vecs[k],cov=np.linalg.inv(self.h_kappas[k]*self.lambda_mats[k]))
-    
+        return self
+
     def set_params(
             self,
             pi_vec=None,
@@ -212,6 +214,7 @@ class GenModel(base.Generative):
                     "lambda_mats.shape[-1] and lambda_mats.shape[-2] must coincide with self.c_degree:"
                     +f"lambda_mats.shape[-1] and lambda_mats.shape[-2] = {lambda_mats.shape[-1]}, self.c_degree = {self.c_degree}"))
             self.lambda_mats[:] = lambda_mats
+        return self
 
     def get_params(self):
         """Get the parameter of the sthocastic data generative model.
@@ -535,6 +538,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
 
         self._calc_prior_char()
         self.reset_hn_params()
+        return self
 
     def get_h0_params(self):
         """Get the initial values of the hyperparameters of the posterior distribution.
@@ -614,6 +618,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self._calc_q_lambda_char()
 
         self.calc_pred_dist()
+        return self
 
     def get_hn_params(self):
         """Get the hyperparameters of the posterior distribution.
@@ -867,6 +872,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self._calc_q_pi_char()
         self._calc_q_lambda_char()
         self._update_q_z(x)
+        return self
 
     def estimate_params(self,loss="squared"):
         """Estimate the parameter of the stochastic data generative model under the given criterion.
@@ -1040,6 +1046,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self.p_mu_vecs[:] = self.hn_m_vecs
         self.p_nus[:] = self.hn_nus - self.c_degree + 1
         self.p_lambda_mats[:] = (self.hn_kappas * self.p_nus / (self.hn_kappas + 1))[:,np.newaxis,np.newaxis] * self.hn_w_mats
+        return self
 
     def make_prediction(self,loss="squared"):
         """Predict a new data point under the given criterion.
