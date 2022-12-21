@@ -223,7 +223,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self.set_h0_params(h0_alpha,h0_beta)
     
     def get_constants(self):
-        """Get constants of GenModel.
+        """Get constants of LearnModel.
 
         This model does not have any constants. 
         Therefore, this function returns an emtpy dict ``{}``.

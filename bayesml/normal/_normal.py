@@ -270,7 +270,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         )
 
     def get_constants(self):
-        """Get constants of GenModel.
+        """Get constants of LearnModel.
 
         This model does not have any constants. 
         Therefore, this function returns an emtpy dict ``{}``.
@@ -558,6 +558,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             If the loss function is \"KL\", the predictive distribution itself will be returned
             as numpy.ndarray.
         """
+        _check.float_(x,'x',DataFormatError)
         self.calc_pred_dist()
         prediction = self.make_prediction(loss=loss)
         self.update_posterior(x)
