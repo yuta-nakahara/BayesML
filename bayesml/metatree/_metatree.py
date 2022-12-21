@@ -39,6 +39,17 @@ CONTINUOUS_MODELS = {
     # linearregression,
     exponential,
     }
+CLF_MODELS = {
+    bernoulli,
+    # categorical,
+    }
+REG_MODELS = {
+    normal,
+    # multivariate_normal,
+    # linearregression,
+    exponential,
+    poisson,
+    }
 
 class _Node:
     def __init__(self,
@@ -252,8 +263,7 @@ class GenModel(base.Generative):
                 node.h_g = 0
             else:
                 node.h_g = self.h_g
-            # node.sub_model.set_h_params(**self.sub_h_params)
-            node.sub_model = self.SubModel.GenModel(seed=self.rng,**self.sub_h_params)
+            node.sub_model.set_h_params(**self.sub_h_params)
             if node.depth == self.c_max_depth or not node.k_candidates or self.rng.random() > self.h_g:  # leaf node
                 node.sub_model.gen_params()
                 node.leaf = True
@@ -332,8 +342,7 @@ class GenModel(base.Generative):
             node.h_g = 0
         else:
             node.h_g = self.h_g
-        # node.sub_model.set_h_params(**self.sub_h_params)
-        node.sub_model = self.SubModel.GenModel(seed=self.rng,**self.sub_h_params)
+        node.sub_model.set_h_params(**self.sub_h_params)
         if node.leaf:  # leaf node
             node.sub_model.gen_params()
             node.leaf = True
@@ -481,8 +490,7 @@ class GenModel(base.Generative):
                 self._set_h_g_recursion(node.children[i])
 
     def _set_sub_h_params_recursion(self,node:_Node):
-        # node.sub_model.set_h_params(**self.sub_h_params)
-        node.sub_model = self.SubModel.GenModel(seed=self.rng,**self.sub_h_params)
+        node.sub_model.set_h_params(**self.sub_h_params)
         if not node.leaf:
             for i in range(self.c_num_children_vec[node.k]):
                 self._set_sub_h_params_recursion(node.children[i])
@@ -493,8 +501,7 @@ class GenModel(base.Generative):
                 node.h_g = 0
             else:
                 node.h_g = self.h_g
-            # node.sub_model.set_h_params(**self.sub_h_params)
-            node.sub_model = self.SubModel.GenModel(seed=self.rng,**self.sub_h_params)
+            node.sub_model.set_h_params(**self.sub_h_params)
             if not node.leaf:
                 for i in range(self.c_num_children_vec[node.k]):
                     self._set_h_params_recursion(node.children[i],None)
@@ -576,8 +583,7 @@ class GenModel(base.Generative):
                     self._set_h_g_recursion(h_root)
 
         if sub_h_params is not None:
-            self.SubModel.GenModel(seed=self.rng,**sub_h_params)
-            self.sub_h_params = copy.deepcopy(sub_h_params)
+            self.sub_h_params = self.SubModel.GenModel(seed=self.rng,**sub_h_params).get_h_params()
             if self.h_metatree_list:
                 for h_root in self.h_metatree_list:
                     self._set_sub_h_params_recursion(h_root)
@@ -686,12 +692,12 @@ class GenModel(base.Generative):
             if ``'random'``, self.c_ranges will be recursively divided by at random intervals.
         """
         if feature_fix:
-            warnings.warn(
-                "If feature_fix=True, tree will be generated according to "
-                +"self.h_g not any element of self.h_metatree_list.",ResultWarning)
             if tree_fix:
                 self._gen_params_recursion_feature_and_tree_fix(self.root,threshold_fix,threshold_type)
             else:
+                warnings.warn(
+                    "If feature_fix=True, tree will be generated according to "
+                    +"self.h_g not any element of self.h_metatree_list.",ResultWarning)
                 self._gen_params_recursion(self.root,None,True,threshold_fix,threshold_type)
         else:
             if threshold_fix or tree_fix:
@@ -1277,8 +1283,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                 self._set_h0_g_recursion(node.children[i])
 
     def _set_sub_h0_params_recursion(self,node:_Node):
-        # node.sub_model.set_h0_params(**self.sub_h0_params)
-        node.sub_model = self.SubModel.LearnModel(**self.sub_h0_params)
+        node.sub_model.set_h0_params(**self.sub_h0_params)
         if not node.leaf:
             for i in range(self.c_num_children_vec[node.k]):
                 self._set_sub_h0_params_recursion(node.children[i])
@@ -1289,8 +1294,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                 node.h_g = 0
             else:
                 node.h_g = self.h0_g
-            # node.sub_model.set_h0_params(**self.sub_h0_params)
-            node.sub_model = self.SubModel.LearnModel(**self.sub_h0_params)
+            node.sub_model.set_h0_params(**self.sub_h0_params)
             if not node.leaf:
                 for i in range(self.c_num_children_vec[node.k]):
                     self._set_h0_params_recursion(node.children[i],None)
@@ -1339,8 +1343,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                 self._set_hn_g_recursion(node.children[i])
 
     def _set_sub_hn_params_recursion(self,node:_Node):
-        # node.sub_model.set_hn_params(**self.sub_hn_params)
-        node.sub_model = self.SubModel.LearnModel(**self.sub_hn_params)
+        node.sub_model.set_hn_params(**self.sub_hn_params)
         if not node.leaf:
             for i in range(self.c_num_children_vec[node.k]):
                 self._set_sub_hn_params_recursion(node.children[i])
@@ -1351,8 +1354,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                 node.h_g = 0
             else:
                 node.h_g = self.hn_g
-            # node.sub_model.set_hn_params(**self.sub_hn_params)
-            node.sub_model = self.SubModel.LearnModel(**self.sub_hn_params)
+            node.sub_model.set_hn_params(**self.sub_hn_params)
             if not node.leaf:
                 for i in range(self.c_num_children_vec[node.k]):
                     self._set_hn_params_recursion(node.children[i],None)
@@ -1382,7 +1384,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                     if node.children[i] is None:
                         node.children[i] = _Node(
                             node.depth+1,
-                            sub_model=self.SubModel.LearnModel(**self.sub_hn_params),
+                            sub_model=self.SubModel.LearnModel(**self.sub_h0_params).set_hn_params(**self.sub_hn_params),
                             )
                     node.children[i].k_candidates = child_k_candidates
                     node.children[i].ranges = np.array(node.ranges)
@@ -1434,8 +1436,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                     self._set_h0_g_recursion(h0_root)
 
         if sub_h0_params is not None:
-            self.SubModel.LearnModel(**sub_h0_params)
-            self.sub_h0_params = copy.deepcopy(sub_h0_params)
+            self.sub_h0_params = self.SubModel.LearnModel(**sub_h0_params).get_h0_params()
             if self.h0_metatree_list:
                 for h0_root in self.h0_metatree_list:
                     self._set_sub_h0_params_recursion(h0_root)
@@ -1568,8 +1569,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                     self._set_hn_g_recursion(hn_root)
 
         if sub_hn_params is not None:
-            self.SubModel.LearnModel(**sub_hn_params)
-            self.sub_hn_params = copy.deepcopy(sub_hn_params)
+            self.sub_hn_params = self.SubModel.LearnModel(**self.sub_h0_params).set_hn_params(**sub_hn_params).get_hn_params()
             if self.hn_metatree_list:
                 for hn_root in self.hn_metatree_list:
                     self._set_sub_hn_params_recursion(hn_root)
@@ -1595,7 +1595,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                             0,
                             self._root_k_candidates,
                             self.hn_g,
-                            sub_model=self.SubModel.LearnModel(**self.sub_hn_params),
+                            sub_model=self.SubModel.LearnModel(**self.sub_h0_params).set_hn_params(**self.sub_hn_params),
                             ranges=self.c_ranges,
                             )
                     )
@@ -1678,7 +1678,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                 new_node.depth+1,
                 child_k_candidates,
                 h_g=self.h0_g,
-                sub_model=self.SubModel.LearnModel(**self.sub_h0_params),
+                sub_model=self.SubModel.LearnModel(**self.sub_h0_params).set_hn_params(**self.sub_hn_params),
                 ranges=np.array(new_node.ranges)
                 )
             if new_node.thresholds is not None:
@@ -1688,7 +1688,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                 new_node.depth+1,
                 child_k_candidates,
                 h_g=self.h0_g,
-                sub_model=self.SubModel.LearnModel(**self.sub_h0_params),
+                sub_model=self.SubModel.LearnModel(**self.sub_h0_params).set_hn_params(**self.sub_hn_params),
                 ranges=np.array(new_node.ranges)
                 )
             if new_node.thresholds is not None:
@@ -1784,9 +1784,9 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         """
         if np.any(self.c_num_children_vec != 2):
             raise(ParameterFormatError("MTRF is supported only when all the elements of c_num_children_vec is 2."))
-        if self.SubModel in DISCRETE_MODELS:
+        if self.SubModel in CLF_MODELS:
             randomforest = RandomForestClassifier(n_estimators=n_estimators,max_depth=self.c_max_depth,**kwargs)
-        if self.SubModel in CONTINUOUS_MODELS:
+        if self.SubModel in REG_MODELS:
             randomforest = RandomForestRegressor(n_estimators=n_estimators,max_depth=self.c_max_depth,**kwargs)
 
         x = np.empty([y.shape[0],self.c_dim_features])
@@ -1800,7 +1800,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                 0,
                 self._root_k_candidates,
                 self.hn_g,
-                sub_model=self.SubModel.LearnModel(**self.sub_hn_params),
+                sub_model=self.SubModel.LearnModel(**self.sub_h0_params).set_hn_params(**self.sub_hn_params),
                 ranges=self.c_ranges,
                 )
             for i in range(n_estimators)
@@ -1957,7 +1957,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
     def _map_recursion_add_nodes(self,node:_Node):
         if node.depth == self.c_max_depth or not node.k_candidates:  # leaf node
             node.h_g = 0.0
-            node.sub_model = self.SubModel.LearnModel(**self.sub_hn_params)
+            node.sub_model = self.SubModel.LearnModel(**self.sub_h0_params).set_hn_params(**self.sub_hn_params)
             node.leaf = True
             node.map_leaf = True
         else:  # inner node
@@ -2181,7 +2181,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             child_k_candidates.remove(k)
         label_string += f'hn_g={self.hn_g:.2f}\\lp_v={tmp_p_v:.2f}\\lsub_params={{'
 
-        sub_model = self.SubModel.LearnModel(**self.sub_hn_params)
+        sub_model = self.SubModel.LearnModel(**self.sub_h0_params).set_hn_params(**self.sub_hn_params)
         try:
             sub_params = sub_model.estimate_params(loss='0-1',dict_out=True)
         except:
@@ -2451,3 +2451,34 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         prediction = self.make_prediction(loss=loss)
         self.update_posterior(x_continuous,x_categorical,y,alg_type='given_MT')
         return prediction
+
+    def reset_hn_params(self):
+        """Reset the hyperparameters of the posterior distribution to their initial values.
+        
+        They are reset to the output of `self.get_h0_params()`.
+        Note that the parameters of the predictive distribution are also calculated from them.
+        """
+        self.set_hn_params(
+            hn_k_weight_vec=self.h0_k_weight_vec,
+            hn_g=self.h0_g,
+            sub_hn_params=self.SubModel.LearnModel(**self.sub_h0_params).get_hn_params(),
+            hn_metatree_list=self.h0_metatree_list,
+            hn_metatree_prob_vec=self.h0_metatree_prob_vec,
+        )
+        return self
+    
+    def overwrite_h0_params(self):
+        """Overwrite the initial values of the hyperparameters of the posterior distribution by the learned values.
+        
+        They are overwitten by the output of `self.get_hn_params()`.
+        Note that the parameters of the predictive distribution are also calculated from them.
+        """
+        tmp = self.SubModel.LearnModel(**self.sub_h0_params).set_hn_params(**self.sub_hn_params)
+        self.set_h0_params(
+            h0_k_weight_vec=self.hn_k_weight_vec,
+            h0_g=self.hn_g,
+            sub_h0_params=tmp.overwrite_h0_params().get_h0_params(),
+            h0_metatree_list=self.hn_metatree_list,
+            h0_metatree_prob_vec=self.hn_metatree_prob_vec,
+        )
+        return self
