@@ -21,16 +21,16 @@ class GenModel(base.Generative):
     Parameters
     ----------
     lambda_ : float, optional
-        a positive real number, 1.0 by default.
+        a positive real number, by default 1.0.
     h_alpha : float, optional
-        a positive real number, 1.0 by default. 
+        a positive real number, by default 1.0. 
     h_beta : float, optional
-        a positive real number, 1.0 by default. 
+        a positive real number, by default 1.0. 
     seed : {None, int}, optional
         A seed to initialize numpy.random.default_rng(),
         by default None
     """
-    def __init__(self,*,lambda_=1.0,h_alpha=1.0,h_beta=1.0,seed=None):
+    def __init__(self,lambda_=1.0,h_alpha=1.0,h_beta=1.0,seed=None):
         self.rng = np.random.default_rng(seed)
 
         # params
@@ -61,9 +61,9 @@ class GenModel(base.Generative):
         Parameters
         ----------
         h_alpha : float, optional
-            a positive real number, None by default.
+            a positive real number, by default None.
         h_beta : float, optional
-            a positive real number, None by default.
+            a positive real number, by default None.
         """
         if h_alpha is not None:
             self.h_alpha = _check.pos_float(h_alpha,'h_alpha',ParameterFormatError)
@@ -96,7 +96,7 @@ class GenModel(base.Generative):
         Parameters
         ----------
         lambda_ : float, optional
-            a positive real number, None by default.
+            a positive real number, by default None.
         """
         if lambda_ is not None:
             self.lambda_ = _check.pos_float(lambda_, 'lambda_', ParameterFormatError)
@@ -153,9 +153,9 @@ class GenModel(base.Generative):
         Parameters
         ----------
         sample_size : int, optional
-            A positive integer, 100 by default.
+            A positive integer, by default 100.
         hist_bins : float, optional
-            A positive float, 10 by default.
+            A positive float, by default 10.
 
         Examples
         --------
@@ -194,9 +194,9 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
     Parameters
     ----------
     h0_alpha : float, optional
-        a positive real number, 1.0 by default.
+        a positive real number, by default 1.0.
     h0_beta : float, optional
-        a positibe real number, 1.0 by default.
+        a positibe real number, by default 1.0.
 
     Attributes
     ----------
@@ -242,9 +242,9 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         Parameters
         ----------
         h0_alpha : float, optional
-            a positive real number, None by default.
+            a positive real number, by default None.
         h0_beta : float, optional
-            a positibe real number, None by default.
+            a positibe real number, by default None.
         """
         if h0_alpha is not None:
             self.h0_alpha = _check.pos_float(h0_alpha, 'h0_alpha', ParameterFormatError)
@@ -270,9 +270,9 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         Parameters
         ----------
         hn_alpha : float, optional
-            a positive real number, None by default.
+            a positive real number, by default None.
         hn_beta : float, optional
-            a positibe real number, None by default.
+            a positibe real number, by default None.
         """
         if hn_alpha is not None:
             self.hn_alpha = _check.pos_float(hn_alpha, 'hn_alpha', ParameterFormatError)
@@ -301,8 +301,17 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             All the elements must be positive real numbers.
         """
         _check.pos_floats(x, 'x', DataFormatError)
+        try:
+            self.hn_alpha += x.size
+        except:
+            self.hn_alpha += 1
+        self.hn_beta += np.sum(x)
+        return self
+
+    def _update_posterior(self,x):
+        """Update opsterior without input check."""
         self.hn_alpha += x.size
-        self.hn_beta += x.sum()
+        self.hn_beta += np.sum(x)
         return self
 
     def estimate_params(self,loss="squared",dict_out=False):
@@ -311,10 +320,10 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         Parameters
         ----------
         loss : str, optional
-            Loss function underlying the Bayes risk function, \"squared\" by default.
+            Loss function underlying the Bayes risk function, by default \"squared\".
             This function supports \"squared\", \"0-1\", \"abs\", and \"KL\".
         dict_out : bool, optional
-            If ``True``, output will be a dict, ``False`` by default.
+            If ``True``, output will be a dict, by default ``False``.
 
         Returns
         -------
@@ -361,7 +370,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         Parameters
         ----------
         credibility : float, optional
-            A posterior probability that the interval conitans the paramter, 0.95 by default.
+            A posterior probability that the interval conitans the paramter, by default 0.95.
 
         Returns
         -------
@@ -417,7 +426,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         Parameters
         ----------
         loss : str, optional
-            Loss function underlying the Bayes risk function, \"squared\" by default.
+            Loss function underlying the Bayes risk function, by default \"squared\".
             This function supports \"squared\", \"0-1\", \"abs\", and \"KL\".
 
         Returns
@@ -451,7 +460,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         x : float
             a positive real number
         loss : str, optional
-            Loss function underlying the Bayes risk function, \"squared\" by default.
+            Loss function underlying the Bayes risk function, by default \"squared\".
             This function supports \"squared\", \"0-1\", \"abs\", and \"KL\".
 
         Returns
