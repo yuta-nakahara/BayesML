@@ -5,7 +5,7 @@
 import warnings
 import numpy as np
 from scipy.stats import beta as ss_beta
-# from scipy.stats import betabino as ss_betabinom
+# from scipy.stats import betabinom as ss_betabinom
 import matplotlib.pyplot as plt
 
 from .. import base
@@ -18,14 +18,14 @@ class GenModel(base.Generative):
     Parameters
     ----------
     theta : float, optional
-        a real number in :math:`[0, 1]`, by default 0.5
+        a real number in :math:`[0, 1]`, 0.5 by default.
     h_alpha : float, optional
-        a positive real number, by default 0.5
+        a positive real number, 0.5 by default.
     h_beta : float, optional
-        a positibe real number, by default 0.5
+        a positibe real number, 0.5 by default.
     seed : {None, int}, optional
         A seed to initialize numpy.random.default_rng(),
-        by default None
+        None by default.
     """
     def __init__(self,*,theta=0.5,h_alpha=0.5,h_beta=0.5,seed=None):
         self.rng = np.random.default_rng(seed)
@@ -58,9 +58,9 @@ class GenModel(base.Generative):
         Parameters
         ----------
         h_alpha : float, optional
-            a positive real number, bydefault None
+            a positive real number, None by default.
         h_beta : float, optional
-            a positibe real number, bydefault None
+            a positibe real number, None by default.
         """
         if h_alpha is not None:
             self.h_alpha = _check.pos_float(h_alpha,'h_alpha',ParameterFormatError)
@@ -93,7 +93,7 @@ class GenModel(base.Generative):
         Parameters
         ----------
         theta : float, optional
-            a real number :math:`\theta \in [0, 1]`, by default None.
+            a real number :math:`\theta \in [0, 1]`, None by default.
         """
         if theta is not None:
             self.theta = _check.float_in_closed01(theta,'theta',ParameterFormatError)
@@ -150,9 +150,9 @@ class GenModel(base.Generative):
         Parameters
         ----------
         sample_size : int, optional
-            A positive integer, by default 20
+            A positive integer, 20 by default.
         sample_num : int, optional
-            A positive integer, by default 5
+            A positive integer, 5 by default.
         
         Examples
         --------
@@ -195,9 +195,9 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
     Parameters
     ----------
     h0_alpha : float, optional
-        a positive real number, by default 0.5
+        a positive real number, 0.5 by default.
     h0_beta : float, optional
-        a positibe real number, by default 0.5
+        a positibe real number, 0.5 by default.
     
     Attributes
     ----------
@@ -240,9 +240,9 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         Parameters
         ----------
         h0_alpha : float, optional
-            a positive real number, by default None
+            a positive real number, None by default.
         h0_beta : float, optionanl
-            a positibe real number, by default None
+            a positibe real number, None by default.
         """
         if h0_alpha is not None:
             self.h0_alpha = _check.pos_float(h0_alpha,'h0_alpha',ParameterFormatError)
@@ -268,9 +268,9 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         Parameters
         ----------
         hn_alpha : float, optional
-            a positive real number, by default None
+            a positive real number, None by default.
         hn_beta : float, optional
-            a positibe real number, by default None
+            a positibe real number, None by default.
         """
         if hn_alpha is not None:
             self.hn_alpha = _check.pos_float(hn_alpha,'hn_alpha',ParameterFormatError)
@@ -315,10 +315,10 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         Parameters
         ----------
         loss : str, optional
-            Loss function underlying the Bayes risk function, by default \"squared\".
+            Loss function underlying the Bayes risk function, \"squared\" by default.
             This function supports \"squared\", \"0-1\", \"abs\", and \"KL\".
         dict_out : bool, optional
-            If ``True``, output will be a dict, by default ``False``.
+            If ``True``, output will be a dict, by ``False`` default.
 
         Returns
         -------
@@ -376,7 +376,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         Parameters
         ----------
         credibility : float, optional
-            A posterior probability that the interval conitans the paramter, by default 0.95
+            A posterior probability that the interval conitans the paramter, 0.95 by default.
 
         Returns
         -------
@@ -430,7 +430,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         Parameters
         ----------
         loss : str, optional
-            Loss function underlying the Bayes risk function, by default \"squared\".
+            Loss function underlying the Bayes risk function, \"squared\" by default.
             This function supports \"squared\", \"0-1\", \"abs\", and \"KL\".
 
         Returns
@@ -462,7 +462,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         x : int
             It must be 0 or 1
         loss : str, optional
-            Loss function underlying the Bayes risk function, by default \"squared\".
+            Loss function underlying the Bayes risk function, \"squared\" by default.
             This function supports \"squared\", \"0-1\", \"abs\", and \"KL\".
 
         Returns

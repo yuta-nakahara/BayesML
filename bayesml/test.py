@@ -1,5 +1,6 @@
-from bayesml.bernoulli import GenModel
-from bayesml.bernoulli import LearnModel
+import numpy as np
+from bayesml.exponential import GenModel
+from bayesml.exponential import LearnModel
 
 if __name__ == '__main__':
     gen_model = GenModel()
