@@ -17,34 +17,36 @@ gen_model = metatree.GenModel(
     SubModel=normal,
     sub_h_params={'h_kappa':0.1})
     # # sub_h_params={'h_alpha':0.3,'h_beta':0.3})
-gen_model.gen_params(threshold_type='random')
+gen_model.gen_params(threshold_type='random',feature_fix=False,threshold_fix=False,tree_fix=False)
 gen_model.visualize_model(filename='tree.pdf')
+gen_model.gen_params(threshold_type='even',feature_fix=True,threshold_fix=False,tree_fix=True)
+gen_model.visualize_model(filename='tree2.pdf')
 
-x_continuous,x_categorical,y = gen_model.gen_sample(200)
+# x_continuous,x_categorical,y = gen_model.gen_sample(200)
 
-learn_model = metatree.LearnModel(
-    c_dim_continuous=dim_continuous,
-    c_dim_categorical=dim_categorical,
-    c_num_children_vec=2,
-    c_max_depth=2,
-    h0_g=0.75,
-    SubModel=normal,
-    sub_h0_params={'h0_kappa':0.1})
-    # sub_h0_params={'h0_alpha':0.3,'h0_beta':0.3})
+# learn_model = metatree.LearnModel(
+#     c_dim_continuous=dim_continuous,
+#     c_dim_categorical=dim_categorical,
+#     c_num_children_vec=2,
+#     c_max_depth=2,
+#     h0_g=0.75,
+#     SubModel=normal,
+#     sub_h0_params={'h0_kappa':0.1})
+#     # sub_h0_params={'h0_alpha':0.3,'h0_beta':0.3})
 
-hn_params = learn_model.get_hn_params()
-hn_params['sub_hn_params']['hn_kappa'] = 0.2
-print(learn_model.get_h0_params())
-learn_model.set_hn_params(sub_hn_params=hn_params['sub_hn_params'])
-print(learn_model.get_hn_params())
+# hn_params = learn_model.get_hn_params()
+# hn_params['sub_hn_params']['hn_kappa'] = 0.2
+# print(learn_model.get_h0_params())
+# learn_model.set_hn_params(sub_hn_params=hn_params['sub_hn_params'])
+# print(learn_model.get_hn_params())
 
-# # start = time.time()
-learn_model.update_posterior(x_continuous,x_categorical,y,n_estimators=5)
-# # end = time.time()
+# # # start = time.time()
+# learn_model.update_posterior(x_continuous,x_categorical,y,n_estimators=5)
+# # # end = time.time()
 
-learn_model.overwrite_h0_params()
-print(learn_model.get_h0_params())
-print(learn_model.get_hn_params())
+# learn_model.overwrite_h0_params()
+# print(learn_model.get_h0_params())
+# print(learn_model.get_hn_params())
 
-# learn_model.visualize_posterior()
-# # print(end-start)
+# # learn_model.visualize_posterior()
+# # # print(end-start)

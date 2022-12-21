@@ -51,6 +51,8 @@ REG_MODELS = {
     poisson,
     }
 
+THRESHOLD_TYPES = {'even','random'}
+
 class _Node:
     def __init__(self,
                  depth,
@@ -256,13 +258,41 @@ class GenModel(base.Generative):
                 "c_max_depth":self.c_max_depth,
                 "c_num_assignment_vec":self.c_num_assignment_vec,
                 "c_ranges":self.c_ranges}
+    
+    def _make_children(self,node:_Node):
+        child_k_candidates = node.k_candidates.copy()
+        child_k_candidates.remove(node.k)
+        node.leaf = False
+        for i in range(self.c_num_children_vec[node.k]):
+            if node.children[i] is None:
+                node.children[i] = _Node(
+                    node.depth+1,
+                    k_candidates=child_k_candidates,
+                    h_g=self.h_g,
+                    sub_model=self.SubModel.GenModel(seed=self.rng,**self.sub_h_params),
+                    ranges=np.array(node.ranges)
+                    )
+            else:
+                node.children[i].k_candidates = child_k_candidates
+                node.children[i].ranges = np.array(node.ranges)
+            if node.thresholds is not None:
+                node.children[i].ranges[node.k,0] = node.thresholds[i]
+                node.children[i].ranges[node.k,1] = node.thresholds[i+1]
+    
+    def _gen_thresholds(self,node:_Node,threshold_type):
+        node.thresholds = np.empty(self.c_num_children_vec[node.k]+1)
+        if threshold_type == 'random':
+            tmp = self.rng.dirichlet(np.ones(self.c_num_children_vec[node.k]))
+            tmp *= (node.ranges[node.k,1] - node.ranges[node.k,0])
+            node.thresholds[0] = node.ranges[node.k,0]
+            for i in range(self.c_num_children_vec[node.k]):
+                node.thresholds[i+1] = node.thresholds[i]+tmp[i]
+        if threshold_type == 'even':
+            node.thresholds[:] = np.linspace(node.ranges[node.k,0],node.ranges[node.k,1],self.c_num_children_vec[node.k]+1)
 
     def _gen_params_recursion(self,node:_Node,h_node:_Node,feature_fix,threshold_fix,threshold_type):
         if h_node is None:
-            if node.depth == self.c_max_depth:
-                node.h_g = 0
-            else:
-                node.h_g = self.h_g
+            node.h_g = 0 if node.depth == self.c_max_depth else self.h_g
             node.sub_model.set_h_params(**self.sub_h_params)
             if node.depth == self.c_max_depth or not node.k_candidates or self.rng.random() > self.h_g:  # leaf node
                 node.sub_model.gen_params()
@@ -273,39 +303,15 @@ class GenModel(base.Generative):
                     node.k = self.rng.choice(node.k_candidates,
                                              p=self.h_k_weight_vec[node.k_candidates]/self.h_k_weight_vec[node.k_candidates].sum())
                     node.children = [None for i in range(self.c_num_children_vec[node.k])]
-                if node.k < self.c_dim_continuous:
-                    if not threshold_fix or flag:
-                        node.thresholds = np.empty(self.c_num_children_vec[node.k]+1)
-                        if threshold_type == 'random':
-                            tmp = self.rng.dirichlet(np.ones(self.c_num_children_vec[node.k]))
-                            tmp *= (node.ranges[node.k,1] - node.ranges[node.k,0])
-                            node.thresholds[0] = node.ranges[node.k,0]
-                            for i in range(self.c_num_children_vec[node.k]):
-                                node.thresholds[i+1] = node.thresholds[i]+tmp[i]
-                        if threshold_type == 'even':
-                            node.thresholds[:] = np.linspace(node.ranges[node.k,0],node.ranges[node.k,1],self.c_num_children_vec[node.k]+1)
+                if node.k < self.c_dim_continuous and (not threshold_fix or flag):
+                    self._gen_thresholds(node,threshold_type)
                 else:
                     node.thresholds = None
-                child_k_candidates = node.k_candidates.copy()
-                child_k_candidates.remove(node.k)
-                node.leaf = False
+                self._make_children(node)
                 for i in range(self.c_num_children_vec[node.k]):
-                    if node.children[i] is None:
-                        node.children[i] = _Node(
-                            node.depth+1,
-                            sub_model=self.SubModel.GenModel(seed=self.rng,**self.sub_h_params),
-                            )
-                    node.children[i].k_candidates = child_k_candidates
-                    node.children[i].ranges = np.array(node.ranges)
-                    if node.thresholds is not None:
-                        node.children[i].ranges[node.k,0] = node.thresholds[i]
-                        node.children[i].ranges[node.k,1] = node.thresholds[i+1]
                     self._gen_params_recursion(node.children[i],None,feature_fix,threshold_fix,threshold_type)
         else:
-            if node.depth == self.c_max_depth:
-                node.h_g = 0
-            else:
-                node.h_g = h_node.h_g
+            node.h_g = 0 if node.depth == self.c_max_depth else h_node.h_g
             try:
                 sub_h_params = h_node.sub_model.get_h_params()
             except:
@@ -317,47 +323,20 @@ class GenModel(base.Generative):
             else:  # inner node
                 node.k = h_node.k
                 node.children = [None for i in range(self.c_num_children_vec[node.k])]
-                if node.k < self.c_dim_continuous:
-                    node.thresholds = np.array(h_node.thresholds)
-                else:
-                    node.thresholds = None
-                child_k_candidates = node.k_candidates.copy()
-                child_k_candidates.remove(node.k)
-                node.leaf = False
+                node.thresholds = np.array(h_node.thresholds) if node.k < self.c_dim_continuous else None
+                self._make_children(node)
                 for i in range(self.c_num_children_vec[node.k]):
-                    if node.children[i] is None:
-                        node.children[i] = _Node(
-                            node.depth+1,
-                            sub_model=self.SubModel.GenModel(seed=self.rng,**self.sub_h_params),
-                            )
-                    node.children[i].k_candidates = child_k_candidates
-                    node.children[i].ranges = np.array(node.ranges)
-                    if node.thresholds is not None:
-                        node.children[i].ranges[node.k,0] = node.thresholds[i]
-                        node.children[i].ranges[node.k,1] = node.thresholds[i+1]
                     self._gen_params_recursion(node.children[i],h_node.children[i],feature_fix,threshold_fix,threshold_type)
 
     def _gen_params_recursion_feature_and_tree_fix(self,node:_Node,threshold_fix,threshold_type):
-        if node.depth == self.c_max_depth:
-            node.h_g = 0
-        else:
-            node.h_g = self.h_g
+        node.h_g = 0 if node.depth == self.c_max_depth else self.h_g
         node.sub_model.set_h_params(**self.sub_h_params)
         if node.leaf:  # leaf node
             node.sub_model.gen_params()
             node.leaf = True
         else:  # inner node
-            if node.k < self.c_dim_continuous:
-                if not threshold_fix:
-                    node.thresholds = np.empty(self.c_num_children_vec[node.k]+1)
-                    if threshold_type == 'random':
-                        tmp = self.rng.dirichlet(np.ones(self.c_num_children_vec[node.k]))
-                        tmp *= (node.ranges[node.k,1] - node.ranges[node.k,0])
-                        node.thresholds[0] = node.ranges[node.k,0]
-                        for i in range(self.c_num_children_vec[node.k]):
-                            node.thresholds[i+1] = node.thresholds[i]+tmp[i]
-                    if threshold_type == 'even':
-                        node.thresholds[:] = np.linspace(node.ranges[node.k,0],node.ranges[node.k,1],self.c_num_children_vec[node.k]+1)
+            if node.k < self.c_dim_continuous and (not threshold_fix):
+                self._gen_thresholds(node,threshold_type)
             else:
                 node.thresholds = None
             child_k_candidates = node.k_candidates.copy()
@@ -372,53 +351,30 @@ class GenModel(base.Generative):
                         node.children[i].ranges[node.k,1] = node.thresholds[i+1]
                     self._gen_params_recursion_feature_and_tree_fix(node.children[i],threshold_fix,threshold_type)
 
-    def _set_params_recursion(self,node:_Node,original_tree_node:_Node):
-        if original_tree_node.leaf:  # leaf node
+    def _set_params_recursion(self,node:_Node,original_node:_Node):
+        if original_node.leaf:  # leaf node
             try:
-                sub_params = original_tree_node.sub_model.get_params()
-                node.sub_model.set_params(**sub_params)
+                sub_params = original_node.sub_model.get_params()
             except:
                 try:
-                    sub_params = original_tree_node.sub_model.estimate_params(loss='0-1',dict_out=True)
-                    node.sub_model.set_params(**sub_params)
+                    sub_params = original_node.sub_model.estimate_params(loss='0-1',dict_out=True)
                 except:
-                    sub_params = original_tree_node.sub_model.estimate_params(dict_out=True)
-                    node.sub_model.set_params(**sub_params)
-
+                    sub_params = original_node.sub_model.estimate_params(dict_out=True)
+            node.sub_model.set_params(**sub_params)
             if node.depth == self.c_max_depth:
                 node.h_g = 0
             node.leaf = True
         else:
-            node.k = original_tree_node.k
+            node.k = original_node.k
             node.children = [None for i in range(self.c_num_children_vec[node.k])]
-            if node.k < self.c_dim_continuous:
-                node.thresholds = np.array(original_tree_node.thresholds)
-            else:
-                node.thresholds = None
-            child_k_candidates = node.k_candidates.copy()
-            child_k_candidates.remove(node.k)
-            node.leaf = False
+            node.thresholds = np.array(original_node.thresholds) if node.k < self.c_dim_continuous else None
+            self._make_children(node)
             for i in range(self.c_num_children_vec[node.k]):
-                if node.children[i] is None:
-                    node.children[i] = _Node(
-                        node.depth+1,
-                        h_g=self.h_g,
-                        sub_model=self.SubModel.GenModel(seed=self.rng,**self.sub_h_params)
-                        )
-                node.children[i].k_candidates = child_k_candidates
-                node.children[i].ranges = np.array(node.ranges)
-                if node.thresholds is not None:
-                    node.children[i].ranges[node.k,0] = node.thresholds[i]
-                    node.children[i].ranges[node.k,1] = node.thresholds[i+1]
-                self._set_params_recursion(node.children[i],original_tree_node.children[i])
+                self._set_params_recursion(node.children[i],original_node.children[i])
     
     def _gen_sample_recursion(self,node:_Node,x_continuous,x_categorical):
         if node.leaf:  # leaf node
-            try:
-                y = node.sub_model.gen_sample(sample_size=1,x=x_continuous)
-            except:
-                y = node.sub_model.gen_sample(sample_size=1)
-            return y
+            return node.sub_model.gen_sample(sample_size=1)
         else:
             if node.k < self.c_dim_continuous:
                 for i in range(self.c_num_children_vec[node.k]):
@@ -481,10 +437,7 @@ class GenModel(base.Generative):
         return node_id
 
     def _set_h_g_recursion(self,node:_Node):
-        if node.depth == self.c_max_depth:
-            node.h_g = 0
-        else:
-            node.h_g = self.h_g
+        node.h_g = 0 if node.depth == self.c_max_depth else self.h_g
         if not node.leaf:
             for i in range(self.c_num_children_vec[node.k]):
                 self._set_h_g_recursion(node.children[i])
@@ -495,50 +448,32 @@ class GenModel(base.Generative):
             for i in range(self.c_num_children_vec[node.k]):
                 self._set_sub_h_params_recursion(node.children[i])
 
-    def _set_h_params_recursion(self,node:_Node,original_tree_node:_Node):
-        if original_tree_node is None:
-            if node.depth == self.c_max_depth:
-                node.h_g = 0
-            else:
-                node.h_g = self.h_g
+    def _set_h_params_recursion(self,node:_Node,original_node:_Node):
+        if original_node is None:
+            node.h_g = 0 if node.depth == self.c_max_depth else self.h_g
             node.sub_model.set_h_params(**self.sub_h_params)
             if not node.leaf:
                 for i in range(self.c_num_children_vec[node.k]):
                     self._set_h_params_recursion(node.children[i],None)
         else:
-            if node.depth == self.c_max_depth:
-                node.h_g = 0
-            else:
-                node.h_g = original_tree_node.h_g
+            node.h_g = 0 if node.depth == self.c_max_depth else original_node.h_g
             try:
                 sub_h_params = node.sub_model.get_h_params()
             except:
                 sub_h_params = node.sub_model.get_hn_params()
             node.sub_model.set_h_params(*sub_h_params.values())
-            if original_tree_node.leaf or node.depth == self.c_max_depth:  # leaf node
+            if original_node.leaf or node.depth == self.c_max_depth:  # leaf node
                 node.leaf = True
             else:
-                node.k = original_tree_node.k
+                node.k = original_node.k
                 node.children = [None for i in range(self.c_num_children_vec[node.k])]
                 if node.k < self.c_dim_continuous:
-                    node.thresholds = np.array(original_tree_node.thresholds)
+                    node.thresholds = np.array(original_node.thresholds)
                 else:
                     node.thresholds = None
-                child_k_candidates = node.k_candidates.copy()
-                child_k_candidates.remove(node.k)
-                node.leaf = False
+                self._make_children(node)
                 for i in range(self.c_num_children_vec[node.k]):
-                    if node.children[i] is None:
-                        node.children[i] = _Node(
-                            node.depth+1,
-                            sub_model=self.SubModel.GenModel(seed=self.rng,**self.sub_h_params),
-                            )
-                    node.children[i].k_candidates = child_k_candidates
-                    node.children[i].ranges = np.array(node.ranges)
-                    if node.thresholds is not None:
-                        node.children[i].ranges[node.k,0] = node.thresholds[i]
-                        node.children[i].ranges[node.k,1] = node.thresholds[i+1]
-                    self._set_h_params_recursion(node.children[i],original_tree_node.children[i])
+                    self._set_h_params_recursion(node.children[i],original_node.children[i])
 
     def set_h_params(self,
             h_k_weight_vec = None,
@@ -652,6 +587,7 @@ class GenModel(base.Generative):
             raise(ParameterFormatError(
                 "self.h_metatree_prob_vec must be None or a numpy.ndarray."
             ))
+        return self
 
     def get_h_params(self):
         """Get the hyperparameters of the prior distribution.
@@ -691,6 +627,10 @@ class GenModel(base.Generative):
             If ``'even'``, self.c_ranges will be recursively divided by equal intervals. 
             if ``'random'``, self.c_ranges will be recursively divided by at random intervals.
         """
+        if not threshold_type in THRESHOLD_TYPES:
+            raise(ParameterFormatError(
+                'threshold_type must be "even" or "random"'
+            ))
         if feature_fix:
             if tree_fix:
                 self._gen_params_recursion_feature_and_tree_fix(self.root,threshold_fix,threshold_type)
@@ -707,7 +647,8 @@ class GenModel(base.Generative):
                 self._gen_params_recursion(self.root,tmp_root,False,False,threshold_type)
             else:
                 self._gen_params_recursion(self.root,None,False,False,threshold_type)
-    
+        return self
+
     def set_params(self,root=None):
         """Set the parameter of the sthocastic data generative model.
 
@@ -722,6 +663,7 @@ class GenModel(base.Generative):
                     "root must be an instance of metatree._Node"
                 ))
             self._set_params_recursion(self.root,root)
+        return self
 
     def get_params(self):
         """Get the parameter of the sthocastic data generative model.
@@ -1274,10 +1216,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                 "c_ranges":self.c_ranges}
 
     def _set_h0_g_recursion(self,node:_Node):
-        if node.depth == self.c_max_depth:
-            node.h_g = 0
-        else:
-            node.h_g = self.h0_g
+        node.h_g = 0 if node.depth == self.c_max_depth else self.h0_g
         if not node.leaf:
             for i in range(self.c_num_children_vec[node.k]):
                 self._set_h0_g_recursion(node.children[i])
@@ -1288,56 +1227,43 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             for i in range(self.c_num_children_vec[node.k]):
                 self._set_sub_h0_params_recursion(node.children[i])
 
-    def _set_h0_params_recursion(self,node:_Node,original_tree_node:_Node):
-        if original_tree_node is None:
-            if node.depth == self.c_max_depth:
-                node.h_g = 0
-            else:
-                node.h_g = self.h0_g
+    def _set_h0_params_recursion(self,node:_Node,original_node:_Node):
+        if original_node is None:
+            node.h_g = 0 if node.depth == self.c_max_depth else self.h0_g
             node.sub_model.set_h0_params(**self.sub_h0_params)
             if not node.leaf:
                 for i in range(self.c_num_children_vec[node.k]):
                     self._set_h0_params_recursion(node.children[i],None)
         else:
-            if node.depth == self.c_max_depth:
-                node.h_g = 0
-            else:
-                node.h_g = original_tree_node.h_g
+            node.h_g = 0 if node.depth == self.c_max_depth else original_node.h_g
             try:
                 sub_h0_params = node.sub_model.get_h_params()
             except:
                 sub_h0_params = node.sub_model.get_h0_params()
             node.sub_model.set_h0_params(*sub_h0_params.values())
-            if original_tree_node.leaf or node.depth == self.c_max_depth:  # leaf node
+            if original_node.leaf or node.depth == self.c_max_depth:  # leaf node
                 node.leaf = True
             else:
-                node.k = original_tree_node.k
+                node.k = original_node.k
                 node.children = [None for i in range(self.c_num_children_vec[node.k])]
-                if node.k < self.c_dim_continuous:
-                    node.thresholds = np.array(original_tree_node.thresholds)
-                else:
-                    node.thresholds = None
+                node.thresholds = np.array(original_node.thresholds) if node.k < self.c_dim_continuous else None
                 child_k_candidates = node.k_candidates.copy()
                 child_k_candidates.remove(node.k)
                 node.leaf = False
                 for i in range(self.c_num_children_vec[node.k]):
-                    if node.children[i] is None:
-                        node.children[i] = _Node(
-                            node.depth+1,
-                            sub_model=self.SubModel.LearnModel(**self.sub_h0_params),
-                            )
-                    node.children[i].k_candidates = child_k_candidates
-                    node.children[i].ranges = np.array(node.ranges)
+                    node.children[i] = _Node(
+                        node.depth+1,
+                        k_candidates=child_k_candidates,
+                        sub_model=self.SubModel.LearnModel(**self.sub_h0_params),
+                        ranges=np.array(node.ranges)
+                        )
                     if node.thresholds is not None:
                         node.children[i].ranges[node.k,0] = node.thresholds[i]
                         node.children[i].ranges[node.k,1] = node.thresholds[i+1]
-                    self._set_h0_params_recursion(node.children[i],original_tree_node.children[i])
+                    self._set_h0_params_recursion(node.children[i],original_node.children[i])
 
     def _set_hn_g_recursion(self,node:_Node):
-        if node.depth == self.c_max_depth:
-            node.h_g = 0
-        else:
-            node.h_g = self.hn_g
+        node.h_g = 0 if node.depth == self.c_max_depth else self.hn_g
         if not node.leaf:
             for i in range(self.c_num_children_vec[node.k]):
                 self._set_hn_g_recursion(node.children[i])
@@ -1348,50 +1274,40 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             for i in range(self.c_num_children_vec[node.k]):
                 self._set_sub_hn_params_recursion(node.children[i])
 
-    def _set_hn_params_recursion(self,node:_Node,original_tree_node:_Node):
-        if original_tree_node is None:
-            if node.depth == self.c_max_depth:
-                node.h_g = 0
-            else:
-                node.h_g = self.hn_g
+    def _set_hn_params_recursion(self,node:_Node,original_node:_Node):
+        if original_node is None:
+            node.h_g = 0 if node.depth == self.c_max_depth else self.hn_g
             node.sub_model.set_hn_params(**self.sub_hn_params)
             if not node.leaf:
                 for i in range(self.c_num_children_vec[node.k]):
                     self._set_hn_params_recursion(node.children[i],None)
         else:
-            if node.depth == self.c_max_depth:
-                node.h_g = 0
-            else:
-                node.h_g = original_tree_node.h_g
+            node.h_g = 0 if node.depth == self.c_max_depth else original_node.h_g
             try:
                 sub_hn_params = node.sub_model.get_h_params()
             except:
                 sub_hn_params = node.sub_model.get_hn_params()
             node.sub_model.set_hn_params(*sub_hn_params.values())
-            if original_tree_node.leaf or node.depth == self.c_max_depth:  # leaf node
+            if original_node.leaf or node.depth == self.c_max_depth:  # leaf node
                 node.leaf = True
             else:
-                node.k = original_tree_node.k
+                node.k = original_node.k
                 node.children = [None for i in range(self.c_num_children_vec[node.k])]
-                if node.k < self.c_dim_continuous:
-                    node.thresholds = np.array(original_tree_node.thresholds)
-                else:
-                    node.thresholds = None
+                node.thresholds = np.array(original_node.thresholds) if node.k < self.c_dim_continuous else None
                 child_k_candidates = node.k_candidates.copy()
                 child_k_candidates.remove(node.k)
                 node.leaf = False
                 for i in range(self.c_num_children_vec[node.k]):
-                    if node.children[i] is None:
-                        node.children[i] = _Node(
-                            node.depth+1,
-                            sub_model=self.SubModel.LearnModel(**self.sub_h0_params).set_hn_params(**self.sub_hn_params),
-                            )
-                    node.children[i].k_candidates = child_k_candidates
-                    node.children[i].ranges = np.array(node.ranges)
+                    node.children[i] = _Node(
+                        node.depth+1,
+                        k_candidates=child_k_candidates,
+                        sub_model=self.SubModel.LearnModel(**self.sub_h0_params).set_hn_params(**self.sub_hn_params),
+                        ranges=np.array(node.ranges)
+                        )
                     if node.thresholds is not None:
                         node.children[i].ranges[node.k,0] = node.thresholds[i]
                         node.children[i].ranges[node.k,1] = node.thresholds[i+1]
-                    self._set_hn_params_recursion(node.children[i],original_tree_node.children[i])
+                    self._set_hn_params_recursion(node.children[i],original_node.children[i])
 
     def set_h0_params(self,
         h0_k_weight_vec = None,
@@ -1507,6 +1423,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             ))
 
         self.reset_hn_params()
+        return self
 
     def get_h0_params(self):
         """Get the hyperparameters of the prior distribution.
@@ -1642,6 +1559,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self.calc_pred_dist(
             np.zeros(self.c_dim_continuous,dtype=float),
             np.zeros(self.c_dim_categorical,dtype=int))
+        return self
 
     def get_hn_params(self):
         """Get the hyperparameters of the posterior distribution.
@@ -1704,7 +1622,9 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         return node.sub_model._calc_pred_density(y)
 
     def _update_posterior_recursion(self,node:_Node,x_continuous,x_categorical,y):
-        if not node.leaf:  # inner node
+        if node.leaf:  # leaf node
+            return self._update_posterior_leaf(node,y)
+        else:  # inner node
             if node.k < self.c_dim_continuous:
                 for i in range(self.c_num_children_vec[node.k]):
                     if x_continuous[node.k] < node.thresholds[i+1]:
@@ -1716,8 +1636,6 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             tmp2 = (1 - node.h_g) * self._update_posterior_leaf(node,y) + node.h_g * tmp1
             node.h_g = node.h_g * tmp1 / tmp2
             return tmp2
-        else:  # leaf node
-            return self._update_posterior_leaf(node,y)
 
     def _compare_metatree_recursion(self,node1:_Node,node2:_Node):
         if node1.leaf:
@@ -1953,6 +1871,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             self.hn_metatree_list, self.hn_metatree_prob_vec = self._MTRF(x_continuous,x_categorical,y,**kwargs)
         elif alg_type == 'given_MT':
             self.hn_metatree_list, self.hn_metatree_prob_vec = self._given_MT(x_continuous,x_categorical,y)
+        return self
 
     def _map_recursion_add_nodes(self,node:_Node):
         if node.depth == self.c_max_depth or not node.k_candidates:  # leaf node
@@ -2096,7 +2015,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                 tree_graph.attr("node",shape="box",fontname="helvetica",style="rounded,filled")
                 self._visualize_model_recursion(tree_graph, map_root, 0, None, None, None, 1.0)
                 tree_graph.view()
-            return {'root':map_root}
+            return map_root
         else:
             raise(CriteriaError("Unsupported loss function! "
                                 +"This function supports only \"0-1\"."))
@@ -2356,6 +2275,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self._tmp_x_categorical[:] = x_categorical
         for root in self.hn_metatree_list:
             self._calc_pred_dist_recursion(root,self._tmp_x_continuous,self._tmp_x_categorical)
+        return self
 
     def _make_prediction_recursion_squared(self,node:_Node):
         if node.leaf:  # leaf node
