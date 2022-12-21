@@ -1,12 +1,12 @@
 import numpy as np
-from bayesml.normal import GenModel
-from bayesml.normal import LearnModel
+from bayesml.multivariate_normal import GenModel
+from bayesml.multivariate_normal import LearnModel
 
 if __name__ == '__main__':
-    gen_model = GenModel()
+    gen_model = GenModel(2)
     h_params = gen_model.get_h_params()
     params = gen_model.get_params()
-    learn_model = LearnModel()
+    learn_model = LearnModel(2)
     h0_params = learn_model.get_h0_params()
     hn_params = learn_model.get_hn_params()
 
@@ -55,9 +55,9 @@ if __name__ == '__main__':
         print('ok14')
 
     import copy
-    gen_model = GenModel()
+    gen_model = GenModel(2)
     x = gen_model.gen_sample(100)
-    learn_model = LearnModel()
+    learn_model = LearnModel(2)
     h0_params = copy.deepcopy(learn_model.get_h0_params())
     hn_params = copy.deepcopy(learn_model.get_hn_params())
     learn_model.update_posterior(x)
