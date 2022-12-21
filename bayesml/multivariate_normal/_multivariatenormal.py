@@ -329,7 +329,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
     """
     def __init__(
             self,
-            c_degree=None,
+            c_degree,
             h0_m_vec=None,
             h0_kappa=1.0,
             h0_nu=None,

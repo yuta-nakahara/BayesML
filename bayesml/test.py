@@ -1,6 +1,6 @@
 import numpy as np
-from bayesml.multivariate_normal import GenModel
-from bayesml.multivariate_normal import LearnModel
+from bayesml.linearregression import GenModel
+from bayesml.linearregression import LearnModel
 
 if __name__ == '__main__':
     gen_model = GenModel(2)
@@ -56,11 +56,11 @@ if __name__ == '__main__':
 
     import copy
     gen_model = GenModel(2)
-    x = gen_model.gen_sample(100)
+    x,y = gen_model.gen_sample(100)
     learn_model = LearnModel(2)
     h0_params = copy.deepcopy(learn_model.get_h0_params())
     hn_params = copy.deepcopy(learn_model.get_hn_params())
-    learn_model.update_posterior(x)
+    learn_model.update_posterior(x,y)
     if str(hn_params) != str(learn_model.get_hn_params()):
         print('ok15')
     else:
@@ -70,7 +70,7 @@ if __name__ == '__main__':
         print('ok16')
     else:
         print('!!!!!!!!!!!NG!!!!!!!!!!!!')
-    learn_model.update_posterior(x)
+    learn_model.update_posterior(x,y)
     learn_model.overwrite_h0_params()
     if str(h0_params) != str(learn_model.get_h0_params()):
         print('ok17')
