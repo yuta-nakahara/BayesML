@@ -6,7 +6,6 @@
 # Document Author
 # Yuji Iikubo <yuji-iikubo.8@fuji.waseda.jp>
 # Yuta Nakahara <yuta.nakahara@aoni.waseda.jp>
-from random import sample
 import warnings
 import numpy as np
 from scipy.stats import expon as ss_expon, gamma as ss_gamma, lomax as ss_lomax
@@ -22,33 +21,54 @@ class GenModel(base.Generative):
     Parameters
     ----------
     lambda_ : float, optional
-        a positive real number, 1.0 by default.
+        a positive real number, by default 1.0.
     h_alpha : float, optional
-        a positive real number, 1.0 by default. 
+        a positive real number, by default 1.0. 
     h_beta : float, optional
-        a positive real number, 1.0 by default. 
+        a positive real number, by default 1.0. 
     seed : {None, int}, optional
         A seed to initialize numpy.random.default_rng(),
         by default None
     """
-    def __init__(self,*,lambda_=1.0,h_alpha=1.0,h_beta=1.0,seed=None):
-        self.lambda_ = _check.pos_float(lambda_, 'lambda_', ParameterFormatError)
-        self.h_alpha = _check.pos_float(h_alpha,'h_alpha',ParameterFormatError)
-        self.h_beta = _check.pos_float(h_beta,'h_beta',ParameterFormatError)
+    def __init__(self,lambda_=1.0,h_alpha=1.0,h_beta=1.0,seed=None):
         self.rng = np.random.default_rng(seed)
 
-    def set_h_params(self,h_alpha,h_beta):
+        # params
+        self.lambda_ = 1.0
+
+        # h_params
+        self.h_alpha = 1.0
+        self.h_beta = 1.0
+
+        self.set_params(lambda_)
+        self.set_h_params(h_alpha,h_beta)
+
+    def get_constants(self):
+        """Get constants of GenModel.
+
+        This model does not have any constants. 
+        Therefore, this function returns an emtpy dict ``{}``.
+        
+        Returns
+        -------
+        constants : an empty dict
+        """
+        return {}
+
+    def set_h_params(self,h_alpha=None,h_beta=None):
         """Set the hyperparameters of the prior distribution.
         
         Parameters
         ----------
-        h_alpha : float
-            a positive real number
-        h_beta : float
-            a positive real number
+        h_alpha : float, optional
+            a positive real number, by default None.
+        h_beta : float, optional
+            a positive real number, by default None.
         """
-        self.h_alpha = _check.pos_float(h_alpha,'h_alpha',ParameterFormatError)
-        self.h_beta = _check.pos_float(h_beta,'h_beta',ParameterFormatError)
+        if h_alpha is not None:
+            self.h_alpha = _check.pos_float(h_alpha,'h_alpha',ParameterFormatError)
+        if h_beta is not None:
+            self.h_beta = _check.pos_float(h_beta,'h_beta',ParameterFormatError)
         return self
 
     def get_h_params(self):
@@ -70,15 +90,16 @@ class GenModel(base.Generative):
         self.lambda_ = self.rng.gamma(self.h_alpha,1.0/self.h_beta)
         return self
 
-    def set_params(self,lambda_):
+    def set_params(self,lambda_=None):
         """Set the parameter of the sthocastic data generative model.
 
         Parameters
         ----------
-        lambda_ : float
-            a positive real number
+        lambda_ : float, optional
+            a positive real number, by default None.
         """
-        self.lambda_ = _check.pos_float(lambda_, 'lambda_', ParameterFormatError)
+        if lambda_ is not None:
+            self.lambda_ = _check.pos_float(lambda_, 'lambda_', ParameterFormatError)
         return self
 
     def get_params(self):
@@ -126,17 +147,15 @@ class GenModel(base.Generative):
         """
         np.savez_compressed(filename,x=self.gen_sample(sample_size))
 
-    def visualize_model(
-        self,sample_size=100,
-        hist_bins=10):
+    def visualize_model(self,sample_size=100,hist_bins=10):
         """Visualize the stochastic data generative model and generated samples.
 
         Parameters
         ----------
         sample_size : int, optional
-            A positive integer, by default 100
+            A positive integer, by default 100.
         hist_bins : float, optional
-            A positive float, by default 10
+            A positive float, by default 10.
 
         Examples
         --------
@@ -175,41 +194,62 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
     Parameters
     ----------
     h0_alpha : float, optional
-        a positive real number, by default 0.5
+        a positive real number, by default 1.0.
     h0_beta : float, optional
-        a positibe real number, by default 0.5
+        a positive real number, by default 1.0.
 
     Attributes
     ----------
     hn_alpha : float
         a positive real number
     hn_beta : float
-        a positibe real number
+        a positive real number
     p_kappa : float
         a positive real number
     p_lambda : float
-        a positibe real number
+        a positive real number
     """
-    def __init__(self,h0_alpha=2.0, h0_beta=1.0):
-        self.h0_alpha = _check.pos_float(h0_alpha, 'h0_alpha', ParameterFormatError)
-        self.h0_beta = _check.pos_float(h0_beta, 'h0_beta', ParameterFormatError)
-        self.hn_alpha = self.h0_alpha
-        self.hn_beta = self.h0_beta
-        self.p_kappa = self.hn_alpha
-        self.p_lambda = self.hn_beta
+    def __init__(self,h0_alpha=1.0, h0_beta=1.0):
+        # h0_params
+        self.h0_alpha = 1.0
+        self.h0_beta = 1.0
+
+        # hn_params
+        self.hn_alpha = 1.0
+        self.hn_beta = 1.0
+
+        # p_params
+        self.p_kappa = 1.0
+        self.p_lambda = 1.0
+
+        self.set_h0_params(h0_alpha,h0_beta)
     
-    def set_h0_params(self,h0_alpha, h0_beta):
+    def get_constants(self):
+        """Get constants of LearnModel.
+
+        This model does not have any constants. 
+        Therefore, this function returns an emtpy dict ``{}``.
+        
+        Returns
+        -------
+        constants : an empty dict
+        """
+        return {}
+
+    def set_h0_params(self,h0_alpha=None,h0_beta=None):
         """Set initial values of the hyperparameter of the posterior distribution.
 
         Parameters
         ----------
-        h0_alpha : float
-            a positive real number
-        h0_beta : float
-            a positibe real number
+        h0_alpha : float, optional
+            a positive real number, by default None.
+        h0_beta : float, optional
+            a positive real number, by default None.
         """
-        self.h0_alpha = _check.pos_float(h0_alpha, 'h0_alpha', ParameterFormatError)
-        self.h0_beta = _check.pos_float(h0_beta, 'h0_beta', ParameterFormatError)
+        if h0_alpha is not None:
+            self.h0_alpha = _check.pos_float(h0_alpha, 'h0_alpha', ParameterFormatError)
+        if h0_beta is not None:
+            self.h0_beta = _check.pos_float(h0_beta, 'h0_beta', ParameterFormatError)
         self.reset_hn_params()
         return self
 
@@ -224,18 +264,20 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         """
         return {"h0_alpha":self.h0_alpha, "h0_beta": self.h0_beta}
 
-    def set_hn_params(self,hn_alpha, hn_beta):
+    def set_hn_params(self,hn_alpha=None,hn_beta=None):
         """Set updated values of the hyperparameter of the posterior distribution.
 
         Parameters
         ----------
-        hn_alpha : float
-            a positive real number
-        hn_beta : float
-            a positibe real number
+        hn_alpha : float, optional
+            a positive real number, by default None.
+        hn_beta : float, optional
+            a positive real number, by default None.
         """
-        self.hn_alpha = _check.pos_float(hn_alpha, 'hn_alpha', ParameterFormatError)
-        self.hn_beta = _check.pos_float(hn_beta, 'hn_beta', ParameterFormatError)
+        if hn_alpha is not None:
+            self.hn_alpha = _check.pos_float(hn_alpha, 'hn_alpha', ParameterFormatError)
+        if hn_beta is not None:
+            self.hn_beta = _check.pos_float(hn_beta, 'hn_beta', ParameterFormatError)
         self.calc_pred_dist()
         return self
 
@@ -250,28 +292,6 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         """
         return {"hn_alpha":self.hn_alpha, "hn_beta":self.hn_beta}
 
-    def reset_hn_params(self):
-        """Reset the hyperparameters of the posterior distribution to their initial values.
-
-        They are reset to `self.h0_alpha` and `self.h0_beta`.
-        Note that the parameters of the predictive distribution are also calculated from `self.h0_alpha` and `self.h0_beta`.
-        """
-        self.hn_alpha = self.h0_alpha
-        self.hn_beta = self.h0_beta
-        self.calc_pred_dist()
-        return self
-
-    def overwrite_h0_params(self):
-        """Overwrite the initial values of the hyperparameters of the posterior distribution by the learned values.
-
-        They are overwritten by `self.hn_alpha` and `self.hn_beta`.
-        Note that the parameters of the predictive distribution are also calculated from `self.hn_alpha` and `self.hn_beta`.
-        """
-        self.h0_alpha = self.hn_alpha
-        self.h0_beta = self.hn_beta
-        self.calc_pred_dist()
-        return self
-
     def update_posterior(self,x):
         """Update the hyperparameters of the posterior distribution using traning data.
 
@@ -281,8 +301,17 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             All the elements must be positive real numbers.
         """
         _check.pos_floats(x, 'x', DataFormatError)
-        self.hn_alpha += x.size
+        try:
+            self.hn_alpha += x.size
+        except:
+            self.hn_alpha += 1
         self.hn_beta += np.sum(x)
+        return self
+
+    def _update_posterior(self,x):
+        """Update opsterior without input check."""
+        self.hn_alpha += x.size
+        self.hn_beta += x.sum()
         return self
 
     def estimate_params(self,loss="squared",dict_out=False):
@@ -341,7 +370,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         Parameters
         ----------
         credibility : float, optional
-            A posterior probability that the interval conitans the paramter, by default 0.95
+            A posterior probability that the interval conitans the paramter, by default 0.95.
 
         Returns
         -------
