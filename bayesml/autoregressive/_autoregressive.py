@@ -241,7 +241,7 @@ class GenModel(base.Generative):
         --------
         >>> import numpy as np
         >>> from bayesml import autoregressive
-        >>> model = autoregressive.GenModel(theta_vec=np.array([0,1]))
+        >>> model = autoregressive.GenModel(c_degree=1,theta_vec=np.array([0,1]))
         >>> model.visualize_model()
         theta_vec:[0,1]
         tau:1.0
@@ -552,7 +552,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         Examples
         --------
         >>> from bayesml import autoregressive
-        >>> gen_model = autoregressive.GenModel(theta_vec=np.array([0,1]),tau=1.0)
+        >>> gen_model = autoregressive.GenModel(c_degree=1,theta_vec=np.array([0,1]),tau=1.0)
         >>> x = gen_model.gen_sample(50)
         >>> learn_model = autoregressive.LearnModel()
         >>> learn_model.update_posterior(x)

@@ -259,7 +259,7 @@ class GenModel(base.Generative):
         --------
         >>> import numpy as np
         >>> from bayesml import linearregression
-        >>> model = linearregression.GenModel(theta_vec=np.array([2,1]))
+        >>> model = linearregression.GenModel(c_degree=2,theta_vec=np.array([2,1]))
         >>> model.visualize_model()
 
         .. image:: ./images/linearregression_example.png
@@ -609,7 +609,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         Examples
         --------
         >>> from bayesml import linearregression
-        >>> gen_model = linearregression.GenModel(theta_vec=np.array([1,1]),tau=1.0)
+        >>> gen_model = linearregression.GenModel(c_degree=2,theta_vec=np.array([1,1]),tau=1.0)
         >>> x,y = gen_model.gen_sample(sample_size=50)
         >>> learn_model = linearregression.LearnModel()
         >>> learn_model.update_posterior(x,y)

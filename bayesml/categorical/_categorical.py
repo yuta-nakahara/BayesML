@@ -26,76 +26,44 @@ class GenModel(base.Generative):
 
     Parameters
     ----------
-    degree : int, optional
-        a positive integer. Default is None, in which case 
-        a value consistent with ``theta_vec`` and 
-        ``h_alpha_vec`` is used. If all of them are not given, 
-        degree is assumed to be 3.
+    c_degree : int
+        a positive integer.
     theta_vec : numpy ndarray, optional
         a real vector in :math:`[0, 1]^d`, by default [1/d, 1/d, ... , 1/d]
     h_alpha_vec : numpy ndarray, optional
-        a vector of positive real numbers, by default [1/2, 1/2, ... , 1/2]
+        a vector of positive real numbers, by default [1/2, 1/2, ... , 1/2]. 
+        If a single real number is input, it will be broadcasted.
     seed : {None, int}, optional
         A seed to initialize numpy.random.default_rng(),
         by default None
     """
-    def __init__(
-        self, *, degree=None, theta_vec=None, h_alpha_vec=None, seed=None,
-        ):
-
-        if degree is not None:
-            self.degree = _check.pos_int(degree,'degree',ParameterFormatError)
-            if theta_vec is None:
-                self.theta_vec = np.ones(self.degree) / self.degree
-            else:
-                self.theta_vec = _check.float_vec_sum_1(theta_vec,'theta_vec',ParameterFormatError)
-            
-            if h_alpha_vec is None:
-                self.h_alpha_vec = np.ones(self.degree) / 2.0
-            else:
-                self.h_alpha_vec = _check.pos_float_vec(h_alpha_vec,'h_alpha_vec',ParameterFormatError)
-        
-        elif theta_vec is not None:
-            self.theta_vec = _check.float_vec_sum_1(theta_vec,'theta_vec',ParameterFormatError)
-            self.degree = self.theta_vec.shape[0]
-            if h_alpha_vec is None:
-                self.h_alpha_vec = np.ones(self.degree) / 2.0
-            else:
-                self.h_alpha_vec = _check.pos_float_vec(h_alpha_vec,'h_alpha_vec',ParameterFormatError)
-        
-        elif h_alpha_vec is not None:
-            self.h_alpha_vec = _check.pos_float_vec(h_alpha_vec,'h_alpha_vec',ParameterFormatError)
-            self.degree = self.h_alpha_vec.shape[0]
-            self.theta_vec = np.ones(self.degree) / self.degree
-
-        else:
-            self.degree = 3
-            self.theta_vec = np.ones(self.degree) / self.degree
-            self.h_alpha_vec = np.ones(self.degree) / 2.0
-
-        if (self.degree != self.theta_vec.shape[0]
-            or self.degree != self.h_alpha_vec.shape[0]):
-            raise(ParameterFormatError(
-                "degree and dimensions of theta_vec and"
-                +" h_alpha_mat must be the same,"
-                +" if two or more of them are specified."))
-
+    def __init__(self,c_degree,theta_vec=None,h_alpha_vec=None,seed=None,):
+        # constants
+        self.c_degree = _check.pos_int(c_degree,'c_degree',ParameterFormatError)
         self.rng = np.random.default_rng(seed)
 
-    def set_h_params(self,h_alpha_vec):
+        # params
+        self.theta_vec = np.ones(self.c_degree) / self.c_degree
+
+        # h_params
+        self.h_alpha_vec = np.ones(self.c_degree) / 2.0
+
+        self.set_params(theta_vec)
+        self.set_h_params(h_alpha_vec)
+
+    def set_h_params(self,h_alpha_vec=None):
         """Set the hyperparameters of the prior distribution.
 
         Parameters
         ----------
-        h_alpha_vec : numpy ndarray
-            a vector of positive real numbers
+        h_alpha_vec : numpy ndarray, optional
+            a vector of positive real numbers, by default None.
+            If a single real number is input, it will be broadcasted.
         """
-        self.h_alpha_vec = _check.pos_float_vec(h_alpha_vec,'h_alpha_vec',ParameterFormatError)
+        if h_alpha_vec is not None:
+            _check.pos_floats(h_alpha_vec,'h_alpha_vec',ParameterFormatError)
+            self.h_alpha_vec[:] = h_alpha_vec
 
-        self.degree = self.h_alpha_vec.shape[0]
-        if self.degree != self.theta_vec.shape[0]:
-            self.theta_vec = np.ones(self.degree) / self.degree
-            warnings.warn("theta_vec is reinitialized to [1.0/self.degree, 1.0/self.degree, ..., 1.0/self.degree] because dimension of theta_vec and h_alpha_vec are mismatched.", ParameterFormatWarning)
         return self
 
     def get_h_params(self):
@@ -116,20 +84,23 @@ class GenModel(base.Generative):
         self.theta_vec[:] = self.rng.dirichlet(self.h_alpha_vec)
         return self
 
-    def set_params(self, theta_vec):
+    def set_params(self, theta_vec=None):
         """Set the parameter of the sthocastic data generative model.
 
         Parameters
         ----------
-        p : numpy ndarray
-            a real vector :math:`p \in [0, 1]^d`
+        p : numpy ndarray, optional
+            a real vector :math:`p \in [0, 1]^d`, by default None.
         """
-        self.theta_vec = _check.float_vec_sum_1(theta_vec,'theta_vec',ParameterFormatError)
+        if theta_vec is not None:
+            _check.float_vec_sum_1(theta_vec,'theta_vec',ParameterFormatError)
+            _check.shape_consistency(
+                theta_vec.shape[0],'theta_vec.shape[0]',
+                self.c_degree,'self.c_degree',
+                ParameterFormatError
+            )
+            self.theta_vec[:] = theta_vec
 
-        self.degree = self.theta_vec.shape[0]
-        if self.degree != self.h_alpha_vec.shape[0]:
-            self.h_alpha_vec = np.ones(self.degree) / 2.0
-            warnings.warn("h_alpha_vec is reinitialized to [1/2, 1/2, ..., 1/2] because dimension of h_m_vec and mu_vec are mismatched.", ParameterFormatWarning)
         return self
 
     def get_params(self):
@@ -142,26 +113,33 @@ class GenModel(base.Generative):
         """
         return {"theta_vec": self.theta_vec}
 
-    def gen_sample(self, sample_size):
+    def gen_sample(self, sample_size, onehot=True):
         """Generate a sample from the stochastic data generative model.
 
         Parameters
         ----------
         sample_size : int
             A positive integer
+        onehot : bool, optional
+            If True, a generated sample will be one-hot encoded, 
+            by default True.
 
         Returns
         -------
         x : numpy ndarray
-            2-dimensional array whose shape is ``(sample_size,degree)`` whose rows are one-hot vectors.
+            An non-negative int array. If onehot option is True, its shape will be 
+            ``(sample_size,c_degree)`` and each row will be a one-hot vector. 
+            If onehot option is False, its shape will be ``(sample_size,)`` 
+            and each element will be smaller than self.c_degree.
         """
         _check.pos_int(sample_size,'sample_size',DataFormatError)
-        x = np.zeros([sample_size,self.degree],dtype=int)
-        for i in range(sample_size):
-            x[i,self.rng.choice(self.degree,p=self.theta_vec)] = 1
-        return x
+        x = self.rng.choice(self.c_degree,sample_size,p=self.theta_vec)
+        if onehot:
+            return np.eye(self.c_degree,dtype=int)[x]
+        else:
+            return x
 
-    def save_sample(self, filename, sample_size):
+    def save_sample(self, filename, sample_size, onehot=True):
         """Save the generated sample as NumPy ``.npz`` format.
 
         It is saved as a NpzFile with keyword: \"x\".
@@ -173,12 +151,15 @@ class GenModel(base.Generative):
             ``.npz`` will be appended if it isn't there.
         sample_size : int
             A positive integer
+        onehot : bool, optional
+            If True, a generated sample will be one-hot encoded, 
+            by default True.
         
         See Also
         --------
         numpy.savez_compressed
         """
-        np.savez_compressed(filename,x=self.gen_sample(sample_size))
+        np.savez_compressed(filename,x=self.gen_sample(sample_size,onehot))
 
     def visualize_model(self, sample_size=20, sample_num=5):
         """Visualize the stochastic data generative model and generated samples.
@@ -193,7 +174,7 @@ class GenModel(base.Generative):
         Examples
         --------
         >>> from bayesml import categorical
-        >>> model = categorical.GenModel()
+        >>> model = categorical.GenModel(3)
         >>> model.visualize_model()
         theta_vec:[0.33333333 0.33333333 0.33333333]
 
@@ -205,32 +186,32 @@ class GenModel(base.Generative):
         print(f"theta_vec:{self.theta_vec}",)
         fig, ax = plt.subplots(2,1,figsize=(5, sample_num+1),gridspec_kw={'height_ratios': [1,sample_num]})
         ax[0].set_title("True distribution")
-        for j in range(self.degree):
-            ax[0].barh(0,self.theta_vec[j],left=self.theta_vec[:j].sum(),color=cmap(j / self.degree))
+        for j in range(self.c_degree):
+            ax[0].barh(0,self.theta_vec[j],left=self.theta_vec[:j].sum(),color=cmap(j / self.c_degree))
         ax[1].set_title("Generated sample")
         for i in range(sample_num):
             x = self.gen_sample(sample_size)
             # print(f"x{i}:{x}")
             tmp_sum = 0
             if i == 0:
-                for j in range(self.degree):
+                for j in range(self.c_degree):
                     count = x[:,j].sum()
                     ax[1].barh(
                         i,
                         count,
                         left=tmp_sum,
                         label=j,
-                        color=cmap(j / self.degree),
+                        color=cmap(j / self.c_degree),
                     )
                     tmp_sum += count
             else:
-                for j in range(self.degree):
+                for j in range(self.c_degree):
                     count = x[:,j].sum()
                     ax[1].barh(
                         i,
                         count,
                         left=tmp_sum,
-                        color=cmap(j / self.degree),
+                        color=cmap(j / self.c_degree),
                     )
                     tmp_sum += count
         ax[1].legend()
@@ -242,13 +223,11 @@ class LearnModel(base.Posterior, base.PredictiveMixin):
 
     Parameters
     ----------
-    degree : int, optional
-        a positive integer. Default is None, in which case 
-        a value consistent with ``h_alpha_vec`` is used. 
-        If ``h_alpha_vec`` is also None, 
-        degree is assumed to be 3.
+    c_degree : int
+        a positive integer.
     h0_alpha_vec : numpy.ndarray, optional
-        a vector of positive real numbers, by default [1/2, 1/2, ... , 1/2]
+        a vector of positive real numbers, by default [1/2, 1/2, ... , 1/2]. 
+        If a single real number is input, it will be broadcasted.
 
     Attributes
     ----------
@@ -257,40 +236,33 @@ class LearnModel(base.Posterior, base.PredictiveMixin):
     p_theta_vec : numpy.ndarray
         a real vector in :math:`[0, 1]^d`
     """
-    def __init__(self, degree=None, h0_alpha_vec=None):
-        if degree is not None:
-            self.degree = _check.pos_int(degree,'degree',ParameterFormatError)
-            if h0_alpha_vec is None:
-                self.h0_alpha_vec = np.ones(self.degree) / 2.0
-            else:
-                self.h0_alpha_vec = _check.pos_float_vec(h0_alpha_vec,'h0_alpha_vec',ParameterFormatError)
+    def __init__(self,c_degree,h0_alpha_vec=None):
+        # constants
+        self.c_degree = _check.pos_int(c_degree,'c_degree',ParameterFormatError)
 
-        elif h0_alpha_vec is not None:
-            self.h0_alpha_vec = _check.pos_float_vec(h0_alpha_vec,'h0_alpha_vec',ParameterFormatError)
-            self.degree = self.h0_alpha_vec.shape[0]
-        
-        else:
-            self.degree = 3
-            self.h0_alpha_vec = np.ones(self.degree) / 2.0
+        # h0_params
+        self.h0_alpha_vec = np.ones(self.c_degree) / 2.0
 
-        if self.degree != self.h0_alpha_vec.shape[0]:
-            raise(ParameterFormatError(
-                "degree and dimensions of h0_alpha_vec and"
-                +" must be the same, if both are specified."))
+        # hn_params
+        self.hn_alpha_vec = np.ones(self.c_degree) / 2.0
 
-        self.hn_alpha_vec = np.copy(self.h0_alpha_vec)
-        self.p_theta_vec = self.hn_alpha_vec / self.hn_alpha_vec.sum()
+        # p_params
+        self.p_theta_vec = np.ones(self.c_degree) / self.c_degree
 
-    def set_h0_params(self,h0_alpha_vec):
+        self.set_h0_params(h0_alpha_vec)
+
+    def set_h0_params(self,h0_alpha_vec=None):
         """Set the hyperparameters of the prior distribution.
         
         Parameters
         ----------
-        h0_alpha_vec : numpy.ndarray
-            a vector of positive real numbers
+        h0_alpha_vec : numpy ndarray, optional
+            a vector of positive real numbers, by default None.
+            If a single real number is input, it will be broadcasted.
         """
-        self.h0_alpha_vec = _check.pos_float_vec(h0_alpha_vec,'h0_alpha_vec',ParameterFormatError)
-        self.degree = self.h0_alpha_vec.shape[0]
+        if h0_alpha_vec is not None:
+            _check.pos_floats(h0_alpha_vec,'h0_alpha_vec',ParameterFormatError)
+            self.h0_alpha_vec[:] = h0_alpha_vec
         self.reset_hn_params()
         return self
 
@@ -304,16 +276,18 @@ class LearnModel(base.Posterior, base.PredictiveMixin):
         """
         return {"h0_alpha_vec": self.h0_alpha_vec}
 
-    def set_hn_params(self,hn_alpha_vec):
+    def set_hn_params(self,hn_alpha_vec=None):
         """Set updated values of the hyperparameter of the posterior distribution.
         
         Parameters
         ----------
-        hn_alpha_vec : numpy.ndarray
-            a vector of positive real numbers
+        hn_alpha_vec : numpy ndarray, optional
+            a vector of positive real numbers, by default None.
+            If a single real number is input, it will be broadcasted.
         """
-        self.hn_alpha_vec = _check.pos_float_vec(hn_alpha_vec,'hn_alpha_vec',ParameterFormatError)
-        self.degree = self.hn_alpha_vec.shape[0]
+        if hn_alpha_vec is not None:
+            _check.pos_floats(hn_alpha_vec,'hn_alpha_vec',ParameterFormatError)
+            self.hn_alpha_vec[:] = hn_alpha_vec
         self.calc_pred_dist()
         return self
 
@@ -327,41 +301,43 @@ class LearnModel(base.Posterior, base.PredictiveMixin):
         """
         return {"hn_alpha_vec": self.hn_alpha_vec}
 
-    def reset_hn_params(self):
-        """Reset the hyperparameter of the posterior distribution to their initial values.
-        
-        It is reset to `self.h0_alpha_vec`.
-        Note that the parameters of the predictive distribution are also calculated from `self.h0_alpha_vec`.
-        """
-        self.hn_alpha_vec = np.copy(self.h0_alpha_vec)
-        self.calc_pred_dist()
-        return self
-
-    def overwrite_h0_params(self):
-        """Overwrite the initial value of the hyperparameter of the posterior distribution by the learned values.
-        
-        It is overwitten by `self.hn_alpha_vec`.
-        Note that the parameters of the predictive distribution are also calculated from `self.hn_alpha_vec`.
-        """
-        self.h0_alpha_vec = np.copy(self.hn_alpha_vec)
-        self.calc_pred_dist()
-        return self
-
-    def update_posterior(self, x):
+    def update_posterior(self,x,onehot=True):
         """Update the hyperparameters of the posterior distribution using traning data.
 
         Parameters
         ----------
         x : numpy.ndarray
-            2-dimensional array whose shape is ``(sample_size,degree)`` whose rows are one-hot vectors.
+            A non-negative int array. If onehot option is True, 
+            its shape must be ``(sample_size,c_degree)`` and 
+            each row must be a one-hot vector. If onehot option is False, 
+            its shape must be ``(sample_size,)`` and each element must be 
+            smaller than ``self.c_degree``.
+        onehot : bool, optional
+            If True, the input sample must be one-hot encoded, 
+            by default True.
         """
-        _check.onehot_vecs(x,'x',DataFormatError)
-        if x.shape[-1] != self.degree:
-            raise(DataFormatError(f"x.shape[-1] must be degree:{self.degree}"))
-        x = x.reshape(-1,self.degree)
+        if onehot:
+            _check.onehot_vecs(x,'x',DataFormatError)
+            if x.shape[-1] != self.c_degree:
+                raise(DataFormatError(f"x.shape[-1] must be c_degree:{self.c_degree}"))
+            x = x.reshape(-1,self.c_degree)
+            self.hn_alpha_vec[:] += x.sum(axis=0)
+        else:
+            _check.nonneg_ints(x,'x',DataFormatError)
+            if np.max(x) >= self.c_degree:
+                raise(DataFormatError(
+                    'np.max(x) must be smaller than self.c_degree: '
+                    +f'np.max(x) = {np.max(x)}, self.c_degree = {self.c_degree}'
+                ))
+            for k in range(self.c_degree):
+                self.hn_alpha_vec[k] += np.count_nonzero(x==k)
 
-        for k in range(self.degree):
-            self.hn_alpha_vec[k] += x[:,k].sum()
+        return self
+
+    def _update_posterior(self,x):
+        """Update opsterior without input check."""
+        for k in range(self.c_degree):
+            self.hn_alpha_vec[k] += np.count_nonzero(x==k)
         return self
 
     def estimate_params(self, loss="squared",dict_out=False):
@@ -395,9 +371,9 @@ class LearnModel(base.Posterior, base.PredictiveMixin):
         elif loss == "0-1":
             if np.all(self.hn_alpha_vec > 1):
                 if dict_out:
-                    return {'theta_vec':(self.hn_alpha_vec - 1) / (np.sum(self.hn_alpha_vec) - self.degree)}
+                    return {'theta_vec':(self.hn_alpha_vec - 1) / (np.sum(self.hn_alpha_vec) - self.c_degree)}
                 else:
-                    return (self.hn_alpha_vec - 1) / (np.sum(self.hn_alpha_vec) - self.degree)
+                    return (self.hn_alpha_vec - 1) / (np.sum(self.hn_alpha_vec) - self.c_degree)
             else:
                 warnings.warn("MAP estimate of lambda_mat doesn't exist for the current hn_alpha_vec.",ResultWarning)
                 return None
@@ -417,7 +393,7 @@ class LearnModel(base.Posterior, base.PredictiveMixin):
         Examples
         --------
         >>> from bayesml import categorical
-        >>> gen_model = categorical.GenModel()
+        >>> gen_model = categorical.GenModel(3)
         >>> x = gen_model.gen_sample(20)
         >>> learn_model = categorical.LearnModel()
         >>> learn_model.update_posterior(x)
@@ -430,7 +406,7 @@ class LearnModel(base.Posterior, base.PredictiveMixin):
         theta_vec_pdf = self.estimate_params(loss='KL')
         fig, axes = plt.subplots()
         step_num = 200
-        if self.degree == 3:
+        if self.c_degree == 3:
             theta1_range = np.linspace(0.01, 0.99, step_num)
             theta2_range = np.linspace(0.01, 0.99, step_num)
             X, Y = np.meshgrid(theta1_range, theta2_range)
@@ -454,7 +430,7 @@ class LearnModel(base.Posterior, base.PredictiveMixin):
             plt.title(f"Log PDF for theta_vec")
             plt.show()
 
-        elif self.degree == 2:
+        elif self.c_degree == 2:
             theta1_range = np.linspace(0.01, 0.99, step_num)
             Z = np.zeros(step_num)
             for i in range(step_num):
@@ -464,7 +440,7 @@ class LearnModel(base.Posterior, base.PredictiveMixin):
             plt.show()
 
         else:
-            raise(ParameterFormatError("if degree != 2 or degree != 3, it is impossible to visualize the model by this function."))
+            raise(ParameterFormatError("if c_degree != 2 or c_degree != 3, it is impossible to visualize the model by this function."))
 
     def get_p_params(self):
         """Get the parameters of the predictive distribution.
@@ -478,10 +454,10 @@ class LearnModel(base.Posterior, base.PredictiveMixin):
 
     def calc_pred_dist(self):
         """Calculate the parameters of the predictive distribution."""
-        self.p_theta_vec = self.hn_alpha_vec / self.hn_alpha_vec.sum()
+        self.p_theta_vec[:] = self.hn_alpha_vec / self.hn_alpha_vec.sum()
         return self
 
-    def make_prediction(self, loss="squared"):
+    def make_prediction(self,loss="squared",onehot=True):
         """Predict a new data point under the given criterion.
 
         Parameters
@@ -489,6 +465,9 @@ class LearnModel(base.Posterior, base.PredictiveMixin):
         loss : str, optional
             Loss function underlying the Bayes risk function, by default \"squared\".
             This function supports \"squared\", \"0-1\", and \"KL\".
+        onehot : bool, optional
+            If True, predected value under \"0-1\" loss will be one-hot encoded, 
+            by default True.
 
         Returns
         -------
@@ -500,9 +479,12 @@ class LearnModel(base.Posterior, base.PredictiveMixin):
         if loss == "squared":
             return self.p_theta_vec
         elif loss == "0-1":
-            tmp = np.zeros(self.degree,dtype=int)
-            tmp[np.argmax(self.p_theta_vec)] = 1
-            return tmp
+            if onehot:
+                tmp = np.zeros(self.c_degree,dtype=int)
+                tmp[np.argmax(self.p_theta_vec)] = 1
+                return tmp
+            else:
+                return np.argmax(self.p_theta_vec)
         elif loss == "KL":
             return self.p_theta_vec
         else:
@@ -513,16 +495,19 @@ class LearnModel(base.Posterior, base.PredictiveMixin):
                 )
             )
 
-    def pred_and_update(self, x, loss="squared"):
+    def pred_and_update(self, x, loss="squared",onehot=True):
         """Predict a new data point and update the posterior sequentially.
 
         Parameters
         ----------
         x : numpy.ndarray
-            2-dimensional array whose shape is ``(sample_size,degree)`` whose rows are one-hot vectors.
+            2-dimensional array whose shape is ``(sample_size,c_degree)`` whose rows are one-hot vectors.
         loss : str, optional
             Loss function underlying the Bayes risk function, by default \"squared\".
             This function supports \"squared\", \"0-1\", and \"KL\".
+        onehot : bool, optional
+            If True, the input must be one-hot encoded and a predected value 
+            under \"0-1\" loss will be one-hot encoded, by default True.
 
         Returns
         -------
@@ -532,6 +517,6 @@ class LearnModel(base.Posterior, base.PredictiveMixin):
             as numpy.ndarray.
         """
         self.calc_pred_dist()
-        prediction = self.make_prediction(loss=loss)
-        self.update_posterior(x)
+        prediction = self.make_prediction(loss,onehot)
+        self.update_posterior(x,onehot)
         return prediction

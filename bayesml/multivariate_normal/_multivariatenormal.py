@@ -41,16 +41,16 @@ class GenModel(base.Generative):
         by default None
     """
     def __init__(
-        self,
-        c_degree,
-        mu_vec=None,
-        lambda_mat=None,
-        h_m_vec=None,
-        h_kappa=1.0,
-        h_nu=None,
-        h_w_mat=None,
-        seed=None
-        ):
+            self,
+            c_degree,
+            mu_vec=None,
+            lambda_mat=None,
+            h_m_vec=None,
+            h_kappa=1.0,
+            h_nu=None,
+            h_w_mat=None,
+            seed=None
+            ):
         # constants
         self.c_degree = _check.pos_int(c_degree,'c_degree',ParameterFormatError)
         self.rng = np.random.default_rng(seed)
@@ -681,10 +681,10 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
     
     def calc_pred_dist(self):
         """Calculate the parameters of the predictive distribution."""
-        self.p_m_vec = np.copy(self.hn_m_vec)
+        self.p_m_vec[:] = self.hn_m_vec
         self.p_nu = self.hn_nu - self.c_degree + 1
-        self.p_v_mat = self.hn_kappa*self.p_nu/(self.hn_kappa+1) * self.hn_w_mat
-        self.p_v_mat_inv = (self.hn_kappa+1)/self.hn_kappa/self.p_nu * self.hn_w_mat_inv
+        self.p_v_mat[:] = self.hn_kappa*self.p_nu/(self.hn_kappa+1) * self.hn_w_mat
+        self.p_v_mat_inv[:] = (self.hn_kappa+1)/self.hn_kappa/self.p_nu * self.hn_w_mat_inv
         return self
 
     def make_prediction(self,loss="squared"):

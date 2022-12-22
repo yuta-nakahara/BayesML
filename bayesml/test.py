@@ -1,12 +1,12 @@
 import numpy as np
-from bayesml.autoregressive import GenModel
-from bayesml.autoregressive import LearnModel
+from bayesml.categorical import GenModel
+from bayesml.categorical import LearnModel
 
 if __name__ == '__main__':
-    gen_model = GenModel(2)
+    gen_model = GenModel(3)
     h_params = gen_model.get_h_params()
     params = gen_model.get_params()
-    learn_model = LearnModel(2)
+    learn_model = LearnModel(3)
     h0_params = learn_model.get_h0_params()
     hn_params = learn_model.get_hn_params()
 
@@ -55,9 +55,9 @@ if __name__ == '__main__':
         print('ok14')
 
     import copy
-    gen_model = GenModel(2)
+    gen_model = GenModel(3)
     x = gen_model.gen_sample(100)
-    learn_model = LearnModel(2)
+    learn_model = LearnModel(3)
     h0_params = copy.deepcopy(learn_model.get_h0_params())
     hn_params = copy.deepcopy(learn_model.get_hn_params())
     learn_model.update_posterior(x)
@@ -76,3 +76,13 @@ if __name__ == '__main__':
         print('ok17')
     else:
         print('!!!!!!!!!!!NG!!!!!!!!!!!!')
+
+gen_model = GenModel(3)
+gen_model.gen_params()
+gen_model.visualize_model()
+x = gen_model.gen_sample(100,False)
+
+learn_model = LearnModel(3)
+learn_model._update_posterior(x)
+print(learn_model.estimate_params())
+learn_model.visualize_posterior()
