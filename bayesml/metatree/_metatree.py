@@ -711,6 +711,7 @@ class GenModel(base.Generative):
                     self.c_dim_continuous,'self.c_dim_continuous',
                     ParameterFormatError
                     )
+                x_continuous = x_continuous.reshape(-1,self.c_dim_continuous)
                 _check.shape_consistency(
                     x_continuous.shape[0],'x_continuous.shape[0]',
                     sample_size,'sample_size',
@@ -729,6 +730,7 @@ class GenModel(base.Generative):
                     self.c_dim_categorical,'self.c_dim_categorical',
                     ParameterFormatError
                     )
+                x_categorical = x_categorical.reshape(-1,self.c_dim_categorical)
                 _check.shape_consistency(
                     x_categorical.shape[0],'x_categorical.shape[0]',
                     sample_size,'sample_size',
@@ -765,6 +767,7 @@ class GenModel(base.Generative):
                     self.c_dim_categorical,'self.c_dim_categorical',
                     ParameterFormatError
                     )
+                x_categorical = x_categorical.reshape(-1,self.c_dim_categorical)
                 _check.shape_consistency(
                     x_categorical.shape[0],'x_categorical.shape[0]',
                     x_continuous.shape[0],'x_continuous.shape[0]',
