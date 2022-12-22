@@ -20,11 +20,8 @@ class GenModel(base.Generative):
 
     Parameters
     ----------
-    c_degree : int, optional
-        a positive integer. Default is None, in which case 
-        a value consistent with ``theta_vec``, ``h_mu_vec``, 
-        and ``h_lambda_mat`` is used. If all of them are not given,
-        c_degree is assumed to be 1.
+    c_degree : int
+        a positive integer.
     theta_vec : numpy ndarray, optional
         a vector of real numbers, by default [0.0, 0.0, ... , 0.0]
     tau : float, optional
@@ -67,6 +64,16 @@ class GenModel(base.Generative):
 
         self.set_params(theta_vec,tau)
         self.set_h_params(h_mu_vec,h_lambda_mat,h_alpha,h_beta)
+
+    def get_constants(self):
+        """Get constants of GenModel.
+
+        Returns
+        -------
+        constants : dict of {str: int}
+            * ``"c_degree"`` : the value of ``self.c_degree``
+        """
+        return {'c_degree':self.c_degree}
 
     def set_h_params(self,h_mu_vec=None,h_lambda_mat=None,h_alpha=None,h_beta=None):
         """Set the hyperparameters of the prior distribution.
@@ -297,11 +304,8 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
 
     Parameters
     ----------
-    c_degree : int, optional
-        a positive integer. Default is None, in which case 
-        a value consistent with ``w``, ``h_mu_vec``, 
-        and ``h_Lambda`` is used. If all of them are not given,
-        c_degree is assumed to be 1.
+    c_degree : int
+        a positive integer.
     h0_mu_vec : numpy ndarray, optional
         a vector of real numbers, by default [0.0, 0.0, ... , 0.0]
     h0_lambda_mat : numpy ndarray, optional
@@ -362,6 +366,16 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             h0_alpha,
             h0_beta,
         )
+
+    def get_constants(self):
+        """Get constants of LearnModel.
+
+        Returns
+        -------
+        constants : dict of {str: int}
+            * ``"c_degree"`` : the value of ``self.c_degree``
+        """
+        return {'c_degree':self.c_degree}
 
     def set_h0_params(
             self,
@@ -511,6 +525,17 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         x = x.reshape(-1,self.c_degree)
         y = np.ravel(y)
         
+        hn1_Lambda = np.array(self.hn_lambda_mat)
+        hn1_mu = np.array(self.hn_mu_vec)
+        self.hn_lambda_mat +=  x.T @ x
+        self.hn_mu_vec[:] = np.linalg.solve(self.hn_lambda_mat, x.T @ y[:,np.newaxis]  + hn1_Lambda @ hn1_mu[:,np.newaxis])[:,0]
+        self.hn_alpha +=   x.shape[0]/2.0
+        self.hn_beta += (-self.hn_mu_vec[np.newaxis,:] @ self.hn_lambda_mat @ self.hn_mu_vec[:,np.newaxis]
+                         + y @ y + hn1_mu[np.newaxis,:] @ hn1_Lambda @ hn1_mu[:,np.newaxis])[0,0] /2.0
+        return self
+
+    def _update_posterior(self, x, y):
+        """Update opsterior without input check."""
         hn1_Lambda = np.array(self.hn_lambda_mat)
         hn1_mu = np.array(self.hn_mu_vec)
         self.hn_lambda_mat +=  x.T @ x

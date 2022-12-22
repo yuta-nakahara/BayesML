@@ -22,11 +22,8 @@ class GenModel(base.Generative):
 
     Parameters
     ----------
-    c_degree : int, optional
-        a positive integer. Default is None, in which case 
-        a value consistent with ``mu_vec``, ``lambda_mat``, 
-        ``h_m_vec``, ``h_w_mat``, and ``h_nu` is used. 
-        If all of them are not given, c_degree is assumed to be 2.
+    c_degree : int
+        a positive integer.
     mu_vec : numpy.ndarray, optional
         a vector of real numbers, by default [0.0, 0.0, ... , 0.0]
     lambda_mat : numpy.ndarray, optional
@@ -290,11 +287,8 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
 
     Parameters
     ----------
-    c_degree : int, optional
-        a positive integer. Default is None, in which case 
-        a value consistent with ``h_m_vec``, ``h_w_mat``, 
-        and ``h_nu` is used. If all of them are not given, 
-        c_degree is assumed to be 2.
+    c_degree : int
+        a positive integer.
     h0_m_vec : numpy.ndarray, optional
         a vector of real numbers, by default [0.0, 0.0, ... , 0.0]
     h0_kappa : float, optional
@@ -511,6 +505,21 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             raise(DataFormatError(f"x.shape[-1] must be c_degree:{self.c_degree}"))
         x = x.reshape(-1,self.c_degree)
 
+        n = x.shape[0]
+        x_bar = x.sum(axis=0)/n
+
+        self.hn_w_mat_inv[:] = (self.hn_w_mat_inv + (x-x_bar).T @ (x-x_bar)
+                                + (x_bar - self.hn_m_vec)[:,np.newaxis] @ (x_bar - self.hn_m_vec)[np.newaxis,:]
+                                  * self.hn_kappa * n / (self.hn_kappa + n))
+        self.hn_m_vec[:] = (self.hn_kappa*self.hn_m_vec + n*x_bar) / (self.hn_kappa+n)
+        self.hn_kappa += n
+        self.hn_nu += n
+
+        self.hn_w_mat[:] = np.linalg.inv(self.hn_w_mat_inv) 
+        return self
+
+    def _update_posterior(self,x):
+        """Update opsterior without input check."""
         n = x.shape[0]
         x_bar = x.sum(axis=0)/n
 
