@@ -51,6 +51,16 @@ class GenModel(base.Generative):
         self.set_params(theta_vec)
         self.set_h_params(h_alpha_vec)
 
+    def get_constants(self):
+        """Get constants of GenModel.
+
+        Returns
+        -------
+        constants : dict of {str: int}
+            * ``"c_degree"`` : the value of ``self.c_degree``
+        """
+        return {'c_degree':self.c_degree}
+    
     def set_h_params(self,h_alpha_vec=None):
         """Set the hyperparameters of the prior distribution.
 
@@ -250,6 +260,16 @@ class LearnModel(base.Posterior, base.PredictiveMixin):
         self.p_theta_vec = np.ones(self.c_degree) / self.c_degree
 
         self.set_h0_params(h0_alpha_vec)
+
+    def get_constants(self):
+        """Get constants of LearnModel.
+
+        Returns
+        -------
+        constants : dict of {str: int}
+            * ``"c_degree"`` : the value of ``self.c_degree``
+        """
+        return {'c_degree':self.c_degree}
 
     def set_h0_params(self,h0_alpha_vec=None):
         """Set the hyperparameters of the prior distribution.
@@ -500,8 +520,9 @@ class LearnModel(base.Posterior, base.PredictiveMixin):
 
         Parameters
         ----------
-        x : numpy.ndarray
-            2-dimensional array whose shape is ``(sample_size,c_degree)`` whose rows are one-hot vectors.
+        x : numpy.ndarray or int
+            If onehot option is True, 1-dimensional array whose length is ``c_degree``. 
+            If onehot option is False, a non-negative integer.
         loss : str, optional
             Loss function underlying the Bayes risk function, by default \"squared\".
             This function supports \"squared\", \"0-1\", and \"KL\".

@@ -25,15 +25,15 @@ class GenModel(base.Generative):
     mu : float, optional
         a real number, by default 0.0
     tau : float, optional
-        a positibe real number, by default 1.0
+        a positive real number, by default 1.0
     h_m : float, optional
         a real number, by default 0.0
     h_kappa : float, optional
-        a positibe real number, by default 1.0
+        a positive real number, by default 1.0
     h_alpha : float, optional
-        a positibe real number, by default 1.0
+        a positive real number, by default 1.0
     h_beta : float, optional
-        a positibe real number, by default 1.0
+        a positive real number, by default 1.0
     seed : {None, int}, optional
         A seed to initialize numpy.random.default_rng(),
         by default None
@@ -74,11 +74,11 @@ class GenModel(base.Generative):
         h_m : float, optional
             a real number, by default None
         h_kappa : float, optional
-            a positibe real number, by default None
+            a positive real number, by default None
         h_alpha : float, optional
-            a positibe real number, by default None
+            a positive real number, by default None
         h_beta : float, optional
-            a positibe real number, by default None
+            a positive real number, by default None
         """
         if h_m is not None:
             self.h_m = _check.float_(h_m,'h_m',ParameterFormatError)
@@ -120,7 +120,7 @@ class GenModel(base.Generative):
         mu : float, optional
             a real number :math:`mu \in \mathbb{R}`, by default None.
         tau : float, optional
-            a positibe real number, by default None.
+            a positive real number, by default None.
         """
         if mu is not None:
             self.mu = _check.float_(mu,'mu',ParameterFormatError)
@@ -239,9 +239,9 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
     p_mu : float
         a real number
     p_lambda : float
-        a positibe real number
+        a positive real number
     p_nu : float
-        a positibe real number
+        a positive real number
     """
 
     def __init__(self,h0_m=0.0,h0_kappa=1.0,h0_alpha=1.0,h0_beta=1.0):
@@ -289,11 +289,11 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         h0_m : float, optional
             a real number, by default None
         h0_kappa : float, optional
-            a positibe real number, by default None
+            a positive real number, by default None
         h0_alpha : float, optional
-            a positibe real number, by default None
+            a positive real number, by default None
         h0_beta : float, optional
-            a positibe real number, by default None
+            a positive real number, by default None
         """
         if h0_m is not None:
             self.h0_m = _check.float_(h0_m,'h0_m',ParameterFormatError)
@@ -327,11 +327,11 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         hn_m : float, optional
             a real number, by default None
         hn_kappa : float, optional
-            a positibe real number, by default None
+            a positive real number, by default None
         hn_alpha : float, optional
-            a positibe real number, by default None
+            a positive real number, by default None
         hn_beta : float, optional
-            a positibe real number, by default None
+            a positive real number, by default None
         """
         if hn_m is not None:
             self.hn_m = _check.float_(hn_m,'hn_m',ParameterFormatError)

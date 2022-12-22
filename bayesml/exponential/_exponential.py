@@ -196,18 +196,18 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
     h0_alpha : float, optional
         a positive real number, by default 1.0.
     h0_beta : float, optional
-        a positibe real number, by default 1.0.
+        a positive real number, by default 1.0.
 
     Attributes
     ----------
     hn_alpha : float
         a positive real number
     hn_beta : float
-        a positibe real number
+        a positive real number
     p_kappa : float
         a positive real number
     p_lambda : float
-        a positibe real number
+        a positive real number
     """
     def __init__(self,h0_alpha=1.0, h0_beta=1.0):
         # h0_params
@@ -244,7 +244,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         h0_alpha : float, optional
             a positive real number, by default None.
         h0_beta : float, optional
-            a positibe real number, by default None.
+            a positive real number, by default None.
         """
         if h0_alpha is not None:
             self.h0_alpha = _check.pos_float(h0_alpha, 'h0_alpha', ParameterFormatError)
@@ -272,7 +272,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         hn_alpha : float, optional
             a positive real number, by default None.
         hn_beta : float, optional
-            a positibe real number, by default None.
+            a positive real number, by default None.
         """
         if hn_alpha is not None:
             self.hn_alpha = _check.pos_float(hn_alpha, 'hn_alpha', ParameterFormatError)

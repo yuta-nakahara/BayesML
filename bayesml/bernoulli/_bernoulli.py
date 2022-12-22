@@ -22,7 +22,7 @@ class GenModel(base.Generative):
     h_alpha : float, optional
         a positive real number, by default 0.5.
     h_beta : float, optional
-        a positibe real number, by default 0.5.
+        a positive real number, by default 0.5.
     seed : {None, int}, optional
         A seed to initialize numpy.random.default_rng(),
         by default None.
@@ -60,7 +60,7 @@ class GenModel(base.Generative):
         h_alpha : float, optional
             a positive real number, by default None.
         h_beta : float, optional
-            a positibe real number, by default None.
+            a positive real number, by default None.
         """
         if h_alpha is not None:
             self.h_alpha = _check.pos_float(h_alpha,'h_alpha',ParameterFormatError)
@@ -197,14 +197,14 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
     h0_alpha : float, optional
         a positive real number, by default 0.5.
     h0_beta : float, optional
-        a positibe real number, by default 0.5.
+        a positive real number, by default 0.5.
     
     Attributes
     ----------
     hn_alpha : float
         a positive real number
     hn_beta : float
-        a positibe real number
+        a positive real number
     p_theta : float
         a real number :math:`\theta_\mathrm{p} \in [0, 1]`
     """
@@ -242,7 +242,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         h0_alpha : float, optional
             a positive real number, by default None.
         h0_beta : float, optionanl
-            a positibe real number, by default None.
+            a positive real number, by default None.
         """
         if h0_alpha is not None:
             self.h0_alpha = _check.pos_float(h0_alpha,'h0_alpha',ParameterFormatError)
@@ -270,7 +270,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         hn_alpha : float, optional
             a positive real number, by default None.
         hn_beta : float, optional
-            a positibe real number, by default None.
+            a positive real number, by default None.
         """
         if hn_alpha is not None:
             self.hn_alpha = _check.pos_float(hn_alpha,'hn_alpha',ParameterFormatError)

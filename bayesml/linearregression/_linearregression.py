@@ -29,11 +29,11 @@ class GenModel(base.Generative):
     h_mu_vec : numpy ndarray, optional
         a vector of real numbers, by default [0.0, 0.0, ... , 0.0]
     h_lambda_mat : numpy ndarray, optional
-        a positibe definate matrix, by default the identity matrix
+        a positive definate matrix, by default the identity matrix
     h_alpha : float, optional
         a positive real number, by default 1.0
     h_beta : float, optional
-        a positibe real number, by default 1.0
+        a positive real number, by default 1.0
     seed : {None, int}, optional
         A seed to initialize numpy.random.default_rng(),
         by default None
@@ -83,11 +83,11 @@ class GenModel(base.Generative):
         h_mu_vec : numpy ndarray, optional
             a vector of real numbers, by default None.
         h_lambda_mat : numpy ndarray, optional
-            a positibe definate matrix, by default None.
+            a positive definate matrix, by default None.
         h_alpha : float, optional
             a positive real number, by default None.
         h_beta : float, optional
-            a positibe real number, by default None.
+            a positive real number, by default None.
         """
         if h_mu_vec is not None:
             _check.float_vec(h_mu_vec,'h_mu_vec',ParameterFormatError)
@@ -309,28 +309,28 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
     h0_mu_vec : numpy ndarray, optional
         a vector of real numbers, by default [0.0, 0.0, ... , 0.0]
     h0_lambda_mat : numpy ndarray, optional
-        a positibe definate matrix, by default the identity matrix
+        a positive definate matrix, by default the identity matrix
     h0_alpha : float, optional
         a positive real number, by default 1.0
     h0_beta : float, optional
-        a positibe real number, by default 1.0
+        a positive real number, by default 1.0
 
     Attributes
     ----------
     hn_mu_vec : numpy ndarray
         a vector of real numbers
     hn_lambda_mat : numpy ndarray
-        a positibe definate matrix
+        a positive definate matrix
     hn_alpha : float
         a positive real number
     hn_beta : float
-        a positibe real number
+        a positive real number
     p_m : float
         a positive real number
     p_lambda : float
-        a positibe real number
+        a positive real number
     p_nu : float
-        a positibe real number
+        a positive real number
     """
     def __init__(
             self,
@@ -394,11 +394,11 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         h0_mu_vec : numpy ndarray, optional
             a vector of real numbers, by default None.
         h0_lambda_mat : numpy ndarray, optional
-            a positibe definate matrix, by default None.
+            a positive definate matrix, by default None.
         h0_alpha : float, optional
             a positive real number, by default None.
         h0_beta : float, optional
-            a positibe real number, by default None.
+            a positive real number, by default None.
         """
         if h0_mu_vec is not None:
             _check.float_vec(h0_mu_vec,'h0_mu_vec',ParameterFormatError)
@@ -456,11 +456,11 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         hn_mu_vec : numpy ndarray, optional
             a vector of real numbers, by default None.
         hn_lambda_mat : numpy ndarray, optional
-            a positibe definate matrix, by default None.
+            a positive definate matrix, by default None.
         hn_alpha : float, optional
             a positive real number, by default None.
         hn_beta : float, optional
-            a positibe real number, by default None.
+            a positive real number, by default None.
         """
         if hn_mu_vec is not None:
             _check.float_vec(hn_mu_vec,'hn_mu_vec',ParameterFormatError)
