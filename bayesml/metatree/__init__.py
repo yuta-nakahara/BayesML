@@ -4,20 +4,19 @@
 r"""
 The stochastic data generative model is as follows:
 
-* :math:`\mathcal{X}` : a space of an explanatory variable (a finite set)
-* :math:`\boldsymbol{x}=[x_1, \ldots, x_d] \in \mathcal{X}^d` : an explanatory variable
+* :math:`\boldsymbol{x}=[x_1, \ldots, x_p, x_{p+1}, \ldots , x_{p+q}]` : an explanatory variable. The first :math:`p` variables are continuous. The other :math:`q` variables are categorical. 
 * :math:`\mathcal{Y}` : a space of an objective variable
 * :math:`y \in \mathcal{Y}` : an objective variable
 * :math:`D_\mathrm{max} \in \mathbb{N}` : the maximum depth of trees
-* :math:`T` : :math:`|\mathcal{X}|`-ary regular tree whose depth is smaller than or equal to :math:`D_\mathrm{max}`, where "regular" means that all inner nodes have :math:`k` child nodes.
+* :math:`T` : a tree whose depth is smaller than or equal to :math:`D_\mathrm{max}`
 * :math:`\mathcal{T}` : a set of :math:`T`
 * :math:`s` : a node of a tree
 * :math:`\mathcal{S}` : a set of :math:`s`
 * :math:`\mathcal{I}(T)` : a set of inner nodes of :math:`T`
 * :math:`\mathcal{L}(T)` : a set of leaf nodes of :math:`T`
-* :math:`\boldsymbol{k}=(k_s)_{s \in \mathcal{S}}` : feature assign vector where :math:`k_s \in \{1,2,\ldots,d\}`
+* :math:`\boldsymbol{k}=(k_s)_{s \in \mathcal{S}}` : feature assignmet vector where :math:`k_s \in \{1, 2,\ldots,p+q\}`. If :math:`k_s \leq p`, the node :math:`s` has a threshold.
 * :math:`\boldsymbol{\theta}=(\theta_s)_{s \in \mathcal{S}}` : a set of parameter
-* :math:`s(\boldsymbol{x}) \in \mathcal{L}(T)` : a leaf node of :math:`T` corresponding to :math:`\boldsymbol{x}`
+* :math:`s(\boldsymbol{x}) \in \mathcal{L}(T)` : a leaf node of :math:`T` corresponding to :math:`\boldsymbol{x}`, which is determined according to :math:`\boldsymbol{k}` and the thresholds.
 
 .. math::
     p(y | \boldsymbol{x}, \boldsymbol{\theta}, T, \boldsymbol{k})=p(y | \theta_{s(\boldsymbol{x})})

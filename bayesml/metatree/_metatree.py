@@ -90,7 +90,7 @@ class GenModel(base.Generative):
         ``c_dim_continuous+c_dim_categorical``, by default [2,2,...,2].
         The first ``c_dim_continuous`` elements represent 
         the numbers of children of continuous features at 
-        inner nodes. The rest ``c_dim_categorial`` elements 
+        inner nodes. The other ``c_dim_categorial`` elements 
         represent those of categorical features.
         If a single integer is input, it will be broadcasted.
     c_max_depth : int, optional
@@ -100,7 +100,7 @@ class GenModel(base.Generative):
         ``c_dim_continuous+c_dim_categorical``. 
         The first ``c_dim_continuous`` elements represent 
         the maximum assignment numbers of continuous features 
-        on a path. The rest ``c_dim_categorial`` elements 
+        on a path. The other ``c_dim_categorial`` elements 
         represent those of categorical features.
         By default [c_max_depth,...,c_max_depth,1,...,1].
     c_ranges : numpy.ndarray, optional
@@ -928,6 +928,8 @@ class GenModel(base.Generative):
     def visualize_model(self,filename=None,format=None,sample_size=100,x_continuous=None,x_categorical=None):
         """Visualize the stochastic data generative model and generated samples.
 
+        Note that values of categorical features will be shown with jitters.
+
         Parameters
         ----------
         filename : str, optional
@@ -1047,7 +1049,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         ``c_dim_continuous+c_dim_categorical``, by default [2,2,...,2].
         The first ``c_dim_continuous`` elements represent 
         the numbers of children of continuous features at 
-        inner nodes. The rest ``c_dim_categorial`` elements 
+        inner nodes. The other ``c_dim_categorial`` elements 
         represent those of categorical features.
         If a single integer is input, it will be broadcasted.
     c_max_depth : int, optional
@@ -1057,7 +1059,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         ``c_dim_continuous+c_dim_categorical``. 
         The first ``c_dim_continuous`` elements represent 
         the maximum assignment numbers of continuous features 
-        on a path. The rest ``c_dim_categorial`` elements 
+        on a path. The other ``c_dim_categorial`` elements 
         represent those of categorical features.
         By default [c_max_depth,...,c_max_depth,1,...,1].
     c_ranges : numpy.ndarray, optional
@@ -2013,6 +2015,10 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
 
     def estimate_params(self,loss="0-1",visualize=True,filename=None,format=None):
         """Estimate the parameter under the given criterion.
+
+        The approximate MAP meta-tree 
+        :math:`M_{T,\boldsymbol{k}_b} = \mathrm{argmax} p(M_{T,\boldsymbol{k}_{b'}} | \boldsymbol{x}^n, y^n)` 
+        will be returned.
 
         Parameters
         ----------
