@@ -492,6 +492,12 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         """
         return {"hn_m_vec":self.hn_m_vec, "hn_kappa":self.hn_kappa, "hn_nu":self.hn_nu, "hn_w_mat":self.hn_w_mat}
     
+    def _check_sample(self,x):
+        _check.float_vecs(x,'x',DataFormatError)
+        if x.shape[-1] != self.c_degree:
+            raise(DataFormatError(f"x.shape[-1] must be c_degree:{self.c_degree}"))
+        return x.reshape(-1,self.c_degree)
+
     def update_posterior(self,x):
         """Update the hyperparameters of the posterior distribution using traning data.
 
@@ -500,10 +506,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         x : numpy.ndarray
             All the elements must be real number.
         """
-        _check.float_vecs(x,'x',DataFormatError)
-        if x.shape[-1] != self.c_degree:
-            raise(DataFormatError(f"x.shape[-1] must be c_degree:{self.c_degree}"))
-        x = x.reshape(-1,self.c_degree)
+        x = self._check_sample(x)
 
         n = x.shape[0]
         x_bar = x.sum(axis=0)/n
@@ -686,6 +689,12 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self.p_v_mat[:] = self.hn_kappa*self.p_nu/(self.hn_kappa+1) * self.hn_w_mat
         self.p_v_mat_inv[:] = (self.hn_kappa+1)/self.hn_kappa/self.p_nu * self.hn_w_mat_inv
         return self
+    
+    def _calc_pred_density(self,x):
+        return ss_multivariate_t.pdf(x,
+                                     loc=self.p_m_vec,
+                                     shape=self.p_v_mat_inv,
+                                     df=self.p_nu)
 
     def make_prediction(self,loss="squared"):
         """Predict a new data point under the given criterion.

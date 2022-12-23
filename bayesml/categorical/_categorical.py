@@ -321,6 +321,22 @@ class LearnModel(base.Posterior, base.PredictiveMixin):
         """
         return {"hn_alpha_vec": self.hn_alpha_vec}
 
+    # default onehot option is False because it is used in metatree
+    def _check_sample(self,x,onehot=False):
+        if onehot:
+            _check.onehot_vecs(x,'x',DataFormatError)
+            if x.shape[-1] != self.c_degree:
+                raise(DataFormatError(f"x.shape[-1] must be c_degree:{self.c_degree}"))
+            return x.reshape(-1,self.c_degree)
+        else:
+            _check.nonneg_ints(x,'x',DataFormatError)
+            if np.max(x) >= self.c_degree:
+                raise(DataFormatError(
+                    'np.max(x) must be smaller than self.c_degree: '
+                    +f'np.max(x) = {np.max(x)}, self.c_degree = {self.c_degree}'
+                ))
+            return x
+
     def update_posterior(self,x,onehot=True):
         """Update the hyperparameters of the posterior distribution using traning data.
 
@@ -336,22 +352,12 @@ class LearnModel(base.Posterior, base.PredictiveMixin):
             If True, the input sample must be one-hot encoded, 
             by default True.
         """
+        x = self._check_sample(x,onehot)
         if onehot:
-            _check.onehot_vecs(x,'x',DataFormatError)
-            if x.shape[-1] != self.c_degree:
-                raise(DataFormatError(f"x.shape[-1] must be c_degree:{self.c_degree}"))
-            x = x.reshape(-1,self.c_degree)
             self.hn_alpha_vec[:] += x.sum(axis=0)
         else:
-            _check.nonneg_ints(x,'x',DataFormatError)
-            if np.max(x) >= self.c_degree:
-                raise(DataFormatError(
-                    'np.max(x) must be smaller than self.c_degree: '
-                    +f'np.max(x) = {np.max(x)}, self.c_degree = {self.c_degree}'
-                ))
             for k in range(self.c_degree):
                 self.hn_alpha_vec[k] += np.count_nonzero(x==k)
-
         return self
 
     def _update_posterior(self,x):
@@ -396,7 +402,10 @@ class LearnModel(base.Posterior, base.PredictiveMixin):
                     return (self.hn_alpha_vec - 1) / (np.sum(self.hn_alpha_vec) - self.c_degree)
             else:
                 warnings.warn("MAP estimate of lambda_mat doesn't exist for the current hn_alpha_vec.",ResultWarning)
-                return None
+                if dict_out:
+                    return {'theta_vec':None}
+                else:
+                    return None
         elif loss == "KL":
             return ss_dirichlet(alpha=self.hn_alpha_vec)
         else:
@@ -476,6 +485,9 @@ class LearnModel(base.Posterior, base.PredictiveMixin):
         """Calculate the parameters of the predictive distribution."""
         self.p_theta_vec[:] = self.hn_alpha_vec / self.hn_alpha_vec.sum()
         return self
+    
+    def _calc_pred_density(self,x):
+        return self.p_theta_vec[x]
 
     def make_prediction(self,loss="squared",onehot=True):
         """Predict a new data point under the given criterion.

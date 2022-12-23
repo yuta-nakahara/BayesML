@@ -288,6 +288,9 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         """
         return {"hn_alpha":self.hn_alpha, "hn_beta":self.hn_beta}
     
+    def _check_sample(self,x):
+        return _check.nonneg_ints(x,'x',DataFormatError)
+
     def update_posterior(self,x):
         """Update the hyperparameters of the posterior distribution using traning data.
 
@@ -296,7 +299,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         x : numpy.ndarray
             All the elements must be non-negative integer.
         """
-        _check.nonneg_ints(x,'x',DataFormatError)
+        x = self._check_sample(x)
         self.hn_alpha += np.sum(x)
         try:
             self.hn_beta += x.size

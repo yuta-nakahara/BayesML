@@ -501,6 +501,24 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         """
         return {"hn_mu_vec":self.hn_mu_vec, "hn_lambda_mat":self.hn_lambda_mat, "hn_alpha":self.hn_alpha, "hn_beta":self.hn_beta}
     
+    def _check_sample_x(self,x):
+        _check.float_vecs(x,'x',DataFormatError)
+        if x.shape[-1] != self.c_degree:
+            raise(DataFormatError(f"x.shape[-1] must be c_degree:{self.c_degree}"))
+
+    def _check_sample_y(self,y):
+        _check.floats(y,'y',DataFormatError)
+
+    def _check_sample(self,x,y):
+        self._check_sample_x(x)
+        self._check_sample_y(y)
+        if type(y) is np.ndarray:
+            if x.shape[:-1] != y.shape: 
+                raise(DataFormatError(f"x.shape[:-1] and y.shape must be same."))
+        elif x.shape[:-1] != ():
+            raise(DataFormatError(f"If y is a scaler, x.shape[:-1] must be the empty tuple ()."))
+        return x.reshape(-1,self.c_degree), np.ravel(y)
+
     def update_posterior(self, x, y):
         """Update the hyperparameters of the posterior distribution using traning data.
 
@@ -512,18 +530,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         y : numpy ndarray
             float array.
         """
-        _check.float_vecs(x,'x',DataFormatError)
-        if x.shape[-1] != self.c_degree:
-            raise(DataFormatError(f"x.shape[-1] must be c_degree:{self.c_degree}"))
-        _check.floats(y,'y',DataFormatError)
-        if type(y) is np.ndarray:
-            if x.shape[:-1] != y.shape: 
-                raise(DataFormatError(f"x.shape[:-1] and y.shape must be same."))
-        elif x.shape[:-1] != ():
-            raise(DataFormatError(f"If y is a scaler, x.shape[:-1] must be the empty tuple ()."))
-            
-        x = x.reshape(-1,self.c_degree)
-        y = np.ravel(y)
+        x,y = self._check_sample(x,y)            
         
         hn1_Lambda = np.array(self.hn_lambda_mat)
         hn1_mu = np.array(self.hn_mu_vec)
@@ -536,6 +543,8 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
 
     def _update_posterior(self, x, y):
         """Update opsterior without input check."""
+        x = x.reshape(-1,self.c_degree)
+        y = np.ravel(y)
         hn1_Lambda = np.array(self.hn_lambda_mat)
         hn1_mu = np.array(self.hn_mu_vec)
         self.hn_lambda_mat +=  x.T @ x
@@ -703,6 +712,16 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self.p_nu = 2.0 * self.hn_alpha
         return self
 
+    def _calc_pred_dist(self, x):
+        """Calculate predictive distribution without check."""
+        self.p_m = x @ self.hn_mu_vec
+        self.p_lambda = self.hn_alpha / self.hn_beta / (1.0 + x @ np.linalg.solve(self.hn_lambda_mat,x))
+        self.p_nu = 2.0 * self.hn_alpha
+        return self
+
+    def _calc_pred_density(self,y):
+        return ss_t.pdf(y,loc=self.p_m, scale=1.0/np.sqrt(self.p_lambda), df=self.p_nu)
+    
     def make_prediction(self,loss="squared"):
         """Predict a new data point under the given criterion.
 

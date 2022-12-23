@@ -290,6 +290,9 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         """
         return {"hn_alpha":self.hn_alpha, "hn_beta":self.hn_beta}
     
+    def _check_sample(self,x):
+        return _check.ints_of_01(x,'x',DataFormatError)
+
     def update_posterior(self,x):
         """Update the hyperparameters of the posterior distribution using traning data.
 
@@ -298,7 +301,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         x : numpy.ndarray
             All the elements must be 0 or 1.
         """
-        _check.ints_of_01(x,'x',DataFormatError)
+        x = self._check_sample(x)
         self.hn_alpha += np.count_nonzero(x==1)
         self.hn_beta += np.count_nonzero(x==0)
         return self
