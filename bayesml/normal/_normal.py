@@ -357,6 +357,9 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         """
         return {"hn_m":self.hn_m, "hn_kappa":self.hn_kappa, "hn_alpha":self.hn_alpha, "hn_beta":self.hn_beta}
     
+    def _check_sample(self,x):
+        return _check.floats(x,'x',DataFormatError)
+
     def update_posterior(self,x):
         """Update the hyperparameters of the posterior distribution using traning data.
 
@@ -365,7 +368,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         x : numpy.ndarray
             Real numbers.
         """
-        _check.floats(x,'x',DataFormatError)
+        x = self._check_sample(x)
         try:
             n=x.size
         except:
@@ -515,6 +518,9 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self.p_nu = 2*self.hn_alpha
         self.p_lambda = self.hn_kappa / (self.hn_kappa+1) * self.hn_alpha / self.hn_beta
         return self
+
+    def _calc_pred_density(self,x):
+        return ss_t.pdf(x,loc=self.p_mu,scale=1.0/np.sqrt(self.p_lambda),df=self.p_nu)
 
     def make_prediction(self,loss="squared"):
         """Predict a new data point under the given criterion.
