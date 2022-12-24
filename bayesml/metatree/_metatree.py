@@ -393,10 +393,11 @@ class GenModel(base.Generative):
                 return node.sub_model.gen_sample(sample_size=1)
         else:
             if node.k < self.c_dim_continuous:
-                for i in range(self.c_num_children_vec[node.k]):
+                index = 0
+                for i in range(self.c_num_children_vec[node.k]-1):
                     if x_continuous[node.k] < node.thresholds[i+1]:
-                        index = i
                         break
+                    index += 1
             else:
                 index = x_categorical[node.k-self.c_dim_continuous]
             return self._gen_sample_recursion(node.children[index],x_continuous,x_categorical)
@@ -1651,10 +1652,12 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             return self._update_posterior_leaf(node,y)
         else:  # inner node
             if node.k < self.c_dim_continuous:
-                for i in range(self.c_num_children_vec[node.k]):
+                index = 0
+                for i in range(self.c_num_children_vec[node.k]-1):
                     if x_continuous[node.k] < node.thresholds[i+1]:
-                        index = i
                         break
+                    index += 1
+                # index = np.count_nonzero(node.thresholds[1:-1]<x_continuous[node.k]) # slower
             else:
                 index = x_categorical[node.k-self.c_dim_continuous]
             tmp1 = self._update_posterior_recursion(node.children[index],x_continuous,x_categorical,y)
@@ -1672,10 +1675,12 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             return self._update_posterior_leaf_lr(node,x_continuous,y)
         else:  # inner node
             if node.k < self.c_dim_continuous:
-                for i in range(self.c_num_children_vec[node.k]):
+                index = 0
+                for i in range(self.c_num_children_vec[node.k]-1):
                     if x_continuous[node.k] < node.thresholds[i+1]:
-                        index = i
                         break
+                    index += 1
+                # index = np.count_nonzero(node.thresholds[1:-1]<x_continuous[node.k]) # slower
             else:
                 index = x_categorical[node.k-self.c_dim_continuous]
             tmp1 = self._update_posterior_recursion_lr(node.children[index],x_continuous,x_categorical,y)
@@ -2302,10 +2307,11 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         node.sub_model.calc_pred_dist()
         if not node.leaf:  # inner node
             if node.k < self.c_dim_continuous:
-                for i in range(self.c_num_children_vec[node.k]):
+                index = 0
+                for i in range(self.c_num_children_vec[node.k]-1):
                     if x_continuous[node.k] < node.thresholds[i+1]:
-                        index = i
                         break
+                    index += 1
             else:
                 index = x_categorical[node.k-self.c_dim_continuous]
             self._calc_pred_dist_recursion(node.children[index],x_continuous,x_categorical)
@@ -2314,10 +2320,11 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         node.sub_model._calc_pred_dist(x_continuous)
         if not node.leaf:  # inner node
             if node.k < self.c_dim_continuous:
-                for i in range(self.c_num_children_vec[node.k]):
+                index = 0
+                for i in range(self.c_num_children_vec[node.k]-1):
                     if x_continuous[node.k] < node.thresholds[i+1]:
-                        index = i
                         break
+                    index += 1
             else:
                 index = x_categorical[node.k-self.c_dim_continuous]
             self._calc_pred_dist_recursion_lr(node.children[index],x_continuous,x_categorical)
@@ -2352,10 +2359,11 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             return node.sub_model.make_prediction(loss='squared')
         else:  # inner node
             if node.k < self.c_dim_continuous:
-                for i in range(self.c_num_children_vec[node.k]):
+                index = 0
+                for i in range(self.c_num_children_vec[node.k]-1):
                     if self._tmp_x_continuous[node.k] < node.thresholds[i+1]:
-                        index = i
                         break
+                    index += 1
             else:
                 index = self._tmp_x_categorical[node.k-self.c_dim_continuous]
             return ((1 - node.h_g) * node.sub_model.make_prediction(loss='squared')
@@ -2366,10 +2374,11 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             return node.sub_model.make_prediction(loss='KL')
         else:  # inner node
             if node.k < self.c_dim_continuous:
-                for i in range(self.c_num_children_vec[node.k]):
+                index = 0
+                for i in range(self.c_num_children_vec[node.k]-1):
                     if self._tmp_x_continuous[node.k] < node.thresholds[i+1]:
-                        index = i
                         break
+                    index += 1
             else:
                 index = self._tmp_x_categorical[node.k-self.c_dim_continuous]
             return ((1 - node.h_g) * node.sub_model.make_prediction(loss='KL')

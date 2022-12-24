@@ -16,9 +16,9 @@ gen_model = metatree.GenModel(
     c_dim_categorical=dim_categorical,
     c_max_depth=2,
     h_g=0.75,
-    SubModel=linearregression,
-    sub_constants={'c_degree':2},
-    sub_h_params={'h_lambda_mat':np.eye(2)*0.01},
+    SubModel=bernoulli,
+    # sub_constants={'c_degree':2},
+    # sub_h_params={'h_lambda_mat':np.eye(2)*0.01},
     # sub_h_params={'h_kappa':0.1})
     # sub_h_params={'h_alpha':0.3,'h_beta':0.3}
 )
@@ -33,9 +33,9 @@ learn_model = metatree.LearnModel(
     c_num_children_vec=2,
     c_max_depth=2,
     h0_g=0.75,
-    SubModel=linearregression,
-    sub_constants={'c_degree':2},
-    sub_h0_params={'h0_lambda_mat':np.eye(2)*0.01},
+    SubModel=bernoulli,
+    # sub_constants={'c_degree':2},
+    # sub_h0_params={'h0_lambda_mat':np.eye(2)*0.01},
     # sub_h0_params={'h0_kappa':0.1})
     # sub_h0_params={'h0_alpha':0.3,'h0_beta':0.3})
 )
