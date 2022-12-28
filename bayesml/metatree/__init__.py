@@ -4,20 +4,19 @@
 r"""
 The stochastic data generative model is as follows:
 
-* :math:`\mathcal{X}` : a space of an explanatory variable (a finite set)
-* :math:`\boldsymbol{x}=[x_1, \ldots, x_d] \in \mathcal{X}^d` : an explanatory variable
+* :math:`\boldsymbol{x}=[x_1, \ldots, x_p, x_{p+1}, \ldots , x_{p+q}]` : an explanatory variable. The first :math:`p` variables are continuous. The other :math:`q` variables are categorical. 
 * :math:`\mathcal{Y}` : a space of an objective variable
 * :math:`y \in \mathcal{Y}` : an objective variable
 * :math:`D_\mathrm{max} \in \mathbb{N}` : the maximum depth of trees
-* :math:`T` : :math:`|\mathcal{X}|`-ary regular tree whose depth is smaller than or equal to :math:`D_\mathrm{max}`, where "regular" means that all inner nodes have :math:`k` child nodes.
+* :math:`T` : a tree whose depth is smaller than or equal to :math:`D_\mathrm{max}`
 * :math:`\mathcal{T}` : a set of :math:`T`
 * :math:`s` : a node of a tree
 * :math:`\mathcal{S}` : a set of :math:`s`
 * :math:`\mathcal{I}(T)` : a set of inner nodes of :math:`T`
 * :math:`\mathcal{L}(T)` : a set of leaf nodes of :math:`T`
-* :math:`\boldsymbol{k}=(k_s)_{s \in \mathcal{S}}` : feature assign vector where :math:`k_s \in \{1,2,\ldots,d\}`
+* :math:`\boldsymbol{k}=(k_s)_{s \in \mathcal{S}}` : feature assignmet vector where :math:`k_s \in \{1, 2,\ldots,p+q\}`. If :math:`k_s \leq p`, the node :math:`s` has a threshold.
 * :math:`\boldsymbol{\theta}=(\theta_s)_{s \in \mathcal{S}}` : a set of parameter
-* :math:`s(\boldsymbol{x}) \in \mathcal{L}(T)` : a leaf node of :math:`T` corresponding to :math:`\boldsymbol{x}`
+* :math:`s(\boldsymbol{x}) \in \mathcal{L}(T)` : a leaf node of :math:`T` corresponding to :math:`\boldsymbol{x}`, which is determined according to :math:`\boldsymbol{k}` and the thresholds.
 
 .. math::
     p(y | \boldsymbol{x}, \boldsymbol{\theta}, T, \boldsymbol{k})=p(y | \theta_{s(\boldsymbol{x})})
@@ -103,29 +102,12 @@ where the expectation for :math:`\tilde{q}` is recursively given as follows.
     \qquad + g_{n,s} \mathbb{E}_{\tilde{q}_{s_{\mathrm{child}}}(y_{n+1} | \boldsymbol{x}_{n+1}, \boldsymbol{x}^n, y^n, M_{T_b, \boldsymbol{k}_b})} [Y_{n+1} | \boldsymbol{x}_{n+1}, \boldsymbol{x}^n, y^n, \boldsymbol{k}_b] ,& ({\rm otherwise}).
     \end{cases}
 
-The maximum value of the predictive distribution can be calculated as follows.
-
-.. math::
-    \max_{y_{n+1}} p(y_{n+1}| \boldsymbol{x}_{n+1}, \boldsymbol{x}^n, y^n) = \max_{b = 1, \dots , B} \left\{ p(\boldsymbol{k}_b | \boldsymbol{x}^n, y^n) \max_{y_{n+1}} \tilde{q}_{s_{\lambda}}(y_{n+1}|\boldsymbol{x}_{n+1},\boldsymbol{x}^n, y^n, M_{T_b, \boldsymbol{k}_b}) \right\},
-
-where the maximum value of :math:`\tilde{q}` is recursively given as follows.
-
-.. math::
-    &\max_{y_{n+1}} \tilde{q}_s(y_{n+1} | \boldsymbol{x}_{n+1}, \boldsymbol{x}^n, y^n, M_{T_b, \boldsymbol{k}_b}) \\
-    &= \begin{cases}
-    \max_{y_{n+1}} q_s(y_{n+1} | \boldsymbol{x}_{n+1}, \boldsymbol{x}^n, y^n, \boldsymbol{k}_b),& (s \ {\rm is \ the \ leaf \ node \ of} \ M_{T_b, \boldsymbol{k}_b}),\\
-    \max \{ (1-g_{n,s}) \max_{y_{n+1}} q_s(y_{n+1} | \boldsymbol{x}_{n+1}, \boldsymbol{x}^n, y^n, \boldsymbol{k}_b), \\
-    \qquad \qquad g_{n,s} \max_{y_{n+1}} \tilde{q}_{s_{\mathrm{child}}}(y_{n+1} | \boldsymbol{x}_{n+1}, \boldsymbol{x}^n, y^n, M_{T_b, \boldsymbol{k}_b}) \} ,& ({\rm otherwise}).
-    \end{cases}
-
-The mode of the predictive distribution can be also calculated by using the above equation.
-
 References
 
 * Dobashi, N.; Saito, S.; Nakahara, Y.; Matsushima, T. Meta-Tree Random Forest: Probabilistic Data-Generative Model and Bayes Optimal Prediction. *Entropy* 2021, 23, 768. https://doi.org/10.3390/e23060768
 * Nakahara, Y.; Saito, S.; Kamatsuka, A.; Matsushima, T. Probability Distribution on Full Rooted Trees. *Entropy* 2022, 24, 328. https://doi.org/10.3390/e24030328
 """
-from ._metatree_x_discrete import GenModel
-from ._metatree_x_discrete import LearnModel
+from ._metatree import GenModel
+from ._metatree import LearnModel
 
 __all__ = ["GenModel", "LearnModel"]
