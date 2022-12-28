@@ -123,6 +123,8 @@ The following packages are currently available. In this library, a probabilistic
 * [Hidden Markov normal model](https://yuta-nakahara.github.io/BayesML/bayesml.hiddenmarkovnormal.html "BayesML Hidden Markov Normal Model")
 * [Context tree model](https://yuta-nakahara.github.io/BayesML/bayesml.contexttree.html "BayesML Context Tree Model")
 
+In the future, we will add packages to deal with more complicated hierarchical models.
+
 ## How to contribute
 
 Thank you for considering a contribution to BayesML. For more information, please see [here](./CONTRIBUTING.md).

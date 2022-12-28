@@ -120,6 +120,8 @@ print(learn_model.estimate_params(loss='0-1'))
 * [隠れマルコフモデル](https://yuta-nakahara.github.io/BayesML/bayesml.hiddenmarkovnormal.html "BayesML Hidden Markov Normal Model")
 * [文脈木モデル](https://yuta-nakahara.github.io/BayesML/bayesml.contexttree.html "BayesML Context Tree Model")
 
+また，今後はより複雑な階層的モデルを取り扱うパッケージを追加していく予定です．
+
 ## コントリビューションの方法
 
 BayesMLへのコントリビューションを考えてくださってありがとうございます．詳細については[こちら](./CONTRIBUTING_jp.md)をご覧ください．
