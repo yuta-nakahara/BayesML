@@ -58,7 +58,7 @@ class GenModel(base.Generative):
 
         # h_params
         self.h_mu_vec = np.zeros(self.c_degree)
-        self.h_lambda_mat = np.identity(self.c_degree)
+        self.h_lambda_mat = np.eye(self.c_degree)
         self.h_alpha = 1.0
         self.h_beta = 1.0
 
@@ -203,7 +203,7 @@ class GenModel(base.Generative):
             sample_size = x.shape[0]
         elif sample_size is not None:
             _check.pos_int(sample_size,'sample_size',DataFormatError)
-            x = self.rng.multivariate_normal(np.zeros(self.c_degree),np.identity(self.c_degree), size=sample_size)
+            x = self.rng.multivariate_normal(np.zeros(self.c_degree),np.eye(self.c_degree), size=sample_size)
             if constant:
                 x[:,-1] = 1.0
         else:
@@ -345,13 +345,13 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
 
         # h0_params
         self.h0_mu_vec = np.zeros(self.c_degree)
-        self.h0_lambda_mat = np.identity(self.c_degree)
+        self.h0_lambda_mat = np.eye(self.c_degree)
         self.h0_alpha = 1.0
         self.h0_beta = 1.0
 
         # hn_params
         self.hn_mu_vec = np.zeros(self.c_degree)
-        self.hn_lambda_mat = np.identity(self.c_degree)
+        self.hn_lambda_mat = np.eye(self.c_degree)
         self.hn_alpha = 1.0
         self.hn_beta = 1.0
 

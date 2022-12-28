@@ -123,8 +123,6 @@ The following packages are currently available. In this library, a probabilistic
 * [Hidden Markov normal model](https://yuta-nakahara.github.io/BayesML/bayesml.hiddenmarkovnormal.html "BayesML Hidden Markov Normal Model")
 * [Context tree model](https://yuta-nakahara.github.io/BayesML/bayesml.contexttree.html "BayesML Context Tree Model")
 
-In the future, we will add packages to deal with a mixture normal model and a hidden Markov model, which are difficult to perform exact Bayesian inference, by using variational Bayes methods.
-
 ## How to contribute
 
 Thank you for considering a contribution to BayesML. For more information, please see [here](./CONTRIBUTING.md).
@@ -137,7 +135,7 @@ Plain text
 
 ```
 Y. Nakahara, N. Ichijo, K. Shimada, Y. Iikubo, 
-S. Saito, K. Kazama, T. Matsushima, ``BayesML 0.2.0,'' 
+S. Saito, K. Kazama, T. Matsushima, BayesML Developers, ``BayesML 0.2.1,'' 
 [Online] https://github.com/yuta-nakahara/BayesML
 ```
 
@@ -147,8 +145,8 @@ BibTeX
 @misc{bayesml,
   author = {Nakahara Yuta and Ichijo Naoki and Shimada Koshi and
             Iikubo Yuji and Saito Shota and Kazama Koki and
-            Matsushima Toshiyasu}
-  title = {BayesML 0.2.0},
+            Matsushima Toshiyasu and BayesML Developers}
+  title = {BayesML 0.2.1},
   howpublished = {\url{https://github.com/yuta-nakahara/BayesML}},
   year = {2022}
 }

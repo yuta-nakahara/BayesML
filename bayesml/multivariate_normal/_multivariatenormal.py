@@ -57,13 +57,13 @@ class GenModel(base.Generative):
 
         # params
         self.mu_vec = np.zeros(self.c_degree)
-        self.lambda_mat = np.identity(self.c_degree)
+        self.lambda_mat = np.eye(self.c_degree)
 
         # h_params
         self.h_m_vec = np.zeros(self.c_degree)
         self.h_kappa = 1.0
         self.h_nu = float(self.c_degree)
-        self.h_w_mat = np.identity(self.c_degree)
+        self.h_w_mat = np.eye(self.c_degree)
 
         self.set_params(mu_vec,lambda_mat)
         self.set_h_params(h_m_vec,h_kappa,h_nu,h_w_mat)
@@ -336,24 +336,24 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self.h0_m_vec = np.zeros(self.c_degree)
         self.h0_kappa = 1.0
         self.h0_nu = float(self.c_degree)
-        self.h0_w_mat = np.identity(self.c_degree)
+        self.h0_w_mat = np.eye(self.c_degree)
         
-        self.h0_w_mat_inv = np.identity(self.c_degree)
+        self.h0_w_mat_inv = np.eye(self.c_degree)
 
         # hn_params
         self.hn_m_vec = np.zeros(self.c_degree)
         self.hn_kappa = 1.0
         self.hn_nu = float(self.c_degree)
-        self.hn_w_mat = np.identity(self.c_degree)
+        self.hn_w_mat = np.eye(self.c_degree)
         
-        self.hn_w_mat_inv = np.identity(self.c_degree)
+        self.hn_w_mat_inv = np.eye(self.c_degree)
 
         # p_params
         self.p_m_vec = np.zeros(self.c_degree)
         self.p_nu = 1.0
-        self.p_v_mat = np.identity(self.c_degree)/2.0
+        self.p_v_mat = np.eye(self.c_degree)/2.0
 
-        self.p_v_mat_inv = np.identity(self.c_degree)*2.0
+        self.p_v_mat_inv = np.eye(self.c_degree)*2.0
 
         self.set_h0_params(
             h0_m_vec,

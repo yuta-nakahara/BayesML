@@ -401,7 +401,7 @@ class LearnModel(base.Posterior, base.PredictiveMixin):
                 else:
                     return (self.hn_alpha_vec - 1) / (np.sum(self.hn_alpha_vec) - self.c_degree)
             else:
-                warnings.warn("MAP estimate of lambda_mat doesn't exist for the current hn_alpha_vec.",ResultWarning)
+                warnings.warn("MAP estimate of theta_vec doesn't exist for the current hn_alpha_vec.",ResultWarning)
                 if dict_out:
                     return {'theta_vec':None}
                 else:
