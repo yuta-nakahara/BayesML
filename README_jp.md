@@ -120,7 +120,7 @@ print(learn_model.estimate_params(loss='0-1'))
 * [隠れマルコフモデル](https://yuta-nakahara.github.io/BayesML/bayesml.hiddenmarkovnormal.html "BayesML Hidden Markov Normal Model")
 * [文脈木モデル](https://yuta-nakahara.github.io/BayesML/bayesml.contexttree.html "BayesML Context Tree Model")
 
-また，今後は混合正規モデルや隠れマルコフモデルなどの厳密なベイズ推論が困難なモデルを変分ベイズ法で学習するパッケージが追加される予定です．
+また，今後はより複雑な階層的モデルを取り扱うパッケージを追加していく予定です．
 
 ## コントリビューションの方法
 
@@ -134,7 +134,7 @@ BayesMLへのコントリビューションを考えてくださってありが�
 
 ```
 Y. Nakahara, N. Ichijo, K. Shimada, Y. Iikubo, 
-S. Saito, K. Kazama, T. Matsushima, ``BayesML,'' 
+S. Saito, K. Kazama, T. Matsushima, BayesML Developers, ``BayesML 0.2.1,'' 
 [Online] https://github.com/yuta-nakahara/BayesML
 ```
 
@@ -144,8 +144,8 @@ BibTeX
 @misc{bayesml,
   author = {Nakahara Yuta and Ichijo Naoki and Shimada Koshi and
             Iikubo Yuji and Saito Shota and Kazama Koki and
-            Matsushima Toshiyasu}
-  title = {BayesML},
+            Matsushima Toshiyasu and {BayesML Developers}},
+  title = {BayesML 0.2.1},
   howpublished = {\url{https://github.com/yuta-nakahara/BayesML}},
   year = {2022}
 }

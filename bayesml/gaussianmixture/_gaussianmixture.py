@@ -48,7 +48,6 @@ class GenModel(base.Generative):
             self,
             c_num_classes,
             c_degree,
-            *,
             pi_vec=None,
             mu_vecs=None,
             lambda_mats=None,
@@ -67,14 +66,14 @@ class GenModel(base.Generative):
         # params
         self.pi_vec = np.ones(self.c_num_classes) / self.c_num_classes
         self.mu_vecs = np.zeros([self.c_num_classes,self.c_degree])
-        self.lambda_mats = np.tile(np.identity(self.c_degree),[self.c_num_classes,1,1])
+        self.lambda_mats = np.tile(np.eye(self.c_degree),[self.c_num_classes,1,1])
 
         # h_params
         self.h_alpha_vec = np.ones(self.c_num_classes) / 2        
         self.h_m_vecs = np.zeros([self.c_num_classes,self.c_degree])
         self.h_kappas = np.ones(self.c_num_classes)
         self.h_nus = np.ones(self.c_num_classes) * self.c_degree
-        self.h_w_mats = np.tile(np.identity(self.c_degree),[self.c_num_classes,1,1])
+        self.h_w_mats = np.tile(np.eye(self.c_degree),[self.c_num_classes,1,1])
         
         self.set_params(
             pi_vec,
@@ -88,7 +87,18 @@ class GenModel(base.Generative):
             h_nus,
             h_w_mats,
             )
-        
+
+    def get_constants(self):
+        """Get constants of GenModel.
+
+        Returns
+        -------
+        constants : dict of {str: int, numpy.ndarray}
+            * ``"c_num_classes"`` : the value of ``self.c_num_classes``
+            * ``"c_degree"`` : the value of ``self.c_degree``
+        """
+        return {"c_num_classes":self.c_num_classes, "c_degree":self.c_degree}
+
     def set_h_params(
             self,
             h_alpha_vec=None,
@@ -412,7 +422,6 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             self,
             c_num_classes,
             c_degree,
-            *,
             h0_alpha_vec = None,
             h0_m_vecs = None,
             h0_kappas = None,
@@ -430,7 +439,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self.h0_m_vecs = np.zeros([self.c_num_classes,self.c_degree])
         self.h0_kappas = np.ones(self.c_num_classes)
         self.h0_nus = np.ones(self.c_num_classes) * self.c_degree
-        self.h0_w_mats = np.tile(np.identity(self.c_degree),[self.c_num_classes,1,1])
+        self.h0_w_mats = np.tile(np.eye(self.c_degree),[self.c_num_classes,1,1])
         self.h0_w_mats_inv = np.linalg.inv(self.h0_w_mats)
 
         self._ln_c_h0_alpha = 0.0
@@ -479,6 +488,17 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             h0_nus,
             h0_w_mats,
         )
+
+    def get_constants(self):
+        """Get constants of LearnModel.
+
+        Returns
+        -------
+        constants : dict of {str: int, numpy.ndarray}
+            * ``"c_num_classes"`` : the value of ``self.c_num_classes``
+            * ``"c_degree"`` : the value of ``self.c_degree``
+        """
+        return {"c_num_classes":self.c_num_classes, "c_degree":self.c_degree}
 
     def set_h0_params(
             self,
@@ -771,7 +791,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             self.hn_w_mats_inv[k] = ((_subsample - self.hn_m_vecs[k]).T
                                  @ (_subsample - self.hn_m_vecs[k])
                                  / _size * self.hn_nus[k]
-                                 + np.identity(self.c_degree) * 1.0E-5) # avoid singular matrix
+                                 + np.eye(self.c_degree) * 1.0E-5) # avoid singular matrix
             self.hn_w_mats[k] = np.linalg.inv(self.hn_w_mats_inv[k])
         self._calc_q_lambda_char()
 
@@ -815,12 +835,12 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self.r_vecs = np.empty([x.shape[0],self.c_num_classes])
 
         tmp_vl = 0.0
-        tmp_alpha_vec = np.copy(self.hn_alpha_vec)
-        tmp_m_vecs = np.copy(self.hn_m_vecs)
-        tmp_kappas = np.copy(self.hn_kappas)
-        tmp_nus = np.copy(self.hn_nus)
-        tmp_w_mats = np.copy(self.hn_w_mats)
-        tmp_w_mats_inv = np.copy(self.hn_w_mats_inv)
+        tmp_alpha_vec = np.array(self.hn_alpha_vec)
+        tmp_m_vecs = np.array(self.hn_m_vecs)
+        tmp_kappas = np.array(self.hn_kappas)
+        tmp_nus = np.array(self.hn_nus)
+        tmp_w_mats = np.array(self.hn_w_mats)
+        tmp_w_mats_inv = np.array(self.hn_w_mats_inv)
 
         convergence_flag = True
         for i in range(num_init):
@@ -913,7 +933,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             if np.all(self.hn_alpha_vec > 1):
                 pi_vec_hat[:] = (self.hn_alpha_vec - 1) / (np.sum(self.hn_alpha_vec) - self.c_degree)
             else:
-                warnings.warn("MAP estimate of lambda_mat doesn't exist for the current hn_alpha_vec.",ResultWarning)
+                warnings.warn("MAP estimate of pi_vec doesn't exist for the current hn_alpha_vec.",ResultWarning)
                 pi_vec_hat[:] = np.nan
 
             lambda_mats_hat = np.empty([self.c_num_classes,self.c_degree,self.c_degree])
@@ -1164,7 +1184,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         if loss == "squared":
             return self.r_vecs
         elif loss == "0-1":
-            return np.identity(self.c_num_classes,dtype=int)[np.argmax(self.r_vecs,axis=1)]
+            return np.eye(self.c_num_classes,dtype=int)[np.argmax(self.r_vecs,axis=1)]
         elif loss == "KL":
             return self.r_vecs
         else:

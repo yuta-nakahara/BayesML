@@ -1,7 +1,8 @@
 bayesml.metatree package
 ========================
 
-.. image:: ./images/metatree_example.png
+.. image:: ./images/metatree_example1.png
+.. image:: ./images/metatree_example2.png
 
 Module contents
 ---------------

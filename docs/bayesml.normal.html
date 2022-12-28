@@ -32,8 +32,8 @@
     <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
     <script src="_static/sphinx-book-theme.9d8b4a8b9bb19db25eeaddc40d639ba2.js"></script>
-    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <link rel="shortcut icon" href="_static/BayesML_favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -357,7 +357,7 @@ m_n &amp;= \frac{\kappa_0 m_0 + n \bar{x}}{\kappa_0 + n}, \\
 \nu_\mathrm{p} &amp;= 2 \alpha_n.\end{split}\]</div>
 <dl class="py class">
 <dt class="sig sig-object py" id="bayesml.normal.GenModel">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">bayesml.normal.</span></span><span class="sig-name descname"><span class="pre">GenModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tau</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h_m</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h_kappa</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h_alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h_beta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.normal.GenModel" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bayesml.normal.</span></span><span class="sig-name descname"><span class="pre">GenModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tau</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h_m</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h_kappa</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h_alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h_beta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.normal.GenModel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="bayesml.html#bayesml.base.Generative" title="bayesml.base.Generative"><code class="xref py py-class docutils literal notranslate"><span class="pre">bayesml.base.Generative</span></code></a></p>
 <p>The stochastic data generative model and the prior distribution</p>
 <dl class="field-list simple">
@@ -365,15 +365,15 @@ m_n &amp;= \frac{\kappa_0 m_0 + n \bar{x}}{\kappa_0 + n}, \\
 <dd class="field-odd"><dl class="simple">
 <dt><strong>mu</strong><span class="classifier">float, optional</span></dt><dd><p>a real number, by default 0.0</p>
 </dd>
-<dt><strong>tau</strong><span class="classifier">float, optional</span></dt><dd><p>a positibe real number, by default 1.0</p>
+<dt><strong>tau</strong><span class="classifier">float, optional</span></dt><dd><p>a positive real number, by default 1.0</p>
 </dd>
 <dt><strong>h_m</strong><span class="classifier">float, optional</span></dt><dd><p>a real number, by default 0.0</p>
 </dd>
-<dt><strong>h_kappa</strong><span class="classifier">float, optional</span></dt><dd><p>a positibe real number, by default 1.0</p>
+<dt><strong>h_kappa</strong><span class="classifier">float, optional</span></dt><dd><p>a positive real number, by default 1.0</p>
 </dd>
-<dt><strong>h_alpha</strong><span class="classifier">float, optional</span></dt><dd><p>a positibe real number, by default 1.0</p>
+<dt><strong>h_alpha</strong><span class="classifier">float, optional</span></dt><dd><p>a positive real number, by default 1.0</p>
 </dd>
-<dt><strong>h_beta</strong><span class="classifier">float, optional</span></dt><dd><p>a positibe real number, by default 1.0</p>
+<dt><strong>h_beta</strong><span class="classifier">float, optional</span></dt><dd><p>a positive real number, by default 1.0</p>
 </dd>
 <dt><strong>seed</strong><span class="classifier">{None, int}, optional</span></dt><dd><p>A seed to initialize numpy.random.default_rng(),
 by default None</p>
@@ -394,52 +394,70 @@ by default None</p>
 <tr class="row-even"><td><p><a class="reference internal" href="#bayesml.normal.GenModel.gen_sample" title="bayesml.normal.GenModel.gen_sample"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gen_sample</span></code></a>(sample_size)</p></td>
 <td><p>Generate a sample from the stochastic data generative model.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#bayesml.normal.GenModel.get_h_params" title="bayesml.normal.GenModel.get_h_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_h_params</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bayesml.normal.GenModel.get_constants" title="bayesml.normal.GenModel.get_constants"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_constants</span></code></a>()</p></td>
+<td><p>Get constants of GenModel.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#bayesml.normal.GenModel.get_h_params" title="bayesml.normal.GenModel.get_h_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_h_params</span></code></a>()</p></td>
 <td><p>Get the hyperparameters of the prior distribution.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#bayesml.normal.GenModel.get_params" title="bayesml.normal.GenModel.get_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_params</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bayesml.normal.GenModel.get_params" title="bayesml.normal.GenModel.get_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_params</span></code></a>()</p></td>
 <td><p>Get the parameter of the sthocastic data generative model.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_h_params</span></code>(filename)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_h_params</span></code>(filename)</p></td>
 <td><p>Load the hyperparameters to h_params.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_params</span></code>(filename)</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_params</span></code>(filename)</p></td>
 <td><p>Load the parameters saved by <code class="docutils literal notranslate"><span class="pre">save_params</span></code>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_h_params</span></code>(filename)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_h_params</span></code>(filename)</p></td>
 <td><p>Save the hyperparameters using python <code class="docutils literal notranslate"><span class="pre">pickle</span></code> module.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_params</span></code>(filename)</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_params</span></code>(filename)</p></td>
 <td><p>Save the parameters using python <code class="docutils literal notranslate"><span class="pre">pickle</span></code> module.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#bayesml.normal.GenModel.save_sample" title="bayesml.normal.GenModel.save_sample"><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_sample</span></code></a>(filename, sample_size)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#bayesml.normal.GenModel.save_sample" title="bayesml.normal.GenModel.save_sample"><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_sample</span></code></a>(filename, sample_size)</p></td>
 <td><p>Save the generated sample as NumPy <code class="docutils literal notranslate"><span class="pre">.npz</span></code> format.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#bayesml.normal.GenModel.set_h_params" title="bayesml.normal.GenModel.set_h_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_h_params</span></code></a>(h_m, h_kappa, h_alpha, h_beta)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bayesml.normal.GenModel.set_h_params" title="bayesml.normal.GenModel.set_h_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_h_params</span></code></a>([h_m, h_kappa, h_alpha, h_beta])</p></td>
 <td><p>Set the hyperparameters of the prior distribution.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#bayesml.normal.GenModel.set_params" title="bayesml.normal.GenModel.set_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_params</span></code></a>(mu, tau)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#bayesml.normal.GenModel.set_params" title="bayesml.normal.GenModel.set_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_params</span></code></a>([mu, tau])</p></td>
 <td><p>Set the parameter of the sthocastic data generative model.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#bayesml.normal.GenModel.visualize_model" title="bayesml.normal.GenModel.visualize_model"><code class="xref py py-obj docutils literal notranslate"><span class="pre">visualize_model</span></code></a>([sample_size, hist_bins])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bayesml.normal.GenModel.visualize_model" title="bayesml.normal.GenModel.visualize_model"><code class="xref py py-obj docutils literal notranslate"><span class="pre">visualize_model</span></code></a>([sample_size, hist_bins])</p></td>
 <td><p>Visualize the stochastic data generative model and generated samples.</p></td>
 </tr>
 </tbody>
 </table>
 <dl class="py method">
+<dt class="sig sig-object py" id="bayesml.normal.GenModel.get_constants">
+<span class="sig-name descname"><span class="pre">get_constants</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.normal.GenModel.get_constants" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get constants of GenModel.</p>
+<p>This model does not have any constants. 
+Therefore, this function returns an emtpy dict <code class="docutils literal notranslate"><span class="pre">{}</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>constants</strong><span class="classifier">an empty dict</span></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="bayesml.normal.GenModel.set_h_params">
-<span class="sig-name descname"><span class="pre">set_h_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">h_m</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h_kappa</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h_alpha</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h_beta</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.normal.GenModel.set_h_params" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_h_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">h_m</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h_kappa</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h_alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h_beta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.normal.GenModel.set_h_params" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set the hyperparameters of the prior distribution.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>h_m</strong><span class="classifier">float</span></dt><dd><p>a real number</p>
+<dt><strong>h_m</strong><span class="classifier">float, optional</span></dt><dd><p>a real number, by default None</p>
 </dd>
-<dt><strong>h_kappa</strong><span class="classifier">float</span></dt><dd><p>a positibe real number</p>
+<dt><strong>h_kappa</strong><span class="classifier">float, optional</span></dt><dd><p>a positive real number, by default None</p>
 </dd>
-<dt><strong>h_alpha</strong><span class="classifier">float</span></dt><dd><p>a positibe real number</p>
+<dt><strong>h_alpha</strong><span class="classifier">float, optional</span></dt><dd><p>a positive real number, by default None</p>
 </dd>
-<dt><strong>h_beta</strong><span class="classifier">float</span></dt><dd><p>a positibe real number</p>
+<dt><strong>h_beta</strong><span class="classifier">float, optional</span></dt><dd><p>a positive real number, by default None</p>
 </dd>
 </dl>
 </dd>
@@ -474,14 +492,14 @@ by default None</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="bayesml.normal.GenModel.set_params">
-<span class="sig-name descname"><span class="pre">set_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mu</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tau</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.normal.GenModel.set_params" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tau</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.normal.GenModel.set_params" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set the parameter of the sthocastic data generative model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>mu</strong><span class="classifier">float</span></dt><dd><p>a real number <span class="math notranslate nohighlight">\(mu \in \mathbb{R}\)</span></p>
+<dt><strong>mu</strong><span class="classifier">float, optional</span></dt><dd><p>a real number <span class="math notranslate nohighlight">\(mu \in \mathbb{R}\)</span>, by default None.</p>
 </dd>
-<dt><strong>tau</strong><span class="classifier">float, optional</span></dt><dd><p>a positibe real number</p>
+<dt><strong>tau</strong><span class="classifier">float, optional</span></dt><dd><p>a positive real number, by default None.</p>
 </dd>
 </dl>
 </dd>
@@ -544,7 +562,7 @@ by default None</p>
 <div class="admonition seealso">
 <p class="admonition-title">See also</p>
 <dl class="simple">
-<dt><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.savez_compressed.html#numpy.savez_compressed" title="(in NumPy v1.23)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy.savez_compressed</span></code></a></dt><dd></dd>
+<dt><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.savez_compressed.html#numpy.savez_compressed" title="(in NumPy v1.24)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy.savez_compressed</span></code></a></dt><dd></dd>
 </dl>
 </div>
 </dd></dl>
@@ -556,7 +574,7 @@ by default None</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>sample_size</strong><span class="classifier">int, optional</span></dt><dd><p>A positive integer, by default 20</p>
+<dt><strong>sample_size</strong><span class="classifier">int, optional</span></dt><dd><p>A positive integer, by default 1000</p>
 </dd>
 <dt><strong>hist_bins</strong><span class="classifier">float, optional</span></dt><dd><p>A positive float, by default 10</p>
 </dd>
@@ -576,7 +594,7 @@ by default None</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="bayesml.normal.LearnModel">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">bayesml.normal.</span></span><span class="sig-name descname"><span class="pre">LearnModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">h0_m</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h0_kappa</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h0_alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h0_beta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.normal.LearnModel" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bayesml.normal.</span></span><span class="sig-name descname"><span class="pre">LearnModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">h0_m</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h0_kappa</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h0_alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h0_beta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.normal.LearnModel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="bayesml.html#bayesml.base.Posterior" title="bayesml.base.Posterior"><code class="xref py py-class docutils literal notranslate"><span class="pre">bayesml.base.Posterior</span></code></a>, <a class="reference internal" href="bayesml.html#bayesml.base.PredictiveMixin" title="bayesml.base.PredictiveMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">bayesml.base.PredictiveMixin</span></code></a></p>
 <p>The posterior distribution and the predictive distribution.</p>
 <dl class="field-list simple">
@@ -604,9 +622,9 @@ by default None</p>
 </dd>
 <dt><strong>p_mu</strong><span class="classifier">float</span></dt><dd><p>a real number</p>
 </dd>
-<dt><strong>p_lambda</strong><span class="classifier">float</span></dt><dd><p>a positibe real number</p>
+<dt><strong>p_lambda</strong><span class="classifier">float</span></dt><dd><p>a positive real number</p>
 </dd>
-<dt><strong>p_nu</strong><span class="classifier">float</span></dt><dd><p>a positibe real number</p>
+<dt><strong>p_nu</strong><span class="classifier">float</span></dt><dd><p>a positive real number</p>
 </dd>
 </dl>
 </dd>
@@ -627,67 +645,85 @@ by default None</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="#bayesml.normal.LearnModel.estimate_params" title="bayesml.normal.LearnModel.estimate_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">estimate_params</span></code></a>([loss, dict_out])</p></td>
 <td><p>Estimate the parameter of the stochastic data generative model under the given criterion.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#bayesml.normal.LearnModel.get_h0_params" title="bayesml.normal.LearnModel.get_h0_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_h0_params</span></code></a>()</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#bayesml.normal.LearnModel.get_constants" title="bayesml.normal.LearnModel.get_constants"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_constants</span></code></a>()</p></td>
+<td><p>Get constants of LearnModel.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bayesml.normal.LearnModel.get_h0_params" title="bayesml.normal.LearnModel.get_h0_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_h0_params</span></code></a>()</p></td>
 <td><p>Get the initial values of the hyperparameters of the posterior distribution.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#bayesml.normal.LearnModel.get_hn_params" title="bayesml.normal.LearnModel.get_hn_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_hn_params</span></code></a>()</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#bayesml.normal.LearnModel.get_hn_params" title="bayesml.normal.LearnModel.get_hn_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_hn_params</span></code></a>()</p></td>
 <td><p>Get the hyperparameters of the posterior distribution.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#bayesml.normal.LearnModel.get_p_params" title="bayesml.normal.LearnModel.get_p_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_p_params</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bayesml.normal.LearnModel.get_p_params" title="bayesml.normal.LearnModel.get_p_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_p_params</span></code></a>()</p></td>
 <td><p>Get the parameters of the predictive distribution.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_h0_params</span></code>(filename)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_h0_params</span></code>(filename)</p></td>
 <td><p>Load the hyperparameters to h0_params.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_hn_params</span></code>(filename)</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_hn_params</span></code>(filename)</p></td>
 <td><p>Load the hyperparameters to hn_params.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#bayesml.normal.LearnModel.make_prediction" title="bayesml.normal.LearnModel.make_prediction"><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_prediction</span></code></a>([loss])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#bayesml.normal.LearnModel.make_prediction" title="bayesml.normal.LearnModel.make_prediction"><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_prediction</span></code></a>([loss])</p></td>
 <td><p>Predict a new data point under the given criterion.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#bayesml.normal.LearnModel.overwrite_h0_params" title="bayesml.normal.LearnModel.overwrite_h0_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">overwrite_h0_params</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">overwrite_h0_params</span></code>()</p></td>
 <td><p>Overwrite the initial values of the hyperparameters of the posterior distribution by the learned values.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#bayesml.normal.LearnModel.pred_and_update" title="bayesml.normal.LearnModel.pred_and_update"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pred_and_update</span></code></a>(x[, loss])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#bayesml.normal.LearnModel.pred_and_update" title="bayesml.normal.LearnModel.pred_and_update"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pred_and_update</span></code></a>(x[, loss])</p></td>
 <td><p>Predict a new data point and update the posterior sequentially.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#bayesml.normal.LearnModel.reset_hn_params" title="bayesml.normal.LearnModel.reset_hn_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">reset_hn_params</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">reset_hn_params</span></code>()</p></td>
 <td><p>Reset the hyperparameters of the posterior distribution to their initial values.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_h0_params</span></code>(filename)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_h0_params</span></code>(filename)</p></td>
 <td><p>Save the hyperparameters using python <code class="docutils literal notranslate"><span class="pre">pickle</span></code> module.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_hn_params</span></code>(filename)</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_hn_params</span></code>(filename)</p></td>
 <td><p>Save the hyperparameters using python <code class="docutils literal notranslate"><span class="pre">pickle</span></code> module.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#bayesml.normal.LearnModel.set_h0_params" title="bayesml.normal.LearnModel.set_h0_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_h0_params</span></code></a>(h0_m, h0_kappa, h0_alpha, h0_beta)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#bayesml.normal.LearnModel.set_h0_params" title="bayesml.normal.LearnModel.set_h0_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_h0_params</span></code></a>([h0_m, h0_kappa, h0_alpha, ...])</p></td>
 <td><p>Set the hyperparameters of the prior distribution.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#bayesml.normal.LearnModel.set_hn_params" title="bayesml.normal.LearnModel.set_hn_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_hn_params</span></code></a>(hn_m, hn_kappa, hn_alpha, hn_beta)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bayesml.normal.LearnModel.set_hn_params" title="bayesml.normal.LearnModel.set_hn_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_hn_params</span></code></a>([hn_m, hn_kappa, hn_alpha, ...])</p></td>
 <td><p>Set updated values of the hyperparameter of the posterior distribution.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#bayesml.normal.LearnModel.update_posterior" title="bayesml.normal.LearnModel.update_posterior"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_posterior</span></code></a>(x)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#bayesml.normal.LearnModel.update_posterior" title="bayesml.normal.LearnModel.update_posterior"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_posterior</span></code></a>(x)</p></td>
 <td><p>Update the hyperparameters of the posterior distribution using traning data.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#bayesml.normal.LearnModel.visualize_posterior" title="bayesml.normal.LearnModel.visualize_posterior"><code class="xref py py-obj docutils literal notranslate"><span class="pre">visualize_posterior</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bayesml.normal.LearnModel.visualize_posterior" title="bayesml.normal.LearnModel.visualize_posterior"><code class="xref py py-obj docutils literal notranslate"><span class="pre">visualize_posterior</span></code></a>()</p></td>
 <td><p>Visualize the posterior distribution for the parameter.</p></td>
 </tr>
 </tbody>
 </table>
 <dl class="py method">
+<dt class="sig sig-object py" id="bayesml.normal.LearnModel.get_constants">
+<span class="sig-name descname"><span class="pre">get_constants</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.normal.LearnModel.get_constants" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get constants of LearnModel.</p>
+<p>This model does not have any constants. 
+Therefore, this function returns an emtpy dict <code class="docutils literal notranslate"><span class="pre">{}</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>constants</strong><span class="classifier">an empty dict</span></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="bayesml.normal.LearnModel.set_h0_params">
-<span class="sig-name descname"><span class="pre">set_h0_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">h0_m</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h0_kappa</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h0_alpha</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h0_beta</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.normal.LearnModel.set_h0_params" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_h0_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">h0_m</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h0_kappa</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h0_alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h0_beta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.normal.LearnModel.set_h0_params" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set the hyperparameters of the prior distribution.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>h0_m</strong><span class="classifier">float</span></dt><dd><p>a real number</p>
+<dt><strong>h0_m</strong><span class="classifier">float, optional</span></dt><dd><p>a real number, by default None</p>
 </dd>
-<dt><strong>h0_kappa</strong><span class="classifier">float</span></dt><dd><p>a positive real number</p>
+<dt><strong>h0_kappa</strong><span class="classifier">float, optional</span></dt><dd><p>a positive real number, by default None</p>
 </dd>
-<dt><strong>h0_alpha</strong><span class="classifier">float</span></dt><dd><p>a positive real number</p>
+<dt><strong>h0_alpha</strong><span class="classifier">float, optional</span></dt><dd><p>a positive real number, by default None</p>
 </dd>
-<dt><strong>h0_beta</strong><span class="classifier">float</span></dt><dd><p>a positive real number</p>
+<dt><strong>h0_beta</strong><span class="classifier">float, optional</span></dt><dd><p>a positive real number, by default None</p>
 </dd>
 </dl>
 </dd>
@@ -715,18 +751,18 @@ by default None</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="bayesml.normal.LearnModel.set_hn_params">
-<span class="sig-name descname"><span class="pre">set_hn_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hn_m</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hn_kappa</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hn_alpha</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hn_beta</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.normal.LearnModel.set_hn_params" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_hn_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hn_m</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hn_kappa</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hn_alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hn_beta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.normal.LearnModel.set_hn_params" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set updated values of the hyperparameter of the posterior distribution.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>hn_m</strong><span class="classifier">float</span></dt><dd><p>a real number</p>
+<dt><strong>hn_m</strong><span class="classifier">float, optional</span></dt><dd><p>a real number, by default None</p>
 </dd>
-<dt><strong>hn_kappa</strong><span class="classifier">float</span></dt><dd><p>a positive real number</p>
+<dt><strong>hn_kappa</strong><span class="classifier">float, optional</span></dt><dd><p>a positive real number, by default None</p>
 </dd>
-<dt><strong>hn_alpha</strong><span class="classifier">float</span></dt><dd><p>a positive real number</p>
+<dt><strong>hn_alpha</strong><span class="classifier">float, optional</span></dt><dd><p>a positive real number, by default None</p>
 </dd>
-<dt><strong>hn_beta</strong><span class="classifier">float</span></dt><dd><p>a positive real number</p>
+<dt><strong>hn_beta</strong><span class="classifier">float, optional</span></dt><dd><p>a positive real number, by default None</p>
 </dd>
 </dl>
 </dd>
@@ -753,31 +789,13 @@ by default None</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="bayesml.normal.LearnModel.reset_hn_params">
-<span class="sig-name descname"><span class="pre">reset_hn_params</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.normal.LearnModel.reset_hn_params" title="Permalink to this definition">¶</a></dt>
-<dd><p>Reset the hyperparameters of the posterior distribution to their initial values.</p>
-<p>They are reset to <cite>self.h0_m</cite>, <cite>self.h0_kappa</cite>, <cite>self.h0_alpha</cite>, and <cite>self.h0_beta</cite>.
-Note that the parameters of the predictive distribution are also calculated from 
-<cite>self.h0_m</cite>, <cite>self.h0_kappa</cite>, <cite>self.h0_alpha</cite>, and <cite>self.h0_beta</cite>.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="bayesml.normal.LearnModel.overwrite_h0_params">
-<span class="sig-name descname"><span class="pre">overwrite_h0_params</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.normal.LearnModel.overwrite_h0_params" title="Permalink to this definition">¶</a></dt>
-<dd><p>Overwrite the initial values of the hyperparameters of the posterior distribution by the learned values.</p>
-<p>They are overwritten by <cite>self.hn_m</cite>, <cite>self.hn_kappa</cite>, <cite>self.hn_alpha</cite>, and <cite>self.hn_beta</cite>.
-Note that the parameters of the predictive distribution are also calculated from 
-<cite>self.hn_m</cite>, <cite>self.hn_kappa</cite>, <cite>self.hn_alpha</cite>, and <cite>self.hn_beta</cite>.</p>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="bayesml.normal.LearnModel.update_posterior">
 <span class="sig-name descname"><span class="pre">update_posterior</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.normal.LearnModel.update_posterior" title="Permalink to this definition">¶</a></dt>
 <dd><p>Update the hyperparameters of the posterior distribution using traning data.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>x</strong><span class="classifier">numpy.ndarray</span></dt><dd><p>All the elements must be natural number.</p>
+<dt><strong>x</strong><span class="classifier">numpy.ndarray</span></dt><dd><p>Real numbers.</p>
 </dd>
 </dl>
 </dd>
@@ -911,7 +929,7 @@ as numpy.ndarray.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>x</strong><span class="classifier">int</span></dt><dd><p>It must be natural number</p>
+<dt><strong>x</strong><span class="classifier">float</span></dt><dd><p>A real number</p>
 </dd>
 <dt><strong>loss</strong><span class="classifier">str, optional</span></dt><dd><p>Loss function underlying the Bayes risk function, by default “squared”.
 This function supports “squared”, “0-1”, “abs”, and “KL”.</p>

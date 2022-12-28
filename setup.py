@@ -33,7 +33,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='bayesml',
-    version='0.2.0',
+    version='0.2.1',
     packages=find_packages(),
     author='Yuta Nakahara et al.',
     author_email='yuta.nakahara@aoni.waseda.jp',

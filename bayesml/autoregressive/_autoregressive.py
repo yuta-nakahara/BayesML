@@ -58,7 +58,7 @@ class GenModel(base.Generative):
 
         # h_params
         self.h_mu_vec = np.zeros(self.c_degree+1)
-        self.h_lambda_mat = np.identity(self.c_degree+1)
+        self.h_lambda_mat = np.eye(self.c_degree+1)
         self.h_alpha = 1.0
         self.h_beta = 1.0
 
@@ -306,13 +306,13 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
 
         # h0_params
         self.h0_mu_vec = np.zeros(self.c_degree+1)
-        self.h0_lambda_mat = np.identity(self.c_degree+1)
+        self.h0_lambda_mat = np.eye(self.c_degree+1)
         self.h0_alpha = 1.0
         self.h0_beta = 1.0
 
         # hn_params
         self.hn_mu_vec = np.zeros(self.c_degree+1)
-        self.hn_lambda_mat = np.identity(self.c_degree+1)
+        self.hn_lambda_mat = np.eye(self.c_degree+1)
         self.hn_alpha = 1.0
         self.hn_beta = 1.0
 
@@ -484,8 +484,8 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         for n in range(self.c_degree+1,x.shape[0]):
             x_mat[n,1:] = x[n-self.c_degree:n]
         
-        mu_tmp = np.copy(self.hn_mu_vec)
-        lambda_tmp = np.copy(self.hn_lambda_mat)
+        mu_tmp = np.array(self.hn_mu_vec)
+        lambda_tmp = np.array(self.hn_lambda_mat)
         if padding == "zeros":
             self.hn_lambda_mat += x_mat.T @ x_mat
             self.hn_mu_vec[:] = np.linalg.solve(self.hn_lambda_mat,
