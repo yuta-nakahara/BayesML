@@ -145,7 +145,7 @@ BibTeX
 @misc{bayesml,
   author = {Nakahara Yuta and Ichijo Naoki and Shimada Koshi and
             Iikubo Yuji and Saito Shota and Kazama Koki and
-            Matsushima Toshiyasu and BayesML Developers}
+            Matsushima Toshiyasu and {BayesML Developers}},
   title = {BayesML 0.2.1},
   howpublished = {\url{https://github.com/yuta-nakahara/BayesML}},
   year = {2022}

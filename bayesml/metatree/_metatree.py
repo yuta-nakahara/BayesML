@@ -957,7 +957,6 @@ class GenModel(base.Generative):
         >>> model.visualize_model()
 
         .. image:: ./images/metatree_example1.png
-
         .. image:: ./images/metatree_example2.png
 
         See Also
@@ -2019,7 +2018,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                 self._copy_map_tree_recursion(copied_node.children[i],original_node.children[i])
 
     def estimate_params(self,loss="0-1",visualize=True,filename=None,format=None):
-        """Estimate the parameter under the given criterion.
+        r"""Estimate the parameter under the given criterion.
 
         The approximate MAP meta-tree 
         :math:`M_{T,\boldsymbol{k}_b} = \mathrm{argmax} p(M_{T,\boldsymbol{k}_{b'}} | \boldsymbol{x}^n, y^n)` 
@@ -2028,15 +2027,15 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         Parameters
         ----------
         loss : str, optional
-            Loss function underlying the Bayes risk function, by default ``\"0-1\"``.
-            This function supports only ``\"0-1\"``.
+            Loss function underlying the Bayes risk function, by default ``"0-1"``.
+            This function supports only ``"0-1"``.
         visualize : bool, optional
             If ``True``, the estimated metatree will be visualized, by default ``True``.
             This visualization requires ``graphviz``.
         filename : str, optional
             Filename for saving the figure, by default ``None``
         format : str, optional
-            Rendering output format (``\"pdf\"``, ``\"png\"``, ...).
+            Rendering output format (``"pdf"``, ``"png"``, ...).
 
 
         Returns
