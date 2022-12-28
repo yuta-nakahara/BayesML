@@ -16,22 +16,14 @@ from .. import _check
 _CMAP = plt.get_cmap("Blues")
 
 class _Node:
-    """ The node class used by generative model and the prior distribution
-
-    Parameters
-    ----------
-    depth : int
-            a non-negetive integer :math:' >= 0'
-    h_g : float
-            a positive real number  in \[0 , 1 \], by default 0.5
-    """
     def __init__(self,
                  depth,
                  c_k,
+                 h_g=0.5,
                  ):
         self.depth = depth
         self.children = [None for i in range(c_k)]  # child nodes
-        self.h_g = 0.5
+        self.h_g = h_g
         self.h_beta_vec = np.ones(c_k) / 2
         self.theta_vec = np.ones(c_k) / c_k
         self.leaf = False
@@ -65,8 +57,7 @@ class GenModel(base.Generative):
     def __init__(
             self,
             c_k,
-            c_d_max=10,
-            *,
+            c_d_max=2,
             root=None,
             h_g=0.5,
             h_beta_vec=None,
@@ -74,8 +65,8 @@ class GenModel(base.Generative):
             seed=None,
             ):
         # constants
-        self.c_d_max = _check.pos_int(c_d_max,'c_d_max',ParameterFormatError)
         self.c_k = _check.pos_int(c_k,'c_k',ParameterFormatError)
+        self.c_d_max = _check.pos_int(c_d_max,'c_d_max',ParameterFormatError)
         self.rng = np.random.default_rng(seed)
 
         # h_params
@@ -90,8 +81,7 @@ class GenModel(base.Generative):
         )
 
         # params
-        self.root = _Node(0,self.c_k)
-        self.root.h_g = self.h_g
+        self.root = _Node(0,self.c_k,self.h_g)
         self.root.h_beta_vec[:] = self.h_beta_vec
         self.root.leaf = True
 
@@ -99,13 +89,20 @@ class GenModel(base.Generative):
             root,
         )
 
+    def get_constants(self):
+        """Get constants of GenModel.
+
+        Returns
+        -------
+        constants : dict of {str: int, numpy.ndarray}
+            * ``"c_k"`` : the value of ``self.c_k``
+            * ``"c_d_max"`` : the value of ``self.c_d_max``
+        """
+        return {"c_k":self.c_k, "c_d_max":self.c_d_max}
+
     def _gen_params_recursion(self,node:_Node,h_node:_Node):
-        """ generate parameters recursively"""
         if h_node is None:
-            if node.depth == self.c_d_max:
-                node.h_g = 0
-            else:
-                node.h_g = self.h_g
+            node.h_g = 0.0 if node.depth == self.c_d_max else self.h_g
             node.h_beta_vec[:] = self.h_beta_vec
             if node.depth == self.c_d_max or self.rng.random() > self.h_g:  # leaf node
                 node.theta_vec[:] = self.rng.dirichlet(self.h_beta_vec)
@@ -117,10 +114,7 @@ class GenModel(base.Generative):
                         node.children[i] = _Node(node.depth+1,self.c_k)
                     self._gen_params_recursion(node.children[i],None)
         else:
-            if node.depth == self.c_d_max:
-                node.h_g = 0
-            else:
-                node.h_g = h_node.h_g
+            node.h_g = 0.0 if node.depth == self.c_d_max else h_node.h_g
             node.h_beta_vec[:] = h_node.h_beta_vec
             if node.depth == self.c_d_max or self.rng.random() > h_node.h_g:  # leaf node
                 node.theta_vec[:] = self.rng.dirichlet(h_node.h_beta_vec)
@@ -133,12 +127,8 @@ class GenModel(base.Generative):
                     self._gen_params_recursion(node.children[i],h_node.children[i])
 
     def _gen_params_recursion_tree_fix(self,node:_Node,h_node:_Node):
-        """ generate parameters recursively for fixed tree"""
         if h_node is None:
-            if node.depth == self.c_d_max:
-                node.h_g = 0
-            else:
-                node.h_g = self.h_g
+            node.h_g = 0.0 if node.depth == self.c_d_max else self.h_g
             node.h_beta_vec[:] = self.h_beta_vec
             if node.leaf:  # leaf node
                 node.theta_vec[:] = self.rng.dirichlet(self.h_beta_vec)
@@ -147,10 +137,7 @@ class GenModel(base.Generative):
                     if node.children[i] is not None:
                         self._gen_params_recursion_tree_fix(node.children[i],None)
         else:
-            if node.depth == self.c_d_max:
-                node.h_g = 0
-            else:
-                node.h_g = h_node.h_g
+            node.h_g = 0.0 if node.depth == self.c_d_max else h_node.h_g
             node.h_beta_vec[:] = h_node.h_beta_vec
             if node.leaf:  # leaf node
                 node.theta_vec[:] = self.rng.dirichlet(h_node.h_beta_vec)
@@ -160,17 +147,13 @@ class GenModel(base.Generative):
                         self._gen_params_recursion_tree_fix(node.children[i],h_node.children[i])
 
     def _set_params_recursion(self,node:_Node,original_tree_node:_Node):
-        """ copy parameters from a fixed tree
-
-        Parameters
-        ----------
-        node : object
-                a object from _Node class
-        original_tree_node : object
-                a object from _Node class
-        """
+        node.h_g = original_tree_node.h_g
+        node.h_beta_vec[:] = original_tree_node.h_beta_vec
         node.theta_vec[:] = original_tree_node.theta_vec
-        if original_tree_node.leaf or node.depth == self.c_d_max:  # leaf node
+        if node.depth == self.c_d_max:  # leaf node
+            node.leaf = True
+            node.h_g = 0.0
+        elif original_tree_node.leaf:  # leaf node
             node.leaf = True
         else:
             node.leaf = False
@@ -179,21 +162,21 @@ class GenModel(base.Generative):
                     node.children[i] = _Node(node.depth+1,self.c_k)
                 self._set_params_recursion(node.children[i],original_tree_node.children[i])
 
-    def _set_h_params_recursion(self,node:_Node,original_tree_node:_Node):
-        """ copy parameters from a fixed tree
+    def _set_h_g_recursion(self,node:_Node):
+        node.h_g = 0.0 if node.depth == self.c_d_max else self.h_g
+        for i in range(self.c_k):
+            if node.children[i] is not None:
+                self._set_h_g_recursion(node.children[i])
 
-        Parameters
-        ----------
-        node : object
-                a object from _Node class
-        original_tree_node : object
-                a object from _Node class
-        """
+    def _set_h_beta_vec_recursion(self,node:_Node):
+        node.h_beta_vec[:] = self.h_beta_vec
+        for i in range(self.c_k):
+            if node.children[i] is not None:
+                self._set_h_beta_vec_recursion(node.children[i])
+
+    def _set_h_params_recursion(self,node:_Node,original_tree_node:_Node):
         if original_tree_node is None:
-            if node.depth == self.c_d_max:
-                node.h_g = 0
-            else:
-                node.h_g = self.h_g
+            node.h_g = 0.0 if node.depth == self.c_d_max else self.h_g
             node.h_beta_vec[:] = self.h_beta_vec
             for i in range(self.c_k):
                 if node.children[i] is not None:
@@ -201,10 +184,11 @@ class GenModel(base.Generative):
         else:
             node.h_g = original_tree_node.h_g
             node.h_beta_vec[:] = original_tree_node.h_beta_vec
-            if original_tree_node.leaf or node.depth == self.c_d_max:  # leaf node
+            if node.depth == self.c_d_max:
                 node.leaf = True
-                if node.depth == self.c_d_max:
-                    node.h_g = 0
+                node.h_g = 0.0
+            elif original_tree_node.leaf:  # leaf node
+                node.leaf = True
             else:
                 node.leaf = False
                 for i in range(self.c_k):
@@ -213,37 +197,21 @@ class GenModel(base.Generative):
                     self._set_h_params_recursion(node.children[i],original_tree_node.children[i])
 
     def _gen_sample_recursion(self,node,x):
-        """Generate a sample from the stochastic data generative model.
-
-        Parameters
-        ----------
-        node : object
-                a object form GenNode class
-
-        x : numpy ndarray
-            1 dimensional array whose elements are 0 or 1.
-        """
         if node.leaf:  # leaf node
             return self.rng.choice(self.c_k,p=node.theta_vec)
         else:
             return self._gen_sample_recursion(node.children[x[-node.depth-1]],x)
     
-    def _visualize_model_recursion(self,tree_graph,node,node_id,parent_id,sibling_num,p_v):
-        """Visualize the stochastic data generative model and generated samples."""
+    def _visualize_model_recursion(self,tree_graph,node:_Node,node_id,parent_id,sibling_num,p_v):
         tmp_id = node_id
         tmp_p_v = p_v
         
         # add node information
         label_string = f'h_g={node.h_g:.2f}\\lp_v={tmp_p_v:.2f}\\ltheta_vec\\l='
         if node.leaf:
-            label_string += '['
-            for i in range(self.c_k):
-                label_string += f'{node.theta_vec[i]:.2f}'
-                if i < self.c_k-1:
-                    label_string += ','
-            label_string += ']'
+            label_string += f'{np.array2string(node.theta_vec,precision=2,max_line_width=11)}\\l'
         else:
-            label_string += 'None'
+            label_string += 'None\\l'
             
         tree_graph.node(name=f'{tmp_id}',label=label_string,fillcolor=f'{rgb2hex(_CMAP(tmp_p_v))}')
         if tmp_p_v > 0.65:
@@ -280,20 +248,21 @@ class GenModel(base.Generative):
         if h_g is not None:
             self.h_g = _check.float_in_closed01(h_g,'h_g',ParameterFormatError)
             if self.h_root is not None:
-                self._set_h_params_recursion(self.h_root,None)
+                self._set_h_g_recursion(self.h_root)
 
         if h_beta_vec is not None:
             _check.pos_floats(h_beta_vec,'h_beta_vec',ParameterFormatError)
             self.h_beta_vec[:] = h_beta_vec
             if self.h_root is not None:
-                self._set_h_params_recursion(self.h_root,None)
+                self._set_h_beta_vec_recursion(self.h_root)
         
         if h_root is not None:
             if type(h_root) is not _Node:
                 raise(ParameterFormatError(
                     "h_root must be an instance of contexttree._Node"
                 ))
-            self.h_root = _Node(0,self.c_k)
+            if self.h_root is None:
+                self.h_root = _Node(0,self.c_k)
             self._set_h_params_recursion(self.h_root,h_root)
         return self
 
@@ -483,15 +452,14 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
     def __init__(
             self,
             c_k,
-            c_d_max=10,
-            *,
+            c_d_max=2,
             h0_g=0.5,
             h0_beta_vec=None,
             h0_root=None,
             ):
         # constants
-        self.c_d_max = _check.pos_int(c_d_max,'c_d_max',ParameterFormatError)
         self.c_k = _check.pos_int(c_k,'c_k',ParameterFormatError)
+        self.c_d_max = _check.pos_int(c_d_max,'c_d_max',ParameterFormatError)
 
         # h0_params
         self.h0_g = h0_g
@@ -512,6 +480,29 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             h0_root,
         )
 
+    def get_constants(self):
+        """Get constants of LearnModel.
+
+        Returns
+        -------
+        constants : dict of {str: int, numpy.ndarray}
+            * ``"c_k"`` : the value of ``self.c_k``
+            * ``"c_d_max"`` : the value of ``self.c_d_max``
+        """
+        return {"c_k":self.c_k, "c_d_max":self.c_d_max}
+
+    def _set_h0_g_recursion(self,node:_Node):
+        node.h_g = 0.0 if node.depth == self.c_d_max else self.h0_g
+        for i in range(self.c_k):
+            if node.children[i] is not None:
+                self._set_h0_g_recursion(node.children[i])
+
+    def _set_h0_beta_vec_recursion(self,node:_Node):
+        node.h_beta_vec[:] = self.h0_beta_vec
+        for i in range(self.c_k):
+            if node.children[i] is not None:
+                self._set_h0_beta_vec_recursion(node.children[i])
+
     def _set_h0_params_recursion(self,node:_Node,original_tree_node:_Node):
         """ copy parameters from a fixed tree
 
@@ -523,10 +514,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                 a object from _Node class
         """
         if original_tree_node is None:
-            if node.depth == self.c_d_max:
-                node.h_g = 0
-            else:
-                node.h_g = self.h0_g
+            node.h_g = 0.0 if node.depth == self.c_d_max else self.h0_g
             node.h_beta_vec[:] = self.h0_beta_vec
             for i in range(self.c_k):
                 if node.children[i] is not None:
@@ -534,16 +522,29 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         else:
             node.h_g = original_tree_node.h_g
             node.h_beta_vec[:] = original_tree_node.h_beta_vec
-            if original_tree_node.leaf or node.depth == self.c_d_max:  # leaf node
+            if node.depth == self.c_d_max:
                 node.leaf = True
-                if node.depth == self.c_d_max:
-                    node.h_g = 0
+                node.h_g = 0.0
+            elif original_tree_node.leaf:  # leaf node
+                node.leaf = True
             else:
                 node.leaf = False
                 for i in range(self.c_k):
                     if node.children[i] is None:
                         node.children[i] = _Node(node.depth+1,self.c_k)
                     self._set_h0_params_recursion(node.children[i],original_tree_node.children[i])
+
+    def _set_hn_g_recursion(self,node:_Node):
+        node.h_g = 0.0 if node.depth == self.c_d_max else self.hn_g
+        for i in range(self.c_k):
+            if node.children[i] is not None:
+                self._set_hn_g_recursion(node.children[i])
+
+    def _set_hn_beta_vec_recursion(self,node:_Node):
+        node.h_beta_vec[:] = self.hn_beta_vec
+        for i in range(self.c_k):
+            if node.children[i] is not None:
+                self._set_hn_beta_vec_recursion(node.children[i])
 
     def _set_hn_params_recursion(self,node:_Node,original_tree_node:_Node):
         """ copy parameters from a fixed tree
@@ -556,10 +557,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                 a object from _Node class
         """
         if original_tree_node is None:
-            if node.depth == self.c_d_max:
-                node.h_g = 0
-            else:
-                node.h_g = self.hn_g
+            node.h_g = 0.0 if node.depth == self.c_d_max else self.hn_g
             node.h_beta_vec[:] = self.hn_beta_vec
             for i in range(self.c_k):
                 if node.children[i] is not None:
@@ -567,10 +565,11 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         else:
             node.h_g = original_tree_node.h_g
             node.h_beta_vec[:] = original_tree_node.h_beta_vec
-            if original_tree_node.leaf or node.depth == self.c_d_max:  # leaf node
+            if node.depth == self.c_d_max:
                 node.leaf = True
-                if node.depth == self.c_d_max:
-                    node.h_g = 0
+                node.h_g = 0.0
+            elif original_tree_node.leaf:  # leaf node
+                node.leaf = True
             else:
                 node.leaf = False
                 for i in range(self.c_k):
@@ -599,13 +598,13 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         if h0_g is not None:
             self.h0_g = _check.float_in_closed01(h0_g,'h0_g',ParameterFormatError)
             if self.h0_root is not None:
-                self._set_h0_params_recursion(self.h0_root,None)
+                self._set_h0_g_recursion(self.h0_root)
 
         if h0_beta_vec is not None:
             _check.pos_floats(h0_beta_vec,'h0_beta_vec',ParameterFormatError)
             self.h0_beta_vec[:] = h0_beta_vec
             if self.h0_root is not None:
-                self._set_h0_params_recursion(self.h0_root,None)
+                self._set_h0_beta_vec_recursion(self.h0_root)
         
         if h0_root is not None:
             if type(h0_root) is not _Node:
@@ -654,13 +653,13 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         if hn_g is not None:
             self.hn_g = _check.float_in_closed01(hn_g,'hn_g',ParameterFormatError)
             if self.hn_root is not None:
-                self._set_hn_params_recursion(self.hn_root,None)
+                self._set_hn_g_recursion(self.hn_root)
 
         if hn_beta_vec is not None:
             _check.pos_floats(hn_beta_vec,'hn_beta_vec',ParameterFormatError)
             self.hn_beta_vec[:] = hn_beta_vec
             if self.hn_root is not None:
-                self._set_hn_params_recursion(self.hn_root,None)
+                self._set_hn_beta_vec_recursion(self.hn_root)
         
         if hn_root is not None:
             if type(hn_root) is not _Node:
@@ -699,8 +698,8 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                 node.children[x[i-node.depth-1]] = _Node(
                     node.depth+1,
                     self.c_k,
+                    self.hn_g,
                 )
-                node.children[x[i-node.depth-1]].h_g = self.hn_g
                 node.children[x[i-node.depth-1]].h_beta_vec[:] = self.hn_beta_vec
                 if node.depth + 1 == self.c_d_max:
                     node.children[x[i-node.depth-1]].h_g = 0.0
@@ -726,8 +725,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         x = np.ravel(x)
 
         if self.hn_root is None:
-            self.hn_root = _Node(0,self.c_k)
-            self.hn_root.h_g = self.hn_g
+            self.hn_root = _Node(0,self.c_k,self.hn_g)
             self.hn_root.h_beta_vec[:] = self.hn_beta_vec
 
         for i in range(x.shape[0]):
@@ -741,8 +739,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             node.map_leaf = True
         else:  # inner node
             for i in range(self.c_k):
-                node.children[i] = _Node(node.depth+1,self.c_k)
-                node.children[i].h_g = self.hn_g
+                node.children[i] = _Node(node.depth+1,self.c_k,self.hn_g)
                 node.children[i].h_beta_vec[:] = self.hn_beta_vec
                 self._map_recursion_add_nodes(node.children[i])
 
@@ -757,15 +754,14 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                 if node.children[i] is not None:
                     tmp_vec[i] = self._map_recursion(node.children[i])
                 else:
-                    node.children[i] = _Node(node.depth+1,self.c_k)
-                    node.children[i].h_g = self.hn_g
+                    node.children[i] = _Node(node.depth+1,self.c_k,self.hn_g)
                     node.children[i].h_beta_vec[:] = self.hn_beta_vec
-                    if 1.0 - self.hn_g > self.hn_g ** ((self.c_k ** (self.c_d_max - node.depth) - 1)/(self.c_k-1)):
+                    if 1.0 - node.h_g > node.h_g * self.hn_g ** ((self.c_k ** (self.c_d_max - node.depth) - 1)/(self.c_k-1)-1):
                         node.children[i].map_leaf = True
-                        tmp_vec[i] = 1.0 - self.hn_g
+                        tmp_vec[i] = 1.0 - node.h_g
                     else:
                         self._map_recursion_add_nodes(node.children[i])
-                        tmp_vec[i] = self.hn_g ** ((self.c_k ** (self.c_d_max - node.depth) - 1)/(self.c_k-1))
+                        tmp_vec[i] = node.h_g * self.hn_g ** ((self.c_k ** (self.c_d_max - node.depth) - 1)/(self.c_k-1)-1)
             if tmp1 > node.h_g*tmp_vec.prod():
                 node.map_leaf = True
                 return tmp1
@@ -776,12 +772,18 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
     def _copy_map_tree_recursion(self,copyed_node:_Node,original_node:_Node):
         copyed_node.h_g = original_node.h_g
         copyed_node.h_beta_vec[:] = original_node.h_beta_vec
-        if original_node.map_leaf == False:
+        if np.all(original_node.h_beta_vec > 1):
+            copyed_node.theta_vec[:] = (original_node.h_beta_vec - 1) / (np.sum(original_node.h_beta_vec) - self.c_k)
+        else:
+            warnings.warn("MAP estimate of theta_vec doesn't exist for the current h_beta_vec.",ResultWarning)
+            copyed_node.theta_vec = None
+
+        if original_node.map_leaf:
+            copyed_node.leaf = True
+        else:
             for i in range(self.c_k):
                 copyed_node.children[i] = _Node(copyed_node.depth+1,self.c_k)
                 self._copy_map_tree_recursion(copyed_node.children[i],original_node.children[i])
-        else:
-            copyed_node.leaf = True
 
     def estimate_params(self,loss="0-1",visualize=True,filename=None,format=None):
         """Estimate the parameter under the given criterion.
@@ -813,8 +815,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
 
         if loss == "0-1":
             if self.hn_root is None:
-                self.hn_root = _Node(0,self.c_k)
-                self.hn_root.h_g = self.hn_g
+                self.hn_root = _Node(0,self.c_k,self.hn_g)
                 self.hn_root.h_beta_vec[:] = self.hn_beta_vec
             self._map_recursion(self.hn_root)
             map_root = _Node(0,self.c_k)
@@ -823,7 +824,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                 import graphviz
                 tree_graph = graphviz.Digraph(filename=filename,format=format)
                 tree_graph.attr("node",shape="box",fontname="helvetica",style="rounded,filled")
-                self._visualize_model_recursion(tree_graph, map_root, 0, None, None, 1.0)
+                self._visualize_model_recursion(tree_graph, map_root, 0, None, None, 1.0, True)
                 # Can we show the image on the console without saving the file?
                 tree_graph.view()
             return map_root
@@ -831,19 +832,21 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             raise(CriteriaError("Unsupported loss function! "
                                 +"This function supports only \"0-1\"."))
     
-    def _visualize_model_recursion(self,tree_graph,node:_Node,node_id,parent_id,sibling_num,p_v):
+    def _visualize_model_recursion(self,tree_graph,node:_Node,node_id,parent_id,sibling_num,p_v,map_tree):
         tmp_id = node_id
         tmp_p_v = p_v
         
         # add node information
         label_string = f'hn_g={node.h_g:.2f}\\lp_v={tmp_p_v:.2f}\\ltheta_vec\\l='
-        label_string += '['
-        for i in range(self.c_k):
-            theta_vec_hat = node.h_beta_vec / node.h_beta_vec.sum()
-            label_string += f'{theta_vec_hat[i]:.2f}'
-            if i < self.c_k-1:
-                label_string += ','
-        label_string += ']'
+        if map_tree and not node.leaf:
+            label_string += 'None\\l'
+        else:
+            if np.all(node.h_beta_vec > 1):
+                theta_vec_hat = (node.h_beta_vec - 1) / (np.sum(node.h_beta_vec) - self.c_k)
+                label_string += f'{np.array2string(theta_vec_hat,precision=2,max_line_width=11)}\\l'
+            else:
+                warnings.warn("MAP estimate of theta_vec doesn't exist for the current h_beta_vec.",ResultWarning)
+                label_string += 'None\\l'
             
         tree_graph.node(name=f'{tmp_id}',label=label_string,fillcolor=f'{rgb2hex(_CMAP(tmp_p_v))}')
         if tmp_p_v > 0.65:
@@ -855,7 +858,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         
         for i in range(self.c_k):
             if node.children[i] is not None:
-                node_id = self._visualize_model_recursion(tree_graph,node.children[i],node_id+1,tmp_id,i,tmp_p_v*node.h_g)
+                node_id = self._visualize_model_recursion(tree_graph,node.children[i],node_id+1,tmp_id,i,tmp_p_v*node.h_g,map_tree)
         
         return node_id
 
@@ -865,17 +868,16 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         
         # add node information
         if depth == self.c_d_max:
-            label_string = 'hn_g=0\\l'
+            label_string = 'hn_g=0.0\\l'
         else:
             label_string = f'hn_g={self.hn_g:.2f}\\l'    
         label_string += f'p_v={tmp_p_v:.2f}\\ltheta_vec\\l='
-        label_string += '['
-        for i in range(self.c_k):
-            theta_vec_hat = self.hn_beta_vec / self.hn_beta_vec.sum()
-            label_string += f'{theta_vec_hat[i]:.2f}'
-            if i < self.c_k-1:
-                label_string += ','
-        label_string += ']'
+        if np.all(self.hn_beta_vec > 1):
+            theta_vec_hat = (self.hn_beta_vec - 1) / (np.sum(self.hn_beta_vec) - self.c_k)
+            label_string += f'{np.array2string(theta_vec_hat,precision=2,max_line_width=11)}\\l'
+        else:
+            warnings.warn("MAP estimate of theta_vec doesn't exist for the current h_beta_vec.",ResultWarning)
+            label_string += 'None\\l'
             
         tree_graph.node(name=f'{tmp_id}',label=label_string,fillcolor=f'{rgb2hex(_CMAP(tmp_p_v))}')
         if tmp_p_v > 0.65:
@@ -924,9 +926,9 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             tree_graph = graphviz.Digraph(filename=filename,format=format)
             tree_graph.attr("node",shape="box",fontname="helvetica",style="rounded,filled")
             if self.hn_root is None:
-                self._visualize_model_recursion_none(tree_graph, 0, 0, None, None, 1.0)
+                self._visualize_model_recursion_none(tree_graph, 0, 0, None, None, 1.0, False)
             else:
-                self._visualize_model_recursion(tree_graph, self.hn_root, 0, None, None, 1.0)
+                self._visualize_model_recursion(tree_graph, self.hn_root, 0, None, None, 1.0, False)
             # Can we show the image on the console without saving the file?
             tree_graph.view()
         except ImportError as e:
@@ -943,9 +945,6 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             * ``"p_theta_vec"`` : the value of ``self.p_theta_vec``
         """
         return {"p_theta_vec":self.p_theta_vec}
-    
-    def _calc_pred_dist_leaf(self,node:_Node):
-            return node.h_beta_vec / node.h_beta_vec.sum()
 
     def _calc_pred_dist_recursion(self,node:_Node,x,i):
         if node.depth < self.c_d_max and i-1-node.depth >= 0:  # inner node
@@ -953,17 +952,17 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                 node.children[x[i-node.depth-1]] = _Node(
                     node.depth+1,
                     self.c_k,
+                    self.hn_g,
                 )
-                node.children[x[i-node.depth-1]].h_g = self.hn_g
                 node.children[x[i-node.depth-1]].h_beta_vec[:] = self.hn_beta_vec
                 if node.depth + 1 == self.c_d_max:
                     node.children[x[i-node.depth-1]].h_g = 0.0
                     node.children[x[i-node.depth-1]].leaf = True
             tmp1 = self._calc_pred_dist_recursion(node.children[x[i-node.depth-1]],x,i)
-            tmp2 = (1 - node.h_g) * self._calc_pred_dist_leaf(node) + node.h_g * tmp1
+            tmp2 = (1 - node.h_g) * node.h_beta_vec / node.h_beta_vec.sum() + node.h_g * tmp1
             return tmp2
         else:  # leaf node
-            return self._calc_pred_dist_leaf(node)
+            return node.h_beta_vec / node.h_beta_vec.sum()
 
     def calc_pred_dist(self,x):
         """Calculate the parameters of the predictive distribution.
@@ -1020,8 +1019,8 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                 node.children[x[i-node.depth-1]] = _Node(
                     node.depth+1,
                     self.c_k,
+                    self.hn_g,
                 )
-                node.children[x[i-node.depth-1]].h_g = self.hn_g
                 node.children[x[i-node.depth-1]].h_beta_vec[:] = self.hn_beta_vec
                 if node.depth + 1 == self.c_d_max:
                     node.children[x[i-node.depth-1]].h_g = 0.0
@@ -1055,9 +1054,8 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         i = x.shape[0] - 1
 
         if self.hn_root is None:
-            self.hn_root = _Node(0,self.c_k)
-        self.hn_root.h_g = self.hn_g
-        self.hn_root.h_beta_vec[:] = self.hn_beta_vec
+            self.hn_root = _Node(0,self.c_k,self.hn_g)
+            self.hn_root.h_beta_vec[:] = self.hn_beta_vec
 
         self.p_theta_vec[:] = self._pred_and_update_recursion(self.hn_root,x,i)
         prediction = self.make_prediction(loss=loss)
