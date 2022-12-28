@@ -109,8 +109,8 @@ class GenModel(base.Generative):
         generated between ``c_ranges[k,0]`` and ``c_ranges[k,1]``. 
         By default, [[-3,3],[-3,3],...,[-3,3]].
     SubModel : class, optional
-        bernoulli, poisson, normal, or exponential, 
-        by default bernoulli
+        bernoulli, categorical, poisson, normal, exponential, 
+        or linearregression, by default bernoulli
     sub_constants : dict, optional
         constants for self.SubModel.GenModel, by default {}
     root : metatree._Node, optional
@@ -202,8 +202,8 @@ class GenModel(base.Generative):
         
         if SubModel not in MODELS:
             raise(ParameterFormatError(
-                "SubModel must be bernoulli, "
-                +"poisson, normal, or exponential."
+                "SubModel must be bernoulli, categorical"
+                +"poisson, normal, exponential, or linearregression."
             ))
         self.SubModel = SubModel
 
@@ -1068,8 +1068,8 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         generated between ``c_ranges[k,0]`` and ``c_ranges[k,1]``. 
         By default, [[-3,3],[-3,3],...,[-3,3]].
     SubModel : class, optional
-        bernoulli, poisson, normal, or exponential, 
-        by default bernoulli
+        bernoulli, categorical, poisson, normal, exponential, 
+        or linearregression, by default bernoulli
     sub_constants : dict, optional
         constants for self.SubModel.LearnModel, by default {}
     h0_k_weight_vec : numpy.ndarray, optional
@@ -1166,8 +1166,8 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         
         if SubModel not in MODELS:
             raise(ParameterFormatError(
-                "SubModel must be bernoulli, "
-                +"poisson, normal, or exponential."
+                "SubModel must be bernoulli, categorical"
+                +"poisson, normal, exponential, or linearregression."
             ))
         self.SubModel = SubModel
 
@@ -2403,21 +2403,23 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                 tmp_pred_vec[i] = self._make_prediction_recursion_squared(metatree)
             return self.hn_metatree_prob_vec @ tmp_pred_vec
         elif loss == "0-1":
-            if self.SubModel is not bernoulli:
-                raise(CriteriaError("Unsupported loss function! "
-                                    +"\"0-1\" is supported only when self.SubModel is bernoulli."))
-            tmp_pred_dist_vec = np.empty([len(self.hn_metatree_list),2])
-            for i,metatree in enumerate(self.hn_metatree_list):
-                tmp_pred_dist_vec[i] = self._make_prediction_recursion_kl(metatree)
-            return np.argmax(self.hn_metatree_prob_vec @ tmp_pred_dist_vec)
+            if self.SubModel in CLF_MODELS:
+                tmp_pred_dist_vec = np.empty([len(self.hn_metatree_list),2])
+                for i,metatree in enumerate(self.hn_metatree_list):
+                    tmp_pred_dist_vec[i] = self._make_prediction_recursion_kl(metatree)
+                return np.argmax(self.hn_metatree_prob_vec @ tmp_pred_dist_vec)
+            else:
+                raise(CriteriaError("Unsupported loss function! \"0-1\" is supported "
+                                    +"only when self.SubModel is bernoulli or categorical."))
         elif loss == "KL":
-            if self.SubModel is not bernoulli:
-                raise(CriteriaError("Unsupported loss function! "
-                                    +"\"KL\" is supported only when self.SubModel is bernoulli."))
-            tmp_pred_dist_vec = np.empty([len(self.hn_metatree_list),2])
-            for i,metatree in enumerate(self.hn_metatree_list):
-                tmp_pred_dist_vec[i] = self._make_prediction_recursion_kl(metatree)
-            return self.hn_metatree_prob_vec @ tmp_pred_dist_vec
+            if self.SubModel in CLF_MODELS:
+                tmp_pred_dist_vec = np.empty([len(self.hn_metatree_list),2])
+                for i,metatree in enumerate(self.hn_metatree_list):
+                    tmp_pred_dist_vec[i] = self._make_prediction_recursion_kl(metatree)
+                return self.hn_metatree_prob_vec @ tmp_pred_dist_vec
+            else:
+                raise(CriteriaError("Unsupported loss function! \"KL\" is supported "
+                                    +"only when self.SubModel is bernoulli or categorical."))
         else:
             raise(CriteriaError("Unsupported loss function! "
                                 +"This function supports \"squared\", \"0-1\", and \"KL\"."))
