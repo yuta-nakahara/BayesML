@@ -297,7 +297,7 @@
 <li><p><span class="math notranslate nohighlight">\(\mathcal{S}\)</span> : a set of <span class="math notranslate nohighlight">\(s\)</span></p></li>
 <li><p><span class="math notranslate nohighlight">\(\mathcal{I}(T)\)</span> : a set of inner nodes of <span class="math notranslate nohighlight">\(T\)</span></p></li>
 <li><p><span class="math notranslate nohighlight">\(\mathcal{L}(T)\)</span> : a set of leaf nodes of <span class="math notranslate nohighlight">\(T\)</span></p></li>
-<li><p><span class="math notranslate nohighlight">\(\boldsymbol{k}=(k_s)_{s \in \mathcal{S}}\)</span> : feature assignmet vector where <span class="math notranslate nohighlight">\(k_s \in \{1, 2,\ldots,p+q\}\)</span>. If <span class="math notranslate nohighlight">\(k_s \leq p\)</span>, the node <span class="math notranslate nohighlight">\(s\)</span> has a threshold.</p></li>
+<li><p><span class="math notranslate nohighlight">\(\boldsymbol{k}=(k_s)_{s \in \mathcal{S}}\)</span> : feature assignment vector where <span class="math notranslate nohighlight">\(k_s \in \{1, 2,\ldots,p+q\}\)</span>. If <span class="math notranslate nohighlight">\(k_s \leq p\)</span>, the node <span class="math notranslate nohighlight">\(s\)</span> has a threshold.</p></li>
 <li><p><span class="math notranslate nohighlight">\(\boldsymbol{\theta}=(\theta_s)_{s \in \mathcal{S}}\)</span> : a set of parameter</p></li>
 <li><p><span class="math notranslate nohighlight">\(s(\boldsymbol{x}) \in \mathcal{L}(T)\)</span> : a leaf node of <span class="math notranslate nohighlight">\(T\)</span> corresponding to <span class="math notranslate nohighlight">\(\boldsymbol{x}\)</span>, which is determined according to <span class="math notranslate nohighlight">\(\boldsymbol{k}\)</span> and the thresholds.</p></li>
 </ul>
@@ -348,7 +348,7 @@ q_s(y_{i} | \boldsymbol{x}_{i}, \boldsymbol{x}^{i-1}, y^{i-1}, \boldsymbol{k}),&
 <p>For <span class="math notranslate nohighlight">\(\boldsymbol{k}_b \in \{\boldsymbol{k}_1, \boldsymbol{k}_2, \ldots, \boldsymbol{k}_B \}\)</span>,</p>
 <div class="math notranslate nohighlight">
 \[p(\boldsymbol{k}_b | \boldsymbol{x}^n, y^n)\propto \prod_{i=1}^n \tilde{q}_{s_{\lambda}}(y_{i}|\boldsymbol{x}_{i},\boldsymbol{x}^{i-1}, y^{i-1}, M_{T_b, \boldsymbol{k}_b}),\]</div>
-<p>where <span class="math notranslate nohighlight">\(s_{\lambda}\)</span> is the root node of <span class="math notranslate nohighlight">\(M_{T, \boldsymbol{k}_b}\)</span>.</p>
+<p>where <span class="math notranslate nohighlight">\(s_{\lambda}\)</span> is the root node of <span class="math notranslate nohighlight">\(M_{T_b, \boldsymbol{k}_b}\)</span>.</p>
 <p>The predictive distribution is as follows:</p>
 <div class="math notranslate nohighlight">
 \[p(y_{n+1}| \boldsymbol{x}_{n+1}, \boldsymbol{x}^n, y^n) = \sum_{b = 1}^B p(\boldsymbol{k}_b | \boldsymbol{x}^n, y^n) \tilde{q}_{s_{\lambda}}(y_{n+1}|\boldsymbol{x}_{n+1},\boldsymbol{x}^n, y^n, M_{T_b, \boldsymbol{k}_b})\]</div>
@@ -1043,7 +1043,7 @@ This function does not take such duplication into account.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="bayesml.metatree.LearnModel.visualize_posterior">
-<span class="sig-name descname"><span class="pre">visualize_posterior</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_metatrees</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.metatree.LearnModel.visualize_posterior" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">visualize_posterior</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_metatrees</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h_params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.metatree.LearnModel.visualize_posterior" title="Permalink to this definition">¶</a></dt>
 <dd><p>Visualize the posterior distribution for the parameter.</p>
 <p>This method requires <code class="docutils literal notranslate"><span class="pre">graphviz</span></code>.</p>
 <dl class="field-list simple">
@@ -1054,6 +1054,9 @@ This function does not take such duplication into account.</p>
 <dt><strong>format</strong><span class="classifier">str, optional</span></dt><dd><p>Rendering output format (<code class="docutils literal notranslate"><span class="pre">&quot;pdf&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;png&quot;</span></code>, …).</p>
 </dd>
 <dt><strong>num_metatrees</strong><span class="classifier">int, optional</span></dt><dd><p>Number of metatrees to be visualized, by default 3.</p>
+</dd>
+<dt><strong>h_params</strong><span class="classifier">bool, optional</span></dt><dd><p>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, hyperparameters at each node will be visualized. 
+if <code class="docutils literal notranslate"><span class="pre">False</span></code>, estimated parameters at each node will be visulaized.</p>
 </dd>
 </dl>
 </dd>

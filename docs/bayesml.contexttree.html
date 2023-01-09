@@ -720,7 +720,7 @@ by default <code class="docutils literal notranslate"><span class="pre">None</sp
 <tr class="row-odd"><td><p><a class="reference internal" href="#bayesml.contexttree.LearnModel.update_posterior" title="bayesml.contexttree.LearnModel.update_posterior"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_posterior</span></code></a>(x)</p></td>
 <td><p>Update the hyperparameters using traning data.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#bayesml.contexttree.LearnModel.visualize_posterior" title="bayesml.contexttree.LearnModel.visualize_posterior"><code class="xref py py-obj docutils literal notranslate"><span class="pre">visualize_posterior</span></code></a>([filename, format])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#bayesml.contexttree.LearnModel.visualize_posterior" title="bayesml.contexttree.LearnModel.visualize_posterior"><code class="xref py py-obj docutils literal notranslate"><span class="pre">visualize_posterior</span></code></a>([filename, format, h_params])</p></td>
 <td><p>Visualize the posterior distribution for the parameter.</p></td>
 </tr>
 </tbody>
@@ -842,7 +842,7 @@ by default <code class="docutils literal notranslate"><span class="pre">None</sp
 <dt><strong>loss</strong><span class="classifier">str, optional</span></dt><dd><p>Loss function underlying the Bayes risk function, by default <code class="docutils literal notranslate"><span class="pre">&quot;0-1&quot;</span></code>.
 This function supports only <code class="docutils literal notranslate"><span class="pre">&quot;0-1&quot;</span></code>.</p>
 </dd>
-<dt><strong>visualize</strong><span class="classifier">bool, optional</span></dt><dd><p>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, the estimated metatree will be visualized, by default <code class="docutils literal notranslate"><span class="pre">True</span></code>.
+<dt><strong>visualize</strong><span class="classifier">bool, optional</span></dt><dd><p>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, the estimated context tree model will be visualized, by default <code class="docutils literal notranslate"><span class="pre">True</span></code>.
 This visualization requires <code class="docutils literal notranslate"><span class="pre">graphviz</span></code>.</p>
 </dd>
 <dt><strong>filename</strong><span class="classifier">str, optional</span></dt><dd><p>Filename for saving the figure, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p>
@@ -853,7 +853,7 @@ This visualization requires <code class="docutils literal notranslate"><span cla
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><dl class="simple">
-<dt><strong>map_root</strong><span class="classifier">metatree._Node</span></dt><dd><p>The root node of the estimated meta-tree 
+<dt><strong>map_root</strong><span class="classifier">contexttree._Node</span></dt><dd><p>The root node of the estimated context tree model 
 that also contains the estimated parameters in each node.</p>
 </dd>
 </dl>
@@ -869,7 +869,7 @@ that also contains the estimated parameters in each node.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="bayesml.contexttree.LearnModel.visualize_posterior">
-<span class="sig-name descname"><span class="pre">visualize_posterior</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.contexttree.LearnModel.visualize_posterior" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">visualize_posterior</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h_params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.contexttree.LearnModel.visualize_posterior" title="Permalink to this definition">¶</a></dt>
 <dd><p>Visualize the posterior distribution for the parameter.</p>
 <p>This method requires <code class="docutils literal notranslate"><span class="pre">graphviz</span></code>.</p>
 <dl class="field-list simple">
@@ -878,6 +878,9 @@ that also contains the estimated parameters in each node.</p>
 <dt><strong>filename</strong><span class="classifier">str, optional</span></dt><dd><p>Filename for saving the figure, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </dd>
 <dt><strong>format</strong><span class="classifier">str, optional</span></dt><dd><p>Rendering output format (<code class="docutils literal notranslate"><span class="pre">&quot;pdf&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;png&quot;</span></code>, …).</p>
+</dd>
+<dt><strong>h_params</strong><span class="classifier">bool, optional</span></dt><dd><p>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, hyperparameters at each node will be visualized. 
+if <code class="docutils literal notranslate"><span class="pre">False</span></code>, estimated parameters at each node will be visulaized.</p>
 </dd>
 </dl>
 </dd>
@@ -892,7 +895,7 @@ that also contains the estimated parameters in each node.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">bayesml</span> <span class="kn">import</span> <span class="n">contexttree</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">gen_model</span> <span class="o">=</span> <span class="n">contexttree</span><span class="o">.</span><span class="n">GenModel</span><span class="p">(</span><span class="n">c_k</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span><span class="n">c_d_max</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span><span class="n">h_g</span><span class="o">=</span><span class="mf">0.75</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">gen_model</span><span class="o">.</span><span class="n">gen_params</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">gen_model</span><span class="o">.</span><span class="n">gen_sample</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">gen_model</span><span class="o">.</span><span class="n">gen_sample</span><span class="p">(</span><span class="mi">500</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">learn_model</span> <span class="o">=</span> <span class="n">contexttree</span><span class="o">.</span><span class="n">LearnModel</span><span class="p">(</span><span class="n">c_k</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span><span class="n">c_d_max</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span><span class="n">h0_g</span><span class="o">=</span><span class="mf">0.75</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">learn_model</span><span class="o">.</span><span class="n">update_posterior</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">learn_model</span><span class="o">.</span><span class="n">visualize_posterior</span><span class="p">()</span>
