@@ -5,7 +5,6 @@
 # Wenbin Yu <ywb827748728@163.com>
 import warnings
 import copy
-import pickle
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.colors import rgb2hex
@@ -402,9 +401,9 @@ class GenModel(base.Generative):
                 index = x_categorical[node.k-self.c_dim_continuous]
             return self._gen_sample_recursion(node.children[index],x_continuous,x_categorical)
     
-    def _visualize_model_recursion(self,tree_graph,node:_Node,node_id,parent_id,parent_k,sibling_num,p_v):
+    def _visualize_model_recursion(self,tree_graph,node:_Node,node_id,parent_id,parent_k,sibling_num,p_s):
         tmp_id = node_id
-        tmp_p_v = p_v
+        tmp_p_s = p_s
 
         # add node information
         if node.leaf:
@@ -413,7 +412,7 @@ class GenModel(base.Generative):
             label_string = f'k={node.k}\\l'
             if node.k < self.c_dim_continuous:
                 label_string += f'thresholds=\\l{np.array2string(node.thresholds[1:-1],precision=2)}\\l'
-        label_string += f'h_g={node.h_g:.2f}\\lp_v={tmp_p_v:.2f}\\lsub_params={{'
+        label_string += f'h_g={node.h_g:.2f}\\lp_s={tmp_p_s:.2f}\\lsub_params={{'
         if node.leaf:
             sub_params = node.sub_model.get_params()
             for key,value in sub_params.items():
@@ -428,8 +427,8 @@ class GenModel(base.Generative):
         else:
             label_string += '\\lNone}\\l'
             
-        tree_graph.node(name=f'{tmp_id}',label=label_string,fillcolor=f'{rgb2hex(_CMAP(tmp_p_v))}')
-        if tmp_p_v > 0.65:
+        tree_graph.node(name=f'{tmp_id}',label=label_string,fillcolor=f'{rgb2hex(_CMAP(tmp_p_s))}')
+        if tmp_p_s > 0.65:
             tree_graph.node(name=f'{tmp_id}',fontcolor='white')
         
         # add edge information
@@ -446,7 +445,7 @@ class GenModel(base.Generative):
         
         if node.leaf != True:
             for i in range(self.c_num_children_vec[node.k]):
-                node_id = self._visualize_model_recursion(tree_graph,node.children[i],node_id+1,tmp_id,node.k,i,tmp_p_v*node.h_g)
+                node_id = self._visualize_model_recursion(tree_graph,node.children[i],node_id+1,tmp_id,node.k,i,tmp_p_s*node.h_g)
         
         return node_id
 
@@ -2090,16 +2089,18 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                     None,
                     1.0,
                     map_prob,
-                    True)
+                    True,
+                    False,
+                    )
                 tree_graph.view()
             return map_root
         else:
             raise(CriteriaError("Unsupported loss function! "
                                 +"This function supports only \"0-1\"."))
     
-    def _visualize_model_recursion(self,tree_graph,node:_Node,node_id,parent_id,parent_k,sibling_num,p_v,approx_posterior,map_tree):
+    def _visualize_model_recursion(self,tree_graph,node:_Node,node_id,parent_id,parent_k,sibling_num,p_s,approx_posterior,map_tree,h_params):
         tmp_id = node_id
-        tmp_p_v = p_v
+        tmp_p_s = p_s
 
         # add node information
         if node.leaf:
@@ -2108,12 +2109,17 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             label_string = f'k={node.k}\\l'
             if node.k < self.c_dim_continuous:
                 label_string += f'thresholds=\\l{np.array2string(node.thresholds[1:-1],precision=2)}\\l'
-        label_string += f'hn_g={node.h_g:.2f}\\lp_v={tmp_p_v:.2f}\\lsub_params={{'
+        label_string += f'hn_g={node.h_g:.2f}\\lp_s={tmp_p_s:.2f}\\l'
         if node.sub_model is not None:
-            try:
-                sub_params = node.sub_model.estimate_params(loss='0-1',dict_out=True)
-            except:
-                sub_params = node.sub_model.estimate_params(dict_out=True)
+            if h_params:
+                label_string += 'sub_hn_params={'
+                sub_params = node.sub_model.get_hn_params()
+            else:
+                label_string += 'sub_params={'
+                try:
+                    sub_params = node.sub_model.estimate_params(loss='0-1',dict_out=True)
+                except:
+                    sub_params = node.sub_model.estimate_params(dict_out=True)
 
             for key,value in sub_params.items():
                 try:
@@ -2127,8 +2133,8 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         else:
             label_string += '\\lNone}\\l'
             
-        tree_graph.node(name=f'{tmp_id}',label=label_string,fillcolor=f'{rgb2hex(_CMAP(tmp_p_v))}')
-        if tmp_p_v > 0.65:
+        tree_graph.node(name=f'{tmp_id}',label=label_string,fillcolor=f'{rgb2hex(_CMAP(tmp_p_s))}')
+        if tmp_p_s > 0.65:
             tree_graph.node(name=f'{tmp_id}',fontcolor='white')
         
         # add edge information
@@ -2149,13 +2155,13 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         
         if not node.leaf:
             for i in range(self.c_num_children_vec[node.k]):
-                node_id = self._visualize_model_recursion(tree_graph,node.children[i],node_id+1,tmp_id,node.k,i,tmp_p_v*node.h_g,approx_posterior,map_tree)
+                node_id = self._visualize_model_recursion(tree_graph,node.children[i],node_id+1,tmp_id,node.k,i,tmp_p_s*node.h_g,approx_posterior,map_tree,h_params)
         
         return node_id
 
-    def _visualize_model_recursion_none(self,tree_graph,depth,k_candidates,ranges,node_id,parent_id,parent_k,sibling_num,p_v):
+    def _visualize_model_recursion_none(self,tree_graph,depth,k_candidates,ranges,node_id,parent_id,parent_k,sibling_num,p_s,h_params):
         tmp_id = node_id
-        tmp_p_v = p_v
+        tmp_p_s = p_s
         
         # add node information
         if depth == self.c_max_depth or not k_candidates:
@@ -2170,15 +2176,20 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                 thresholds = None
             child_k_candidates = k_candidates.copy()
             child_k_candidates.remove(k)
-        label_string += f'hn_g={self.hn_g:.2f}\\lp_v={tmp_p_v:.2f}\\lsub_params={{'
+        label_string += f'hn_g={self.hn_g:.2f}\\lp_s={tmp_p_s:.2f}\\l'
 
         sub_model = self.SubModel.LearnModel(
             **self.sub_constants,
             **self.sub_h0_params).set_hn_params(**self.sub_hn_params)
-        try:
-            sub_params = sub_model.estimate_params(loss='0-1',dict_out=True)
-        except:
-            sub_params = sub_model.estimate_params(dict_out=True)
+        if h_params:
+            label_string += 'sub_hn_params={'
+            sub_params = sub_model.get_hn_params()
+        else:
+            label_string += 'sub_params={'
+            try:
+                sub_params = sub_model.estimate_params(loss='0-1',dict_out=True)
+            except:
+                sub_params = sub_model.estimate_params(dict_out=True)
 
         for key,value in sub_params.items():
             try:
@@ -2190,8 +2201,8 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                     label_string += f'\\l{key}:{value}'
         label_string += '}\\l'
 
-        tree_graph.node(name=f'{tmp_id}',label=label_string,fillcolor=f'{rgb2hex(_CMAP(tmp_p_v))}')
-        if tmp_p_v > 0.65:
+        tree_graph.node(name=f'{tmp_id}',label=label_string,fillcolor=f'{rgb2hex(_CMAP(tmp_p_s))}')
+        if tmp_p_s > 0.65:
             tree_graph.node(name=f'{tmp_id}',fontcolor='white')
         
         # add edge information
@@ -2212,11 +2223,11 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                 if thresholds is not None:
                     child_ranges[k,0] = thresholds[i]
                     child_ranges[k,1] = thresholds[i+1]
-                node_id = self._visualize_model_recursion_none(tree_graph,depth+1,child_k_candidates,child_ranges,node_id+1,tmp_id,k,i,tmp_p_v*self.hn_g)
+                node_id = self._visualize_model_recursion_none(tree_graph,depth+1,child_k_candidates,child_ranges,node_id+1,tmp_id,k,i,tmp_p_s*self.hn_g,h_params)
         
         return node_id
 
-    def visualize_posterior(self,filename=None,format=None,num_metatrees=3):
+    def visualize_posterior(self,filename=None,format=None,num_metatrees=3,h_params=False):
         """Visualize the posterior distribution for the parameter.
         
         This method requires ``graphviz``.
@@ -2229,6 +2240,9 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             Rendering output format (``\"pdf\"``, ``\"png\"``, ...).
         num_metatrees : int, optional
             Number of metatrees to be visualized, by default 3.
+        h_params : bool, optional
+            If ``True``, hyperparameters at each node will be visualized. 
+            if ``False``, estimated parameters at each node will be visulaized.
 
         Examples
         --------
@@ -2268,7 +2282,9 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                     None,
                     None,
                     None,
-                    1.0)
+                    1.0,
+                    h_params,
+                    )
             else:
                 node_id = -1
                 indices = np.argsort(self.hn_metatree_prob_vec)[::-1]
@@ -2282,7 +2298,9 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                         None,
                         1.0,
                         self.hn_metatree_prob_vec[indices[i]],
-                        False)
+                        False,
+                        h_params,
+                        )
             # Can we show the image on the console without saving the file?
             tree_graph.view()
         except ImportError as e:
