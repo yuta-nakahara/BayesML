@@ -14,7 +14,7 @@ The stochastic data generative model is as follows:
 * :math:`\mathcal{S}` : a set of :math:`s`
 * :math:`\mathcal{I}(T)` : a set of inner nodes of :math:`T`
 * :math:`\mathcal{L}(T)` : a set of leaf nodes of :math:`T`
-* :math:`\boldsymbol{k}=(k_s)_{s \in \mathcal{S}}` : feature assignmet vector where :math:`k_s \in \{1, 2,\ldots,p+q\}`. If :math:`k_s \leq p`, the node :math:`s` has a threshold.
+* :math:`\boldsymbol{k}=(k_s)_{s \in \mathcal{S}}` : feature assignment vector where :math:`k_s \in \{1, 2,\ldots,p+q\}`. If :math:`k_s \leq p`, the node :math:`s` has a threshold.
 * :math:`\boldsymbol{\theta}=(\theta_s)_{s \in \mathcal{S}}` : a set of parameter
 * :math:`s(\boldsymbol{x}) \in \mathcal{L}(T)` : a leaf node of :math:`T` corresponding to :math:`\boldsymbol{x}`, which is determined according to :math:`\boldsymbol{k}` and the thresholds.
 
@@ -80,7 +80,7 @@ For :math:`\boldsymbol{k}_b \in \{\boldsymbol{k}_1, \boldsymbol{k}_2, \ldots, \b
 .. math::
     p(\boldsymbol{k}_b | \boldsymbol{x}^n, y^n)\propto \prod_{i=1}^n \tilde{q}_{s_{\lambda}}(y_{i}|\boldsymbol{x}_{i},\boldsymbol{x}^{i-1}, y^{i-1}, M_{T_b, \boldsymbol{k}_b}),
 
-where :math:`s_{\lambda}` is the root node of :math:`M_{T, \boldsymbol{k}_b}`.
+where :math:`s_{\lambda}` is the root node of :math:`M_{T_b, \boldsymbol{k}_b}`.
 
 The predictive distribution is as follows:
 

@@ -3,8 +3,6 @@
 # Document Author
 # Yuta Nakahara <yuta.nakahara@aoni.waseda.jp>
 import warnings
-import copy
-import pickle
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.colors import rgb2hex
@@ -202,19 +200,19 @@ class GenModel(base.Generative):
         else:
             return self._gen_sample_recursion(node.children[x[-node.depth-1]],x)
     
-    def _visualize_model_recursion(self,tree_graph,node:_Node,node_id,parent_id,sibling_num,p_v):
+    def _visualize_model_recursion(self,tree_graph,node:_Node,node_id,parent_id,sibling_num,p_s):
         tmp_id = node_id
-        tmp_p_v = p_v
+        tmp_p_s = p_s
         
         # add node information
-        label_string = f'h_g={node.h_g:.2f}\\lp_v={tmp_p_v:.2f}\\ltheta_vec\\l='
+        label_string = f'h_g={node.h_g:.2f}\\lp_s={tmp_p_s:.2f}\\ltheta_vec\\l='
         if node.leaf:
             label_string += f'{np.array2string(node.theta_vec,precision=2,max_line_width=11)}\\l'
         else:
             label_string += 'None\\l'
             
-        tree_graph.node(name=f'{tmp_id}',label=label_string,fillcolor=f'{rgb2hex(_CMAP(tmp_p_v))}')
-        if tmp_p_v > 0.65:
+        tree_graph.node(name=f'{tmp_id}',label=label_string,fillcolor=f'{rgb2hex(_CMAP(tmp_p_s))}')
+        if tmp_p_s > 0.65:
             tree_graph.node(name=f'{tmp_id}',fontcolor='white')
         
         # add edge information
@@ -223,7 +221,7 @@ class GenModel(base.Generative):
         
         if node.leaf != True:
             for i in range(self.c_k):
-                node_id = self._visualize_model_recursion(tree_graph,node.children[i],node_id+1,tmp_id,i,tmp_p_v*node.h_g)
+                node_id = self._visualize_model_recursion(tree_graph,node.children[i],node_id+1,tmp_id,i,tmp_p_s*node.h_g)
         
         return node_id
 
@@ -307,7 +305,7 @@ class GenModel(base.Generative):
         if root is not None:
             if type(root) is not _Node:
                 raise(ParameterFormatError(
-                    "root must be an instance of metatree._Node"
+                    "root must be an instance of contexttree._Node"
                 ))
             self._set_params_recursion(self.root,root)
         return self
@@ -794,7 +792,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             Loss function underlying the Bayes risk function, by default ``\"0-1\"``.
             This function supports only ``\"0-1\"``.
         visualize : bool, optional
-            If ``True``, the estimated metatree will be visualized, by default ``True``.
+            If ``True``, the estimated context tree model will be visualized, by default ``True``.
             This visualization requires ``graphviz``.
         filename : str, optional
             Filename for saving the figure, by default ``None``
@@ -804,8 +802,8 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
 
         Returns
         -------
-        map_root : metatree._Node
-            The root node of the estimated meta-tree 
+        map_root : contexttree._Node
+            The root node of the estimated context tree model 
             that also contains the estimated parameters in each node.
 
         See Also
@@ -824,7 +822,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                 import graphviz
                 tree_graph = graphviz.Digraph(filename=filename,format=format)
                 tree_graph.attr("node",shape="box",fontname="helvetica",style="rounded,filled")
-                self._visualize_model_recursion(tree_graph, map_root, 0, None, None, 1.0, True)
+                self._visualize_model_recursion(tree_graph, map_root, 0, None, None, 1.0, True, False)
                 # Can we show the image on the console without saving the file?
                 tree_graph.view()
             return map_root
@@ -832,24 +830,26 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             raise(CriteriaError("Unsupported loss function! "
                                 +"This function supports only \"0-1\"."))
     
-    def _visualize_model_recursion(self,tree_graph,node:_Node,node_id,parent_id,sibling_num,p_v,map_tree):
+    def _visualize_model_recursion(self,tree_graph,node:_Node,node_id,parent_id,sibling_num,p_s,map_tree,h_params):
         tmp_id = node_id
-        tmp_p_v = p_v
+        tmp_p_s = p_s
         
         # add node information
-        label_string = f'hn_g={node.h_g:.2f}\\lp_v={tmp_p_v:.2f}\\ltheta_vec\\l='
+        label_string = f'hn_g={node.h_g:.2f}\\lp_s={tmp_p_s:.2f}\\l'
         if map_tree and not node.leaf:
-            label_string += 'None\\l'
+            label_string += 'theta_vec\\l=None\\l'
         else:
-            if np.all(node.h_beta_vec > 1):
+            if h_params:
+                label_string += f'hn_beta_vec\\l={np.array2string(node.h_beta_vec,precision=2,max_line_width=11)}\\l'
+            elif np.all(node.h_beta_vec > 1):
                 theta_vec_hat = (node.h_beta_vec - 1) / (np.sum(node.h_beta_vec) - self.c_k)
-                label_string += f'{np.array2string(theta_vec_hat,precision=2,max_line_width=11)}\\l'
+                label_string += f'theta_vec\\l={np.array2string(theta_vec_hat,precision=2,max_line_width=11)}\\l'
             else:
-                warnings.warn("MAP estimate of theta_vec doesn't exist for the current h_beta_vec.",ResultWarning)
-                label_string += 'None\\l'
+                warnings.warn("MAP estimate of theta_vec doesn't exist for the current hn_beta_vec.",ResultWarning)
+                label_string += 'theta_vec\\l=None\\l'
             
-        tree_graph.node(name=f'{tmp_id}',label=label_string,fillcolor=f'{rgb2hex(_CMAP(tmp_p_v))}')
-        if tmp_p_v > 0.65:
+        tree_graph.node(name=f'{tmp_id}',label=label_string,fillcolor=f'{rgb2hex(_CMAP(tmp_p_s))}')
+        if tmp_p_s > 0.65:
             tree_graph.node(name=f'{tmp_id}',fontcolor='white')
         
         # add edge information
@@ -858,29 +858,31 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         
         for i in range(self.c_k):
             if node.children[i] is not None:
-                node_id = self._visualize_model_recursion(tree_graph,node.children[i],node_id+1,tmp_id,i,tmp_p_v*node.h_g,map_tree)
+                node_id = self._visualize_model_recursion(tree_graph,node.children[i],node_id+1,tmp_id,i,tmp_p_s*node.h_g,map_tree,h_params)
         
         return node_id
 
-    def _visualize_model_recursion_none(self,tree_graph,depth,node_id,parent_id,sibling_num,p_v):
+    def _visualize_model_recursion_none(self,tree_graph,depth,node_id,parent_id,sibling_num,p_s,h_params):
         tmp_id = node_id
-        tmp_p_v = p_v
+        tmp_p_s = p_s
         
         # add node information
         if depth == self.c_d_max:
             label_string = 'hn_g=0.0\\l'
         else:
             label_string = f'hn_g={self.hn_g:.2f}\\l'    
-        label_string += f'p_v={tmp_p_v:.2f}\\ltheta_vec\\l='
-        if np.all(self.hn_beta_vec > 1):
+        label_string += f'p_s={tmp_p_s:.2f}\\l'
+        if h_params:
+            label_string += f'hn_beta_vec\\l={np.array2string(self.hn_beta_vec,precision=2,max_line_width=11)}\\l'
+        elif np.all(self.hn_beta_vec > 1):
             theta_vec_hat = (self.hn_beta_vec - 1) / (np.sum(self.hn_beta_vec) - self.c_k)
-            label_string += f'{np.array2string(theta_vec_hat,precision=2,max_line_width=11)}\\l'
+            label_string += f'theta_vec\\l={np.array2string(theta_vec_hat,precision=2,max_line_width=11)}\\l'
         else:
-            warnings.warn("MAP estimate of theta_vec doesn't exist for the current h_beta_vec.",ResultWarning)
-            label_string += 'None\\l'
+            warnings.warn("MAP estimate of theta_vec doesn't exist for the current hn_beta_vec.",ResultWarning)
+            label_string += 'theta_vec\\l=None\\l'
             
-        tree_graph.node(name=f'{tmp_id}',label=label_string,fillcolor=f'{rgb2hex(_CMAP(tmp_p_v))}')
-        if tmp_p_v > 0.65:
+        tree_graph.node(name=f'{tmp_id}',label=label_string,fillcolor=f'{rgb2hex(_CMAP(tmp_p_s))}')
+        if tmp_p_s > 0.65:
             tree_graph.node(name=f'{tmp_id}',fontcolor='white')
         
         # add edge information
@@ -889,11 +891,11 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         
         if depth < self.c_d_max:
             for i in range(self.c_k):
-                node_id = self._visualize_model_recursion_none(tree_graph,depth+1,node_id+1,tmp_id,i,tmp_p_v*self.hn_g)
+                node_id = self._visualize_model_recursion_none(tree_graph,depth+1,node_id+1,tmp_id,i,tmp_p_s*self.hn_g,h_params)
         
         return node_id
 
-    def visualize_posterior(self,filename=None,format=None):
+    def visualize_posterior(self,filename=None,format=None,h_params=False):
         """Visualize the posterior distribution for the parameter.
         
         This method requires ``graphviz``.
@@ -904,13 +906,16 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             Filename for saving the figure, by default ``None``
         format : str, optional
             Rendering output format (``\"pdf\"``, ``\"png\"``, ...).
+        h_params : bool, optional
+            If ``True``, hyperparameters at each node will be visualized. 
+            if ``False``, estimated parameters at each node will be visulaized.
 
         Examples
         --------
         >>> from bayesml import contexttree
         >>> gen_model = contexttree.GenModel(c_k=2,c_d_max=3,h_g=0.75)
         >>> gen_model.gen_params()
-        >>> x = gen_model.gen_sample(50)
+        >>> x = gen_model.gen_sample(500)
         >>> learn_model = contexttree.LearnModel(c_k=2,c_d_max=3,h0_g=0.75)
         >>> learn_model.update_posterior(x)
         >>> learn_model.visualize_posterior()
@@ -926,9 +931,9 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             tree_graph = graphviz.Digraph(filename=filename,format=format)
             tree_graph.attr("node",shape="box",fontname="helvetica",style="rounded,filled")
             if self.hn_root is None:
-                self._visualize_model_recursion_none(tree_graph, 0, 0, None, None, 1.0, False)
+                self._visualize_model_recursion_none(tree_graph, 0, 0, None, None, 1.0, h_params)
             else:
-                self._visualize_model_recursion(tree_graph, self.hn_root, 0, None, None, 1.0, False)
+                self._visualize_model_recursion(tree_graph, self.hn_root, 0, None, None, 1.0, False, h_params)
             # Can we show the image on the console without saving the file?
             tree_graph.view()
         except ImportError as e:
