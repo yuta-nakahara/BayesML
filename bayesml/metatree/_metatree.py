@@ -2416,13 +2416,17 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             The predicted value under the given loss function. 
         """
         if loss == "squared":
-            tmp_pred_vec = np.empty(len(self.hn_metatree_list))
+            if self.SubModel is categorical:
+                tmp_pred_vec = np.empty([len(self.hn_metatree_list),self.sub_constants['c_degree']])
+            else:
+                tmp_pred_vec = np.empty(len(self.hn_metatree_list))
             for i,metatree in enumerate(self.hn_metatree_list):
                 tmp_pred_vec[i] = self._make_prediction_recursion_squared(metatree)
             return self.hn_metatree_prob_vec @ tmp_pred_vec
         elif loss == "0-1":
             if self.SubModel in CLF_MODELS:
-                tmp_pred_dist_vec = np.empty([len(self.hn_metatree_list),2])
+                degree = 2 if self.SubModel is bernoulli else self.sub_constants['c_degree']
+                tmp_pred_dist_vec = np.empty([len(self.hn_metatree_list),degree])
                 for i,metatree in enumerate(self.hn_metatree_list):
                     tmp_pred_dist_vec[i] = self._make_prediction_recursion_kl(metatree)
                 return np.argmax(self.hn_metatree_prob_vec @ tmp_pred_dist_vec)
@@ -2431,7 +2435,8 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                                     +"only when self.SubModel is bernoulli or categorical."))
         elif loss == "KL":
             if self.SubModel in CLF_MODELS:
-                tmp_pred_dist_vec = np.empty([len(self.hn_metatree_list),2])
+                degree = 2 if self.SubModel is bernoulli else self.sub_constants['c_degree']
+                tmp_pred_dist_vec = np.empty([len(self.hn_metatree_list),degree])
                 for i,metatree in enumerate(self.hn_metatree_list):
                     tmp_pred_dist_vec[i] = self._make_prediction_recursion_kl(metatree)
                 return self.hn_metatree_prob_vec @ tmp_pred_dist_vec
