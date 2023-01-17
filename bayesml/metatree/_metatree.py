@@ -100,7 +100,9 @@ class GenModel(base.Generative):
         The first ``c_dim_continuous`` elements represent 
         the maximum assignment numbers of continuous features 
         on a path. The other ``c_dim_categorial`` elements 
-        represent those of categorical features.
+        represent those of categorical features. If it 
+        has a negative element (e.g., -1), the corresponding 
+        feature will be assigned any number of times. 
         By default [c_max_depth,...,c_max_depth,1,...,1].
     c_ranges : numpy.ndarray, optional
         A numpy.ndarray whose size is (c_dim_continuous,2).
@@ -118,7 +120,7 @@ class GenModel(base.Generative):
     h_k_weight_vec : numpy.ndarray, optional
         A vector of positive real numbers whose length is 
         ``c_dim_continuous+c_dim_categorical``, 
-        by default [1/c_num_assignment_vec.sum(),...,1/c_num_assignment_vec.sum()].
+        by default [1,...,1].
     h_g : float, optional
         A real number in :math:`[0, 1]`, by default 0.5
     sub_h_params : dict, optional
@@ -180,12 +182,7 @@ class GenModel(base.Generative):
         self.c_num_assignment_vec = np.ones(self.c_dim_features,dtype=int)
         self.c_num_assignment_vec[:self.c_dim_continuous] *= self.c_max_depth
         if c_num_assignment_vec is not None:
-            _check.nonneg_ints(c_num_assignment_vec,'c_num_assignment_vec',ParameterFormatError)
-            if np.any(c_num_assignment_vec>self.c_max_depth):
-                raise(ParameterFormatError(
-                    'All the elements of c_num_assignment_vec must be less than or equal to self.c_max_depth: '
-                    +f'c_num_assignment_vec={c_num_assignment_vec}.'
-                ))
+            _check.ints(c_num_assignment_vec,'c_num_assignment_vec',ParameterFormatError)
             self.c_num_assignment_vec[:] = c_num_assignment_vec
         
         self.c_ranges = np.zeros([self.c_dim_continuous,2])
@@ -211,7 +208,7 @@ class GenModel(base.Generative):
         self.rng = np.random.default_rng(seed)
 
         # h_params
-        self.h_k_weight_vec = np.ones(self.c_dim_features) / self.c_num_assignment_vec.sum()
+        self.h_k_weight_vec = np.ones(self.c_dim_features)
         self.h_g = 0.5
         self.sub_h_params = {}
         self.h_metatree_list = []
@@ -228,8 +225,11 @@ class GenModel(base.Generative):
         # params
         self._root_k_candidates = []
         for i in range(self.c_dim_features):
-            for j in range(self.c_num_assignment_vec[i]):
+            if self.c_num_assignment_vec[i] < 0:
                 self._root_k_candidates.append(i)
+            else:
+                for j in range(self.c_num_assignment_vec[i]):
+                    self._root_k_candidates.append(i)
         self.root = _Node(
             0,
             self._root_k_candidates,
@@ -267,7 +267,8 @@ class GenModel(base.Generative):
     
     def _make_children(self,node:_Node):
         child_k_candidates = node.k_candidates.copy()
-        child_k_candidates.remove(node.k)
+        if self.c_num_assignment_vec[node.k] > 0:
+            child_k_candidates.remove(node.k)
         node.leaf = False
         for i in range(self.c_num_children_vec[node.k]):
             if node.children[i] is None:
@@ -349,7 +350,8 @@ class GenModel(base.Generative):
             else:
                 node.thresholds = None
             child_k_candidates = node.k_candidates.copy()
-            child_k_candidates.remove(node.k)
+            if self.c_num_assignment_vec[node.k] > 0:
+                child_k_candidates.remove(node.k)
             node.leaf = False
             for i in range(self.c_num_children_vec[node.k]):
                 if node.children[i] is not None:
@@ -500,9 +502,9 @@ class GenModel(base.Generative):
         Parameters
         ----------
         h_k_weight_vec : numpy.ndarray, optional
-            A vector of real numbers in :math:`[0, 1]`, 
-            by default None
-            Sum of its elements must be 1.
+            A vector of positive real numbers whose length is 
+            ``c_dim_continuous+c_dim_categorical``, 
+            by default None.
         h_g : float, optional
             A real number in :math:`[0, 1]`, by default None
         sub_h_params : dict, optional
@@ -1059,7 +1061,9 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         The first ``c_dim_continuous`` elements represent 
         the maximum assignment numbers of continuous features 
         on a path. The other ``c_dim_categorial`` elements 
-        represent those of categorical features.
+        represent those of categorical features. If it 
+        has a negative element (e.g., -1), the corresponding 
+        feature will be assigned any number of times. 
         By default [c_max_depth,...,c_max_depth,1,...,1].
     c_ranges : numpy.ndarray, optional
         A numpy.ndarray whose size is (c_dim_continuous,2).
@@ -1144,12 +1148,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self.c_num_assignment_vec = np.ones(self.c_dim_features,dtype=int)
         self.c_num_assignment_vec[:self.c_dim_continuous] *= self.c_max_depth
         if c_num_assignment_vec is not None:
-            _check.nonneg_ints(c_num_assignment_vec,'c_num_assignment_vec',ParameterFormatError)
-            if np.any(c_num_assignment_vec>self.c_max_depth):
-                raise(ParameterFormatError(
-                    'All the elements of c_num_assignment_vec must be less than or equal to self.c_max_depth: '
-                    +f'c_num_assignment_vec={c_num_assignment_vec}.'
-                ))
+            _check.ints(c_num_assignment_vec,'c_num_assignment_vec',ParameterFormatError)
             self.c_num_assignment_vec[:] = c_num_assignment_vec
         
         self.c_ranges = np.zeros([self.c_dim_continuous,2])
@@ -1174,18 +1173,21 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
 
         self._root_k_candidates = []
         for i in range(self.c_dim_features):
-            for j in range(self.c_num_assignment_vec[i]):
+            if self.c_num_assignment_vec[i] < 0:
                 self._root_k_candidates.append(i)
+            else:
+                for j in range(self.c_num_assignment_vec[i]):
+                    self._root_k_candidates.append(i)
 
         # h0_params
-        self.h0_k_weight_vec = np.ones(self.c_dim_features) / self.c_num_assignment_vec.sum()
+        self.h0_k_weight_vec = np.ones(self.c_dim_features)
         self.h0_g = 0.5
         self.sub_h0_params = {}
         self.h0_metatree_list = []
         self.h0_metatree_prob_vec = None
 
         # hn_params
-        self.hn_k_weight_vec = np.ones(self.c_dim_features) / self.c_num_assignment_vec.sum()
+        self.hn_k_weight_vec = np.ones(self.c_dim_features)
         self.hn_g = 0.5
         self.sub_hn_params = {}
         self.hn_metatree_list = []
@@ -1256,7 +1258,8 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                 node.children = [None for i in range(self.c_num_children_vec[node.k])]
                 node.thresholds = np.array(original_node.thresholds) if node.k < self.c_dim_continuous else None
                 child_k_candidates = node.k_candidates.copy()
-                child_k_candidates.remove(node.k)
+                if self.c_num_assignment_vec[node.k] > 0:
+                    child_k_candidates.remove(node.k)
                 node.leaf = False
                 for i in range(self.c_num_children_vec[node.k]):
                     node.children[i] = _Node(
@@ -1305,7 +1308,8 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                 node.children = [None for i in range(self.c_num_children_vec[node.k])]
                 node.thresholds = np.array(original_node.thresholds) if node.k < self.c_dim_continuous else None
                 child_k_candidates = node.k_candidates.copy()
-                child_k_candidates.remove(node.k)
+                if self.c_num_assignment_vec[node.k] > 0:
+                    child_k_candidates.remove(node.k)
                 node.leaf = False
                 for i in range(self.c_num_children_vec[node.k]):
                     node.children[i] = _Node(
@@ -1333,9 +1337,9 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         Parameters
         ----------
         h0_k_weight_vec : numpy.ndarray, optional
-            A vector of real numbers in :math:`[0, 1]`, 
-            by default None
-            Sum of its elements must be 1.
+            A vector of positive real numbers whose length is 
+            ``c_dim_continuous+c_dim_categorical``, 
+            by default None.
         h0_g : float, optional
             A real number in :math:`[0, 1]`, by default None
         sub_h0_params : dict, optional
@@ -1471,9 +1475,9 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         Parameters
         ----------
         hn_k_weight_vec : numpy.ndarray, optional
-            A vector of real numbers in :math:`[0, 1]`, 
-            by default None
-            Sum of its elements must be 1.
+            A vector of positive real numbers whose length is 
+            ``c_dim_continuous+c_dim_categorical``, 
+            by default None.
         hn_g : float, optional
             A real number in :math:`[0, 1]`, by default None
         sub_hn_params : dict, optional
@@ -1600,7 +1604,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                 "hn_metatree_prob_vec":self.hn_metatree_prob_vec}
     
     def _copy_tree_from_sklearn_tree(self,new_node:_Node, original_tree,node_id):
-        if original_tree.children_left[node_id] != sklearn_tree._tree.TREE_LEAF:  # inner node
+        if original_tree.children_left[node_id] != sklearn_tree._tree.TREE_LEAF and new_node.k_candidates:  # inner node
             new_node.k = original_tree.feature[node_id]
             new_node.children = [None,None]
             if new_node.k < self.c_dim_continuous:
@@ -1611,7 +1615,8 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             else:
                 new_node.thresholds = None
             child_k_candidates = new_node.k_candidates.copy()
-            child_k_candidates.remove(new_node.k)
+            if self.c_num_assignment_vec[new_node.k] > 0:
+                child_k_candidates.remove(new_node.k)
             new_node.children[0] = _Node(
                 new_node.depth+1,
                 child_k_candidates,
@@ -1946,7 +1951,8 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             else:
                 node.thresholds = None
             child_k_candidates = node.k_candidates.copy()
-            child_k_candidates.remove(node.k)
+            if self.c_num_assignment_vec[node.k] > 0:
+                child_k_candidates.remove(node.k)
             node.leaf = False
             for i in range(self.c_num_children_vec[node.k]):
                 node.children[i] = _Node(
@@ -2003,7 +2009,8 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             else:
                 copied_node.thresholds = None
             child_k_candidates = copied_node.k_candidates.copy()
-            child_k_candidates.remove(copied_node.k)
+            if self.c_num_assignment_vec[copied_node.k] > 0:
+                child_k_candidates.remove(copied_node.k)
             copied_node.leaf = False
             for i in range(self.c_num_children_vec[copied_node.k]):
                 copied_node.children[i] = _Node(
@@ -2175,7 +2182,8 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             else:
                 thresholds = None
             child_k_candidates = k_candidates.copy()
-            child_k_candidates.remove(k)
+            if self.c_num_assignment_vec[k] > 0:
+                child_k_candidates.remove(k)
         label_string += f'hn_g={self.hn_g:.2f}\\lp_s={tmp_p_s:.2f}\\l'
 
         sub_model = self.SubModel.LearnModel(
