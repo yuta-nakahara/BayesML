@@ -62,7 +62,8 @@ class _Node:
                  ranges=None,
                  thresholds=None,
                  leaf=False,
-                 map_leaf=False
+                 map_leaf=False,
+                 log_children_marginal_likelihood=None,
                  ):
         self.depth = depth
         self.children = children
@@ -74,6 +75,7 @@ class _Node:
         self.thresholds = thresholds
         self.leaf = leaf
         self.map_leaf = map_leaf
+        self.log_children_marginal_likelihood = log_children_marginal_likelihood
 
 class GenModel(base.Generative):
     """ The stochastice data generative model and the prior distribution
@@ -1624,7 +1626,8 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                 sub_model=self.SubModel.LearnModel(
                     **self.sub_constants,
                     **self.sub_h0_params).set_hn_params(**self.sub_hn_params),
-                ranges=np.array(new_node.ranges)
+                ranges=np.array(new_node.ranges),
+                log_children_marginal_likelihood=np.zeros(2),
                 )
             if new_node.thresholds is not None:
                 new_node.children[0].ranges[new_node.k,1] = new_node.thresholds[1]
@@ -1636,7 +1639,8 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                 sub_model=self.SubModel.LearnModel(
                     **self.sub_constants,
                     **self.sub_h0_params).set_hn_params(**self.sub_hn_params),
-                ranges=np.array(new_node.ranges)
+                ranges=np.array(new_node.ranges),
+                log_children_marginal_likelihood=np.zeros(2),
                 )
             if new_node.thresholds is not None:
                 new_node.children[1].ranges[new_node.k,0] = new_node.thresholds[1]
@@ -1666,6 +1670,47 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             tmp1 = self._update_posterior_recursion(node.children[index],x_continuous,x_categorical,y)
             tmp2 = (1 - node.h_g) * self._update_posterior_leaf(node,y) + node.h_g * tmp1
             node.h_g = node.h_g * tmp1 / tmp2
+            return tmp2
+
+    def _update_posterior_recursion_batch(self,node:_Node,x_continuous,x_categorical,y):
+        if node.leaf:  # leaf node
+            return node.sub_model.calc_log_marginal_likelihood(y)
+        else:  # inner node
+            if node.k < self.c_dim_continuous:
+                for i in range(self.c_num_children_vec[node.k]):
+                    if i == 0:
+                        indices = x_continuous[:,node.k] < node.thresholds[i+1]
+                    elif i == self.c_num_children_vec[node.k]-1:
+                        indices = node.thresholds[i] <= x_continuous[:,node.k]
+                    else:
+                        indices = (node.thresholds[i] <= x_continuous[:,node.k]) & (x_continuous[:,node.k] < node.thresholds[i+1])
+                    
+                    if np.any(indices):
+                        node.log_children_marginal_likelihood[i] = \
+                            self._update_posterior_recursion_batch(
+                                node.children[i],
+                                x_continuous[indices],
+                                x_categorical[indices],
+                                y[indices],
+                            )
+                    else:
+                        node.log_children_marginal_likelihood[i] = 0.0
+            else:
+                for i in range(self.c_num_children_vec[node.k]):
+                    indices = x_categorical[:,node.k-self.c_dim_continuous] == i
+                    if np.any(indices):
+                        node.log_children_marginal_likelihood[i] = \
+                            self._update_posterior_recursion_batch(
+                                node.children[i],
+                                x_continuous[indices],
+                                x_categorical[indices],
+                                y[indices],
+                            )
+                    else:
+                        node.log_children_marginal_likelihood[i] = 0.0
+            tmp1 = np.log(node.h_g) + node.log_children_marginal_likelihood.sum()
+            tmp2 = np.logaddexp(np.log(1 - node.h_g) + node.sub_model.calc_log_marginal_likelihood(y), tmp1)
+            node.h_g = np.exp(tmp1 - tmp2)
             return tmp2
 
     def _update_posterior_leaf_lr(self,node:_Node,x_continuous,y):
@@ -1785,6 +1830,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                     **self.sub_constants,
                     **self.sub_h0_params).set_hn_params(**self.sub_hn_params),
                 ranges=self.c_ranges,
+                log_children_marginal_likelihood=np.zeros(2),
                 )
             for i in range(n_estimators)
             ]
@@ -1824,8 +1870,9 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                     log_metatree_posteriors[i] += np.log(self._update_posterior_recursion_lr(metatree,x_continuous[j],x_categorical[j],y[j]))
         else:
             for i,metatree in enumerate(self.hn_metatree_list):
-                for j in range(y.shape[0]):
-                    log_metatree_posteriors[i] += np.log(self._update_posterior_recursion(metatree,x_continuous[j],x_categorical[j],y[j]))
+                log_metatree_posteriors[i] += self._update_posterior_recursion_batch(metatree,x_continuous,x_categorical,y)
+                # for j in range(y.shape[0]):
+                #     log_metatree_posteriors[i] += np.log(self._update_posterior_recursion(metatree,x_continuous[j],x_categorical[j],y[j]))
         self.hn_metatree_prob_vec[:] = np.exp(log_metatree_posteriors - log_metatree_posteriors.max())
         self.hn_metatree_prob_vec[:] /= self.hn_metatree_prob_vec.sum()
 
