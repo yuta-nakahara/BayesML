@@ -846,15 +846,15 @@ class GenModel(base.Generative):
         x_continuous,x_categorical,y = self.gen_sample(sample_size,x_continuous,x_categorical)
         np.savez_compressed(filename,x_continuous=x_continuous,x_categorical=x_categorical,y=y)
 
-    def _plot_2d_threshold_recursion_continuous(self,ax,node:_Node):
+    def _plot_2d_threshold_recursion_continuous(self,ax,node:_Node,index):
         if not node.leaf:
-            if node.k == 0:
-                ax.vlines(x=node.thresholds[1:-1],ymin=node.ranges[1,0],ymax=node.ranges[1,1],colors='red')
+            if node.k == index[0]:
+                ax.vlines(x=node.thresholds[1:-1],ymin=node.ranges[index[1],0],ymax=node.ranges[index[1],1],colors='red')
             else:
-                ax.hlines(y=node.thresholds[1:-1],xmin=node.ranges[0,0],xmax=node.ranges[0,1],colors='red')
+                ax.hlines(y=node.thresholds[1:-1],xmin=node.ranges[index[0],0],xmax=node.ranges[index[0],1],colors='red')
             for i in range(self.c_num_children_vec[node.k]):
                 if node.children[i] is not None:
-                    self._plot_2d_threshold_recursion_continuous(ax,node.children[i])
+                    self._plot_2d_threshold_recursion_continuous(ax,node.children[i],index)
 
     def _plot_1d_threshold_recursion_continuous(self,ax,node:_Node,ymin,ymax):
         if not node.leaf:
@@ -876,38 +876,38 @@ class GenModel(base.Generative):
                 if node.children[i] is not None:
                     self._plot_1d_threshold_recursion_categorical(ax,node.children[i],ymin,ymax)
 
-    def _plot_2d_threshold_recursion_mix(self,ax,node:_Node,categorical_index):
+    def _plot_2d_threshold_recursion_mix(self,ax,node:_Node,categorical_index,index):
         if not node.leaf:
-            if node.k == 0:
+            if node.k == index[0]:
                 if categorical_index is None:
-                    ax.vlines(x=node.thresholds[1:-1],ymin=0-0.2,ymax=self.c_num_children_vec[1]-1+0.2,colors='red')
+                    ax.vlines(x=node.thresholds[1:-1],ymin=0-0.2,ymax=self.c_num_children_vec[index[1]]-1+0.2,colors='red')
                 else:
                     ax.vlines(x=node.thresholds[1:-1],ymin=categorical_index-0.2,ymax=categorical_index+0.2,colors='red')
                 for i in range(self.c_num_children_vec[node.k]):
                     if node.children[i] is not None:
-                        self._plot_2d_threshold_recursion_mix(ax,node.children[i],categorical_index)
+                        self._plot_2d_threshold_recursion_mix(ax,node.children[i],categorical_index,index)
             else:
                 ax.hlines(
                     y=np.linspace(0,
                         self.c_num_children_vec[node.k]-1,
                         2*(self.c_num_children_vec[node.k]-1)+1)[1:-1:2],
-                    xmin=node.ranges[0,0],
-                    xmax=node.ranges[0,1],
+                    xmin=node.ranges[index[0],0],
+                    xmax=node.ranges[index[0],1],
                     colors='red')
                 for i in range(self.c_num_children_vec[node.k]):
                     if node.children[i] is not None:
-                        self._plot_2d_threshold_recursion_mix(ax,node.children[i],i)
+                        self._plot_2d_threshold_recursion_mix(ax,node.children[i],i,index)
 
-    def _plot_2d_threshold_recursion_categorical(self,ax,node:_Node,categorical_index):
+    def _plot_2d_threshold_recursion_categorical(self,ax,node:_Node,categorical_index,index):
         if not node.leaf:
-            if node.k == 0:
+            if node.k == index[0]:
                 if categorical_index is None:
                     ax.vlines(
                         x=np.linspace(0,
                             self.c_num_children_vec[node.k]-1,
                             2*(self.c_num_children_vec[node.k]-1)+1)[1:-1:2],
                         ymin=-0.2,
-                        ymax=self.c_num_children_vec[1]-1+0.2,
+                        ymax=self.c_num_children_vec[index[1]]-1+0.2,
                         colors='red')
                 else:
                     ax.vlines(
@@ -915,7 +915,7 @@ class GenModel(base.Generative):
                             self.c_num_children_vec[node.k]-1,
                             2*(self.c_num_children_vec[node.k]-1)+1)[1:-1:2],
                         ymin=max(categorical_index-0.5,-0.2),
-                        ymax=min(categorical_index+0.5,self.c_num_children_vec[1]-1+0.2),
+                        ymax=min(categorical_index+0.5,self.c_num_children_vec[index[1]]-1+0.2),
                         colors='red')
             else:
                 if categorical_index is None:
@@ -924,7 +924,7 @@ class GenModel(base.Generative):
                             self.c_num_children_vec[node.k]-1,
                             2*(self.c_num_children_vec[node.k]-1)+1)[1:-1:2],
                         xmin=-0.2,
-                        xmax=self.c_num_children_vec[0]-1+0.2,
+                        xmax=self.c_num_children_vec[index[0]]-1+0.2,
                         colors='red')
                 else:
                     ax.hlines(
@@ -932,11 +932,11 @@ class GenModel(base.Generative):
                             self.c_num_children_vec[node.k]-1,
                             2*(self.c_num_children_vec[node.k]-1)+1)[1:-1:2],
                         xmin=max(categorical_index-0.5,-0.2),
-                        xmax=min(categorical_index+0.5,self.c_num_children_vec[0]-1+0.2),
+                        xmax=min(categorical_index+0.5,self.c_num_children_vec[index[0]]-1+0.2),
                         colors='red')
             for i in range(self.c_num_children_vec[node.k]):
                 if node.children[i] is not None:
-                    self._plot_2d_threshold_recursion_categorical(ax,node.children[i],i)
+                    self._plot_2d_threshold_recursion_categorical(ax,node.children[i],i,index)
 
     def visualize_model(self,filename=None,format=None,sample_size=100,x_continuous=None,x_categorical=None):
         """Visualize the stochastic data generative model and generated samples.
@@ -1004,42 +1004,44 @@ class GenModel(base.Generative):
         if self.SubModel in DISCRETE_MODELS:
             y_jitter = y + 0.2*(self.rng.random(y.shape)-0.5)
 
-        if self.c_dim_features == 1:
-            if self.c_dim_categorical == 1:
+        if np.count_nonzero(self.c_num_assignment_vec) == 1:
+            index = np.flatnonzero(self.c_num_assignment_vec)
+            if index[0] >= self.c_dim_continuous:
                 if self.SubModel in DISCRETE_MODELS:
-                    ax.scatter(x_categorical_jitter,y_jitter)
+                    ax.scatter(x_categorical_jitter[:,index[0]-self.c_dim_continuous],y_jitter)
                 else:
-                    ax.scatter(x_categorical_jitter,y)
+                    ax.scatter(x_categorical_jitter[:,index[0]-self.c_dim_continuous],y)
                 ymin, ymax = ax.get_ylim()
                 self._plot_1d_threshold_recursion_categorical(ax,self.root,ymin,ymax)
-                ax.set_xlabel('x_categorical[0]')
+                ax.set_xlabel(f'x_categorical[{index[0]-self.c_dim_continuous}]')
                 ax.set_ylabel('y')
             else:
                 if self.SubModel in DISCRETE_MODELS:
-                    ax.scatter(x_continuous,y_jitter)
+                    ax.scatter(x_continuous[:,index[0]],y_jitter)
                 else:
-                    ax.scatter(x_continuous,y)
+                    ax.scatter(x_continuous[:,index[0]],y)
                 ymin, ymax = ax.get_ylim()
                 self._plot_1d_threshold_recursion_continuous(ax,self.root,ymin,ymax)
-                ax.set_xlabel('x_continuous[0]')
+                ax.set_xlabel(f'x_continuous[{index[0]}]')
                 ax.set_ylabel('y')
             plt.show()
-        elif self.c_dim_features == 2:
-            if self.c_dim_categorical == 2:
-                mappable = ax.scatter(x_categorical_jitter[:,0],x_categorical_jitter[:,1],c=y)
-                self._plot_2d_threshold_recursion_categorical(ax,self.root,None)
-                ax.set_xlabel('x_categorical[0]')
-                ax.set_ylabel('x_categorical[1]')
-            elif self.c_dim_categorical == 1:
-                mappable = ax.scatter(x_continuous,x_categorical_jitter,c=y)
-                self._plot_2d_threshold_recursion_mix(ax,self.root,None)
-                ax.set_xlabel('x_continuous[0]')
-                ax.set_ylabel('x_categorical[0]')
+        elif np.count_nonzero(self.c_num_assignment_vec) == 2:
+            index = np.flatnonzero(self.c_num_assignment_vec)
+            if np.all(index >= self.c_dim_continuous):
+                mappable = ax.scatter(x_categorical_jitter[:,index[0]-self.c_dim_continuous],x_categorical_jitter[:,index[1]-self.c_dim_continuous],c=y)
+                self._plot_2d_threshold_recursion_categorical(ax,self.root,None,index)
+                ax.set_xlabel(f'x_categorical[{index[0]-self.c_dim_continuous}]')
+                ax.set_ylabel(f'x_categorical[{index[1]-self.c_dim_continuous}]')
+            elif np.all(index < self.c_dim_continuous):
+                mappable = ax.scatter(x_continuous[:,index[0]],x_continuous[:,index[1]],c=y)
+                self._plot_2d_threshold_recursion_continuous(ax,self.root,index)
+                ax.set_xlabel(f'x_continuous[{index[0]}]')
+                ax.set_ylabel(f'x_continuous[{index[1]}]')
             else:
-                mappable = ax.scatter(x_continuous[:,0],x_continuous[:,1],c=y)
-                self._plot_2d_threshold_recursion_continuous(ax,self.root)
-                ax.set_xlabel('x_continuous[0]')
-                ax.set_ylabel('x_continuous[1]')
+                mappable = ax.scatter(x_continuous[:,index[0]],x_categorical_jitter[:,index[1]-self.c_dim_continuous],c=y)
+                self._plot_2d_threshold_recursion_mix(ax,self.root,None,index)
+                ax.set_xlabel(f'x_continuous[{index[0]}]')
+                ax.set_ylabel(f'x_categorical[{index[1]-self.c_dim_continuous}]')
             fig.colorbar(mappable,label='y')
             plt.show()
         else:
