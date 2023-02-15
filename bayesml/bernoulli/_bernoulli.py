@@ -487,31 +487,17 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self.update_posterior(x)
         return prediction
 
-    def calc_log_marginal_likelihood(self,x,posterior_update=True):
-        """Calculate log marginal likelihood of given data
-
-        Parameters
-        ----------
-        x : numpy.ndarray
-            All the elements must be 0 or 1.
-        posterior_update : bool, optional
-            If True, posterior distribution will be 
-            updated at the same time, by default True.
+    def calc_log_marginal_likelihood(self):
+        """Calculate log marginal likelihood
 
         Returns
         -------
         log_marginal_likelihood : float
             The log margina likelihood.
         """
-        self.update_posterior(x)
-        tmp = (gammaln(self.h0_alpha+self.h0_beta)
+        return (gammaln(self.h0_alpha+self.h0_beta)
                 -gammaln(self.h0_alpha)
                 -gammaln(self.h0_beta)
                 -gammaln(self.hn_alpha+self.hn_beta)
                 +gammaln(self.hn_alpha)
                 +gammaln(self.hn_beta))
-
-        if not posterior_update:
-            self.reset_hn_params()
-
-        return tmp

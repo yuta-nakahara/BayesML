@@ -1705,9 +1705,13 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             node.h_g = node.h_g * tmp1 / tmp2
             return tmp2
 
+    def _update_posterior_leaf_batch(self,node:_Node,y):
+        node.sub_model._update_posterior(y)
+        return node.sub_model.calc_log_marginal_likelihood()
+
     def _update_posterior_recursion_batch(self,node:_Node,x_continuous,x_categorical,y):
         if node.leaf:  # leaf node
-            return node.sub_model.calc_log_marginal_likelihood(y)
+            return self._update_posterior_leaf_batch(node,y)
         else:  # inner node
             if node.k < self.c_dim_continuous:
                 for i in range(self.c_num_children_vec[node.k]):
@@ -1742,7 +1746,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                     else:
                         node.log_children_marginal_likelihood[i] = 0.0
             tmp1 = np.log(node.h_g) + node.log_children_marginal_likelihood.sum()
-            tmp2 = np.logaddexp(np.log(1 - node.h_g) + node.sub_model.calc_log_marginal_likelihood(y), tmp1)
+            tmp2 = np.logaddexp(np.log(1 - node.h_g) + self._update_posterior_leaf_batch(node,y), tmp1)
             node.h_g = np.exp(tmp1 - tmp2)
             return tmp2
 
