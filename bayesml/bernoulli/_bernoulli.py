@@ -493,7 +493,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         Returns
         -------
         log_marginal_likelihood : float
-            The log margina likelihood.
+            The log marginal likelihood.
         """
         return (gammaln(self.h0_alpha+self.h0_beta)
                 -gammaln(self.h0_alpha)
