@@ -724,11 +724,19 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
 
     def _calc_n_x_bar_s(self,x):
         self.ns[:] = self.r_vecs.sum(axis=0)
-        self.x_bar_vecs[:] = (self.r_vecs[:,:,np.newaxis] * x[:,np.newaxis,:]).sum(axis=0) / self.ns[:,np.newaxis]
-        self.s_mats[:] = np.sum(self.r_vecs[:,:,np.newaxis,np.newaxis]
-                                * ((x[:,np.newaxis,:] - self.x_bar_vecs)[:,:,:,np.newaxis]
-                                   @ (x[:,np.newaxis,:] - self.x_bar_vecs)[:,:,np.newaxis,:]),
-                                axis=0) / self.ns[:,np.newaxis,np.newaxis]
+        indices = self.ns.astype(bool)
+        if np.all(indices):
+            self.x_bar_vecs[:] = (self.r_vecs[:,:,np.newaxis] * x[:,np.newaxis,:]).sum(axis=0) / self.ns[:,np.newaxis]
+            self.s_mats[:] = np.sum(self.r_vecs[:,:,np.newaxis,np.newaxis]
+                                    * ((x[:,np.newaxis,:] - self.x_bar_vecs)[:,:,:,np.newaxis]
+                                    @ (x[:,np.newaxis,:] - self.x_bar_vecs)[:,:,np.newaxis,:]),
+                                    axis=0) / self.ns[:,np.newaxis,np.newaxis]
+        else:
+            self.x_bar_vecs[indices] = (self.r_vecs[:,indices,np.newaxis] * x[:,np.newaxis,:]).sum(axis=0) / self.ns[indices,np.newaxis]
+            self.s_mats[indices] = np.sum(self.r_vecs[:,indices,np.newaxis,np.newaxis]
+                                    * ((x[:,np.newaxis,:] - self.x_bar_vecs[indices])[:,:,:,np.newaxis]
+                                    @ (x[:,np.newaxis,:] - self.x_bar_vecs[indices])[:,:,np.newaxis,:]),
+                                    axis=0) / self.ns[indices,np.newaxis,np.newaxis]
 
     def _init_random_responsibility(self,x):
         self.r_vecs[:] = self.rng.dirichlet(np.ones(self.c_num_classes),self.r_vecs.shape[0])
