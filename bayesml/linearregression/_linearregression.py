@@ -775,3 +775,22 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         prediction = self.make_prediction(loss=loss)
         self.update_posterior(x,y)
         return prediction
+
+    def calc_log_marginal_likelihood(self):
+        """Calculate log marginal likelihood
+
+        Returns
+        -------
+        log_marginal_likelihood : float
+            The log marginal likelihood.
+        """
+        # return (
+        #     self.h0_alpha * np.log(self.h0_beta)
+        #     - self.hn_alpha * np.log(self.hn_beta)
+        #     + gammaln(self.hn_alpha)
+        #     - gammaln(self.h0_alpha)
+        #     + 0.5 * (
+        #         np.log(self.h0_kappa)
+        #         - np.log(self.hn_kappa)
+        #         - self._n * np.log(2*np.pi))
+        #         )
