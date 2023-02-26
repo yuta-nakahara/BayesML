@@ -799,5 +799,6 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             + 0.5 * (
                 np.linalg.slogdet(self.h0_lambda_mat)[1]
                 - np.linalg.slogdet(self.hn_lambda_mat)[1]
-                - self._n * np.log(2*np.pi))
+                - self._n * np.log(2*np.pi)
+            )
         )
