@@ -59,7 +59,7 @@ Plain text
 .. code-block::
 
    Y. Nakahara, N. Ichijo, K. Shimada, Y. Iikubo, 
-   S. Saito, K. Kazama, T. Matsushima, BayesML Developers, ``BayesML 0.2.3,'' 
+   S. Saito, K. Kazama, T. Matsushima, BayesML Developers, ``BayesML 0.2.4,'' 
    [Online] https://github.com/yuta-nakahara/BayesML
 
 
@@ -68,10 +68,10 @@ BibTeX
 .. code-block:: bibtex
    
    @misc{bayesml,
-   author = {Nakahara Yuta and Ichijo Naoki and Shimada Koshi and
-               Iikubo Yuji and Saito Shota and Kazama Koki and
-               Matsushima Toshiyasu and {BayesML Developers}},
-   title = {BayesML 0.2.3},
+   author = {Nakahara, Yuta and Ichijo, Naoki and Shimada, Koshi and
+               Iikubo, Yuji and Saito, Shota and Kazama, Koki and
+               Matsushima, Toshiyasu and {BayesML Developers}},
+   title = {BayesML 0.2.4},
    howpublished = {\url{https://github.com/yuta-nakahara/BayesML}},
    year = {2022}
    }

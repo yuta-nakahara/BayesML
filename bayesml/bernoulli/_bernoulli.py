@@ -5,7 +5,7 @@
 import warnings
 import numpy as np
 from scipy.stats import beta as ss_beta
-# from scipy.stats import betabinom as ss_betabinom
+from scipy.special import gammaln
 import matplotlib.pyplot as plt
 
 from .. import base
@@ -486,3 +486,18 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         prediction = self.make_prediction(loss=loss)
         self.update_posterior(x)
         return prediction
+
+    def calc_log_marginal_likelihood(self):
+        """Calculate log marginal likelihood
+
+        Returns
+        -------
+        log_marginal_likelihood : float
+            The log marginal likelihood.
+        """
+        return (gammaln(self.h0_alpha+self.h0_beta)
+                -gammaln(self.h0_alpha)
+                -gammaln(self.h0_beta)
+                -gammaln(self.hn_alpha+self.hn_beta)
+                +gammaln(self.hn_alpha)
+                +gammaln(self.hn_beta))

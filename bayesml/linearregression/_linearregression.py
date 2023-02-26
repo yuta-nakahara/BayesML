@@ -9,6 +9,7 @@ import numpy as np
 from scipy.stats import gamma as ss_gamma
 from scipy.stats import multivariate_t as ss_multivariate_t
 from scipy.stats import t as ss_t
+from scipy.special import gammaln
 import matplotlib.pyplot as plt
 
 from .. import base
@@ -360,6 +361,9 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self.p_lambda =  1.0
         self.p_nu = 2.0
 
+        # sample size
+        self._n = 0
+
         self.set_h0_params(
             h0_mu_vec,
             h0_lambda_mat,
@@ -462,6 +466,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         hn_beta : float, optional
             a positive real number, by default None.
         """
+        self._n = 0
         if hn_mu_vec is not None:
             _check.float_vec(hn_mu_vec,'hn_mu_vec',ParameterFormatError)
             _check.shape_consistency(
@@ -539,6 +544,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self.hn_alpha +=   x.shape[0]/2.0
         self.hn_beta += (-self.hn_mu_vec[np.newaxis,:] @ self.hn_lambda_mat @ self.hn_mu_vec[:,np.newaxis]
                          + y @ y + hn1_mu[np.newaxis,:] @ hn1_Lambda @ hn1_mu[:,np.newaxis])[0,0] /2.0
+        self._n += x.shape[0]
         return self
 
     def _update_posterior(self, x, y):
@@ -552,6 +558,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self.hn_alpha +=   x.shape[0]/2.0
         self.hn_beta += (-self.hn_mu_vec[np.newaxis,:] @ self.hn_lambda_mat @ self.hn_mu_vec[:,np.newaxis]
                          + y @ y + hn1_mu[np.newaxis,:] @ hn1_Lambda @ hn1_mu[:,np.newaxis])[0,0] /2.0
+        self._n += x.shape[0]
         return self
 
     def estimate_params(self,loss="squared",dict_out=False):
@@ -775,3 +782,23 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         prediction = self.make_prediction(loss=loss)
         self.update_posterior(x,y)
         return prediction
+
+    def calc_log_marginal_likelihood(self):
+        """Calculate log marginal likelihood
+
+        Returns
+        -------
+        log_marginal_likelihood : float
+            The log marginal likelihood.
+        """
+        return (
+            self.h0_alpha * np.log(self.h0_beta)
+            - self.hn_alpha * np.log(self.hn_beta)
+            + gammaln(self.hn_alpha)
+            - gammaln(self.h0_alpha)
+            + 0.5 * (
+                np.linalg.slogdet(self.h0_lambda_mat)[1]
+                - np.linalg.slogdet(self.hn_lambda_mat)[1]
+                - self._n * np.log(2*np.pi)
+            )
+        )

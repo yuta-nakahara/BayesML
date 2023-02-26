@@ -62,7 +62,8 @@ class _Node:
                  ranges=None,
                  thresholds=None,
                  leaf=False,
-                 map_leaf=False
+                 map_leaf=False,
+                 log_children_marginal_likelihood=None,
                  ):
         self.depth = depth
         self.children = children
@@ -74,6 +75,7 @@ class _Node:
         self.thresholds = thresholds
         self.leaf = leaf
         self.map_leaf = map_leaf
+        self.log_children_marginal_likelihood = log_children_marginal_likelihood
 
 class GenModel(base.Generative):
     """ The stochastice data generative model and the prior distribution
@@ -100,7 +102,9 @@ class GenModel(base.Generative):
         The first ``c_dim_continuous`` elements represent 
         the maximum assignment numbers of continuous features 
         on a path. The other ``c_dim_categorial`` elements 
-        represent those of categorical features.
+        represent those of categorical features. If it 
+        has a negative element (e.g., -1), the corresponding 
+        feature will be assigned any number of times. 
         By default [c_max_depth,...,c_max_depth,1,...,1].
     c_ranges : numpy.ndarray, optional
         A numpy.ndarray whose size is (c_dim_continuous,2).
@@ -118,7 +122,7 @@ class GenModel(base.Generative):
     h_k_weight_vec : numpy.ndarray, optional
         A vector of positive real numbers whose length is 
         ``c_dim_continuous+c_dim_categorical``, 
-        by default [1/c_num_assignment_vec.sum(),...,1/c_num_assignment_vec.sum()].
+        by default [1,...,1].
     h_g : float, optional
         A real number in :math:`[0, 1]`, by default 0.5
     sub_h_params : dict, optional
@@ -180,12 +184,7 @@ class GenModel(base.Generative):
         self.c_num_assignment_vec = np.ones(self.c_dim_features,dtype=int)
         self.c_num_assignment_vec[:self.c_dim_continuous] *= self.c_max_depth
         if c_num_assignment_vec is not None:
-            _check.nonneg_ints(c_num_assignment_vec,'c_num_assignment_vec',ParameterFormatError)
-            if np.any(c_num_assignment_vec>self.c_max_depth):
-                raise(ParameterFormatError(
-                    'All the elements of c_num_assignment_vec must be less than or equal to self.c_max_depth: '
-                    +f'c_num_assignment_vec={c_num_assignment_vec}.'
-                ))
+            _check.ints(c_num_assignment_vec,'c_num_assignment_vec',ParameterFormatError)
             self.c_num_assignment_vec[:] = c_num_assignment_vec
         
         self.c_ranges = np.zeros([self.c_dim_continuous,2])
@@ -211,7 +210,7 @@ class GenModel(base.Generative):
         self.rng = np.random.default_rng(seed)
 
         # h_params
-        self.h_k_weight_vec = np.ones(self.c_dim_features) / self.c_num_assignment_vec.sum()
+        self.h_k_weight_vec = np.ones(self.c_dim_features)
         self.h_g = 0.5
         self.sub_h_params = {}
         self.h_metatree_list = []
@@ -228,8 +227,11 @@ class GenModel(base.Generative):
         # params
         self._root_k_candidates = []
         for i in range(self.c_dim_features):
-            for j in range(self.c_num_assignment_vec[i]):
+            if self.c_num_assignment_vec[i] < 0:
                 self._root_k_candidates.append(i)
+            else:
+                for j in range(self.c_num_assignment_vec[i]):
+                    self._root_k_candidates.append(i)
         self.root = _Node(
             0,
             self._root_k_candidates,
@@ -267,7 +269,8 @@ class GenModel(base.Generative):
     
     def _make_children(self,node:_Node):
         child_k_candidates = node.k_candidates.copy()
-        child_k_candidates.remove(node.k)
+        if self.c_num_assignment_vec[node.k] > 0:
+            child_k_candidates.remove(node.k)
         node.leaf = False
         for i in range(self.c_num_children_vec[node.k]):
             if node.children[i] is None:
@@ -349,7 +352,8 @@ class GenModel(base.Generative):
             else:
                 node.thresholds = None
             child_k_candidates = node.k_candidates.copy()
-            child_k_candidates.remove(node.k)
+            if self.c_num_assignment_vec[node.k] > 0:
+                child_k_candidates.remove(node.k)
             node.leaf = False
             for i in range(self.c_num_children_vec[node.k]):
                 if node.children[i] is not None:
@@ -500,9 +504,9 @@ class GenModel(base.Generative):
         Parameters
         ----------
         h_k_weight_vec : numpy.ndarray, optional
-            A vector of real numbers in :math:`[0, 1]`, 
-            by default None
-            Sum of its elements must be 1.
+            A vector of positive real numbers whose length is 
+            ``c_dim_continuous+c_dim_categorical``, 
+            by default None.
         h_g : float, optional
             A real number in :math:`[0, 1]`, by default None
         sub_h_params : dict, optional
@@ -531,10 +535,19 @@ class GenModel(base.Generative):
                     self._set_h_g_recursion(h_root)
 
         if sub_h_params is not None:
+            new_sub_h_params = {}
+            for key in sub_h_params:
+                if key.startswith('h0_'):
+                    new_key = key.replace('h0_','h_',1)
+                elif key.startswith('hn_'):
+                    new_key = key.replace('hn_','h_',1)
+                else:
+                    new_key = key
+                new_sub_h_params[new_key] = sub_h_params[key]
             self.sub_h_params = self.SubModel.GenModel(
                 seed=self.rng,
                 **self.sub_constants,
-                **sub_h_params).get_h_params()
+                **new_sub_h_params).get_h_params()
             if self.h_metatree_list:
                 for h_root in self.h_metatree_list:
                     self._set_sub_h_params_recursion(h_root)
@@ -833,15 +846,15 @@ class GenModel(base.Generative):
         x_continuous,x_categorical,y = self.gen_sample(sample_size,x_continuous,x_categorical)
         np.savez_compressed(filename,x_continuous=x_continuous,x_categorical=x_categorical,y=y)
 
-    def _plot_2d_threshold_recursion_continuous(self,ax,node:_Node):
+    def _plot_2d_threshold_recursion_continuous(self,ax,node:_Node,index):
         if not node.leaf:
-            if node.k == 0:
-                ax.vlines(x=node.thresholds[1:-1],ymin=node.ranges[1,0],ymax=node.ranges[1,1],colors='red')
+            if node.k == index[0]:
+                ax.vlines(x=node.thresholds[1:-1],ymin=node.ranges[index[1],0],ymax=node.ranges[index[1],1],colors='red')
             else:
-                ax.hlines(y=node.thresholds[1:-1],xmin=node.ranges[0,0],xmax=node.ranges[0,1],colors='red')
+                ax.hlines(y=node.thresholds[1:-1],xmin=node.ranges[index[0],0],xmax=node.ranges[index[0],1],colors='red')
             for i in range(self.c_num_children_vec[node.k]):
                 if node.children[i] is not None:
-                    self._plot_2d_threshold_recursion_continuous(ax,node.children[i])
+                    self._plot_2d_threshold_recursion_continuous(ax,node.children[i],index)
 
     def _plot_1d_threshold_recursion_continuous(self,ax,node:_Node,ymin,ymax):
         if not node.leaf:
@@ -863,38 +876,38 @@ class GenModel(base.Generative):
                 if node.children[i] is not None:
                     self._plot_1d_threshold_recursion_categorical(ax,node.children[i],ymin,ymax)
 
-    def _plot_2d_threshold_recursion_mix(self,ax,node:_Node,categorical_index):
+    def _plot_2d_threshold_recursion_mix(self,ax,node:_Node,categorical_index,index):
         if not node.leaf:
-            if node.k == 0:
+            if node.k == index[0]:
                 if categorical_index is None:
-                    ax.vlines(x=node.thresholds[1:-1],ymin=0-0.2,ymax=self.c_num_children_vec[1]-1+0.2,colors='red')
+                    ax.vlines(x=node.thresholds[1:-1],ymin=0-0.2,ymax=self.c_num_children_vec[index[1]]-1+0.2,colors='red')
                 else:
                     ax.vlines(x=node.thresholds[1:-1],ymin=categorical_index-0.2,ymax=categorical_index+0.2,colors='red')
                 for i in range(self.c_num_children_vec[node.k]):
                     if node.children[i] is not None:
-                        self._plot_2d_threshold_recursion_mix(ax,node.children[i],categorical_index)
+                        self._plot_2d_threshold_recursion_mix(ax,node.children[i],categorical_index,index)
             else:
                 ax.hlines(
                     y=np.linspace(0,
                         self.c_num_children_vec[node.k]-1,
                         2*(self.c_num_children_vec[node.k]-1)+1)[1:-1:2],
-                    xmin=node.ranges[0,0],
-                    xmax=node.ranges[0,1],
+                    xmin=node.ranges[index[0],0],
+                    xmax=node.ranges[index[0],1],
                     colors='red')
                 for i in range(self.c_num_children_vec[node.k]):
                     if node.children[i] is not None:
-                        self._plot_2d_threshold_recursion_mix(ax,node.children[i],i)
+                        self._plot_2d_threshold_recursion_mix(ax,node.children[i],i,index)
 
-    def _plot_2d_threshold_recursion_categorical(self,ax,node:_Node,categorical_index):
+    def _plot_2d_threshold_recursion_categorical(self,ax,node:_Node,categorical_index,index):
         if not node.leaf:
-            if node.k == 0:
+            if node.k == index[0]:
                 if categorical_index is None:
                     ax.vlines(
                         x=np.linspace(0,
                             self.c_num_children_vec[node.k]-1,
                             2*(self.c_num_children_vec[node.k]-1)+1)[1:-1:2],
                         ymin=-0.2,
-                        ymax=self.c_num_children_vec[1]-1+0.2,
+                        ymax=self.c_num_children_vec[index[1]]-1+0.2,
                         colors='red')
                 else:
                     ax.vlines(
@@ -902,7 +915,7 @@ class GenModel(base.Generative):
                             self.c_num_children_vec[node.k]-1,
                             2*(self.c_num_children_vec[node.k]-1)+1)[1:-1:2],
                         ymin=max(categorical_index-0.5,-0.2),
-                        ymax=min(categorical_index+0.5,self.c_num_children_vec[1]-1+0.2),
+                        ymax=min(categorical_index+0.5,self.c_num_children_vec[index[1]]-1+0.2),
                         colors='red')
             else:
                 if categorical_index is None:
@@ -911,7 +924,7 @@ class GenModel(base.Generative):
                             self.c_num_children_vec[node.k]-1,
                             2*(self.c_num_children_vec[node.k]-1)+1)[1:-1:2],
                         xmin=-0.2,
-                        xmax=self.c_num_children_vec[0]-1+0.2,
+                        xmax=self.c_num_children_vec[index[0]]-1+0.2,
                         colors='red')
                 else:
                     ax.hlines(
@@ -919,11 +932,11 @@ class GenModel(base.Generative):
                             self.c_num_children_vec[node.k]-1,
                             2*(self.c_num_children_vec[node.k]-1)+1)[1:-1:2],
                         xmin=max(categorical_index-0.5,-0.2),
-                        xmax=min(categorical_index+0.5,self.c_num_children_vec[0]-1+0.2),
+                        xmax=min(categorical_index+0.5,self.c_num_children_vec[index[0]]-1+0.2),
                         colors='red')
             for i in range(self.c_num_children_vec[node.k]):
                 if node.children[i] is not None:
-                    self._plot_2d_threshold_recursion_categorical(ax,node.children[i],i)
+                    self._plot_2d_threshold_recursion_categorical(ax,node.children[i],i,index)
 
     def visualize_model(self,filename=None,format=None,sample_size=100,x_continuous=None,x_categorical=None):
         """Visualize the stochastic data generative model and generated samples.
@@ -991,42 +1004,44 @@ class GenModel(base.Generative):
         if self.SubModel in DISCRETE_MODELS:
             y_jitter = y + 0.2*(self.rng.random(y.shape)-0.5)
 
-        if self.c_dim_features == 1:
-            if self.c_dim_categorical == 1:
+        if np.count_nonzero(self.c_num_assignment_vec) == 1:
+            index = np.flatnonzero(self.c_num_assignment_vec)
+            if index[0] >= self.c_dim_continuous:
                 if self.SubModel in DISCRETE_MODELS:
-                    ax.scatter(x_categorical_jitter,y_jitter)
+                    ax.scatter(x_categorical_jitter[:,index[0]-self.c_dim_continuous],y_jitter)
                 else:
-                    ax.scatter(x_categorical_jitter,y)
+                    ax.scatter(x_categorical_jitter[:,index[0]-self.c_dim_continuous],y)
                 ymin, ymax = ax.get_ylim()
                 self._plot_1d_threshold_recursion_categorical(ax,self.root,ymin,ymax)
-                ax.set_xlabel('x_categorical[0]')
+                ax.set_xlabel(f'x_categorical[{index[0]-self.c_dim_continuous}]')
                 ax.set_ylabel('y')
             else:
                 if self.SubModel in DISCRETE_MODELS:
-                    ax.scatter(x_continuous,y_jitter)
+                    ax.scatter(x_continuous[:,index[0]],y_jitter)
                 else:
-                    ax.scatter(x_continuous,y)
+                    ax.scatter(x_continuous[:,index[0]],y)
                 ymin, ymax = ax.get_ylim()
                 self._plot_1d_threshold_recursion_continuous(ax,self.root,ymin,ymax)
-                ax.set_xlabel('x_continuous[0]')
+                ax.set_xlabel(f'x_continuous[{index[0]}]')
                 ax.set_ylabel('y')
             plt.show()
-        elif self.c_dim_features == 2:
-            if self.c_dim_categorical == 2:
-                mappable = ax.scatter(x_categorical_jitter[:,0],x_categorical_jitter[:,1],c=y)
-                self._plot_2d_threshold_recursion_categorical(ax,self.root,None)
-                ax.set_xlabel('x_categorical[0]')
-                ax.set_ylabel('x_categorical[1]')
-            elif self.c_dim_categorical == 1:
-                mappable = ax.scatter(x_continuous,x_categorical_jitter,c=y)
-                self._plot_2d_threshold_recursion_mix(ax,self.root,None)
-                ax.set_xlabel('x_continuous[0]')
-                ax.set_ylabel('x_categorical[0]')
+        elif np.count_nonzero(self.c_num_assignment_vec) == 2:
+            index = np.flatnonzero(self.c_num_assignment_vec)
+            if np.all(index >= self.c_dim_continuous):
+                mappable = ax.scatter(x_categorical_jitter[:,index[0]-self.c_dim_continuous],x_categorical_jitter[:,index[1]-self.c_dim_continuous],c=y)
+                self._plot_2d_threshold_recursion_categorical(ax,self.root,None,index)
+                ax.set_xlabel(f'x_categorical[{index[0]-self.c_dim_continuous}]')
+                ax.set_ylabel(f'x_categorical[{index[1]-self.c_dim_continuous}]')
+            elif np.all(index < self.c_dim_continuous):
+                mappable = ax.scatter(x_continuous[:,index[0]],x_continuous[:,index[1]],c=y)
+                self._plot_2d_threshold_recursion_continuous(ax,self.root,index)
+                ax.set_xlabel(f'x_continuous[{index[0]}]')
+                ax.set_ylabel(f'x_continuous[{index[1]}]')
             else:
-                mappable = ax.scatter(x_continuous[:,0],x_continuous[:,1],c=y)
-                self._plot_2d_threshold_recursion_continuous(ax,self.root)
-                ax.set_xlabel('x_continuous[0]')
-                ax.set_ylabel('x_continuous[1]')
+                mappable = ax.scatter(x_continuous[:,index[0]],x_categorical_jitter[:,index[1]-self.c_dim_continuous],c=y)
+                self._plot_2d_threshold_recursion_mix(ax,self.root,None,index)
+                ax.set_xlabel(f'x_continuous[{index[0]}]')
+                ax.set_ylabel(f'x_categorical[{index[1]-self.c_dim_continuous}]')
             fig.colorbar(mappable,label='y')
             plt.show()
         else:
@@ -1059,7 +1074,9 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         The first ``c_dim_continuous`` elements represent 
         the maximum assignment numbers of continuous features 
         on a path. The other ``c_dim_categorial`` elements 
-        represent those of categorical features.
+        represent those of categorical features. If it 
+        has a negative element (e.g., -1), the corresponding 
+        feature will be assigned any number of times. 
         By default [c_max_depth,...,c_max_depth,1,...,1].
     c_ranges : numpy.ndarray, optional
         A numpy.ndarray whose size is (c_dim_continuous,2).
@@ -1144,12 +1161,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self.c_num_assignment_vec = np.ones(self.c_dim_features,dtype=int)
         self.c_num_assignment_vec[:self.c_dim_continuous] *= self.c_max_depth
         if c_num_assignment_vec is not None:
-            _check.nonneg_ints(c_num_assignment_vec,'c_num_assignment_vec',ParameterFormatError)
-            if np.any(c_num_assignment_vec>self.c_max_depth):
-                raise(ParameterFormatError(
-                    'All the elements of c_num_assignment_vec must be less than or equal to self.c_max_depth: '
-                    +f'c_num_assignment_vec={c_num_assignment_vec}.'
-                ))
+            _check.ints(c_num_assignment_vec,'c_num_assignment_vec',ParameterFormatError)
             self.c_num_assignment_vec[:] = c_num_assignment_vec
         
         self.c_ranges = np.zeros([self.c_dim_continuous,2])
@@ -1174,18 +1186,21 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
 
         self._root_k_candidates = []
         for i in range(self.c_dim_features):
-            for j in range(self.c_num_assignment_vec[i]):
+            if self.c_num_assignment_vec[i] < 0:
                 self._root_k_candidates.append(i)
+            else:
+                for j in range(self.c_num_assignment_vec[i]):
+                    self._root_k_candidates.append(i)
 
         # h0_params
-        self.h0_k_weight_vec = np.ones(self.c_dim_features) / self.c_num_assignment_vec.sum()
+        self.h0_k_weight_vec = np.ones(self.c_dim_features)
         self.h0_g = 0.5
         self.sub_h0_params = {}
         self.h0_metatree_list = []
         self.h0_metatree_prob_vec = None
 
         # hn_params
-        self.hn_k_weight_vec = np.ones(self.c_dim_features) / self.c_num_assignment_vec.sum()
+        self.hn_k_weight_vec = np.ones(self.c_dim_features)
         self.hn_g = 0.5
         self.sub_hn_params = {}
         self.hn_metatree_list = []
@@ -1245,9 +1260,9 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         else:
             node.h_g = 0 if node.depth == self.c_max_depth else original_node.h_g
             try:
-                sub_h0_params = node.sub_model.get_h_params()
+                sub_h0_params = original_node.sub_model.get_h_params()
             except:
-                sub_h0_params = node.sub_model.get_h0_params()
+                sub_h0_params = original_node.sub_model.get_h0_params()
             node.sub_model.set_h0_params(*sub_h0_params.values())
             if original_node.leaf or node.depth == self.c_max_depth:  # leaf node
                 node.leaf = True
@@ -1256,7 +1271,8 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                 node.children = [None for i in range(self.c_num_children_vec[node.k])]
                 node.thresholds = np.array(original_node.thresholds) if node.k < self.c_dim_continuous else None
                 child_k_candidates = node.k_candidates.copy()
-                child_k_candidates.remove(node.k)
+                if self.c_num_assignment_vec[node.k] > 0:
+                    child_k_candidates.remove(node.k)
                 node.leaf = False
                 for i in range(self.c_num_children_vec[node.k]):
                     node.children[i] = _Node(
@@ -1265,7 +1281,8 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                         sub_model=self.SubModel.LearnModel(
                             **self.sub_constants,
                             **self.sub_h0_params),
-                        ranges=np.array(node.ranges)
+                        ranges=np.array(node.ranges),
+                        log_children_marginal_likelihood=np.zeros(2),
                         )
                     if node.thresholds is not None:
                         node.children[i].ranges[node.k,0] = node.thresholds[i]
@@ -1294,9 +1311,9 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         else:
             node.h_g = 0 if node.depth == self.c_max_depth else original_node.h_g
             try:
-                sub_hn_params = node.sub_model.get_h_params()
+                sub_hn_params = original_node.sub_model.get_h_params()
             except:
-                sub_hn_params = node.sub_model.get_hn_params()
+                sub_hn_params = original_node.sub_model.get_hn_params()
             node.sub_model.set_hn_params(*sub_hn_params.values())
             if original_node.leaf or node.depth == self.c_max_depth:  # leaf node
                 node.leaf = True
@@ -1305,7 +1322,8 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                 node.children = [None for i in range(self.c_num_children_vec[node.k])]
                 node.thresholds = np.array(original_node.thresholds) if node.k < self.c_dim_continuous else None
                 child_k_candidates = node.k_candidates.copy()
-                child_k_candidates.remove(node.k)
+                if self.c_num_assignment_vec[node.k] > 0:
+                    child_k_candidates.remove(node.k)
                 node.leaf = False
                 for i in range(self.c_num_children_vec[node.k]):
                     node.children[i] = _Node(
@@ -1314,7 +1332,8 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                         sub_model=self.SubModel.LearnModel(
                             **self.sub_constants,
                             **self.sub_h0_params).set_hn_params(**self.sub_hn_params),
-                        ranges=np.array(node.ranges)
+                        ranges=np.array(node.ranges),
+                        log_children_marginal_likelihood=np.zeros(2),
                         )
                     if node.thresholds is not None:
                         node.children[i].ranges[node.k,0] = node.thresholds[i]
@@ -1333,9 +1352,9 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         Parameters
         ----------
         h0_k_weight_vec : numpy.ndarray, optional
-            A vector of real numbers in :math:`[0, 1]`, 
-            by default None
-            Sum of its elements must be 1.
+            A vector of positive real numbers whose length is 
+            ``c_dim_continuous+c_dim_categorical``, 
+            by default None.
         h0_g : float, optional
             A real number in :math:`[0, 1]`, by default None
         sub_h0_params : dict, optional
@@ -1364,9 +1383,18 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                     self._set_h0_g_recursion(h0_root)
 
         if sub_h0_params is not None:
+            new_sub_h0_params = {}
+            for key in sub_h0_params:
+                if key.startswith('h_'):
+                    new_key = key.replace('h_','h0_',1)
+                elif key.startswith('hn_'):
+                    new_key = key.replace('hn_','h0_',1)
+                else:
+                    new_key = key
+                new_sub_h0_params[new_key] = sub_h0_params[key]
             self.sub_h0_params = self.SubModel.LearnModel(
                 **self.sub_constants,
-                **sub_h0_params).get_h0_params()
+                **new_sub_h0_params).get_h0_params()
             if self.h0_metatree_list:
                 for h0_root in self.h0_metatree_list:
                     self._set_sub_h0_params_recursion(h0_root)
@@ -1396,6 +1424,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                                 **self.sub_constants,
                                 **self.sub_h0_params),
                             ranges=self.c_ranges,
+                            log_children_marginal_likelihood=np.zeros(2),
                             )
                     )
             for i in range(len(self.h0_metatree_list)):
@@ -1471,9 +1500,9 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         Parameters
         ----------
         hn_k_weight_vec : numpy.ndarray, optional
-            A vector of real numbers in :math:`[0, 1]`, 
-            by default None
-            Sum of its elements must be 1.
+            A vector of positive real numbers whose length is 
+            ``c_dim_continuous+c_dim_categorical``, 
+            by default None.
         hn_g : float, optional
             A real number in :math:`[0, 1]`, by default None
         sub_hn_params : dict, optional
@@ -1502,9 +1531,18 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                     self._set_hn_g_recursion(hn_root)
 
         if sub_hn_params is not None:
+            new_sub_hn_params = {}
+            for key in sub_hn_params:
+                if key.startswith('h_'):
+                    new_key = key.replace('h_','hn_',1)
+                elif key.startswith('h0_'):
+                    new_key = key.replace('h0_','hn_',1)
+                else:
+                    new_key = key
+                new_sub_hn_params[new_key] = sub_hn_params[key]
             self.sub_hn_params = self.SubModel.LearnModel(
                 **self.sub_constants,
-                **self.sub_h0_params).set_hn_params(**sub_hn_params).get_hn_params()
+                **self.sub_h0_params).set_hn_params(**new_sub_hn_params).get_hn_params()
             if self.hn_metatree_list:
                 for hn_root in self.hn_metatree_list:
                     self._set_sub_hn_params_recursion(hn_root)
@@ -1534,6 +1572,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                                 **self.sub_constants,
                                 **self.sub_h0_params).set_hn_params(**self.sub_hn_params),
                             ranges=self.c_ranges,
+                            log_children_marginal_likelihood=np.zeros(2),
                             )
                     )
             for i in range(len(self.hn_metatree_list)):
@@ -1600,7 +1639,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                 "hn_metatree_prob_vec":self.hn_metatree_prob_vec}
     
     def _copy_tree_from_sklearn_tree(self,new_node:_Node, original_tree,node_id):
-        if original_tree.children_left[node_id] != sklearn_tree._tree.TREE_LEAF:  # inner node
+        if original_tree.children_left[node_id] != sklearn_tree._tree.TREE_LEAF and new_node.k_candidates:  # inner node
             new_node.k = original_tree.feature[node_id]
             new_node.children = [None,None]
             if new_node.k < self.c_dim_continuous:
@@ -1611,7 +1650,8 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             else:
                 new_node.thresholds = None
             child_k_candidates = new_node.k_candidates.copy()
-            child_k_candidates.remove(new_node.k)
+            if self.c_num_assignment_vec[new_node.k] > 0:
+                child_k_candidates.remove(new_node.k)
             new_node.children[0] = _Node(
                 new_node.depth+1,
                 child_k_candidates,
@@ -1619,7 +1659,8 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                 sub_model=self.SubModel.LearnModel(
                     **self.sub_constants,
                     **self.sub_h0_params).set_hn_params(**self.sub_hn_params),
-                ranges=np.array(new_node.ranges)
+                ranges=np.array(new_node.ranges),
+                log_children_marginal_likelihood=np.zeros(2),
                 )
             if new_node.thresholds is not None:
                 new_node.children[0].ranges[new_node.k,1] = new_node.thresholds[1]
@@ -1631,7 +1672,8 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                 sub_model=self.SubModel.LearnModel(
                     **self.sub_constants,
                     **self.sub_h0_params).set_hn_params(**self.sub_hn_params),
-                ranges=np.array(new_node.ranges)
+                ranges=np.array(new_node.ranges),
+                log_children_marginal_likelihood=np.zeros(2),
                 )
             if new_node.thresholds is not None:
                 new_node.children[1].ranges[new_node.k,0] = new_node.thresholds[1]
@@ -1640,50 +1682,94 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             new_node.h_g = 0.0
             new_node.leaf = True
 
-    def _update_posterior_leaf(self,node:_Node,y):
-        node.sub_model.calc_pred_dist()
+    def _update_posterior_leaf_batch(self,node:_Node,y):
         node.sub_model._update_posterior(y)
-        return node.sub_model._calc_pred_density(y)
+        return node.sub_model.calc_log_marginal_likelihood()
 
-    def _update_posterior_recursion(self,node:_Node,x_continuous,x_categorical,y):
+    def _update_posterior_recursion_batch(self,node:_Node,x_continuous,x_categorical,y):
         if node.leaf:  # leaf node
-            return self._update_posterior_leaf(node,y)
+            return self._update_posterior_leaf_batch(node,y)
         else:  # inner node
             if node.k < self.c_dim_continuous:
-                index = 0
-                for i in range(self.c_num_children_vec[node.k]-1):
-                    if x_continuous[node.k] < node.thresholds[i+1]:
-                        break
-                    index += 1
-                # index = np.count_nonzero(node.thresholds[1:-1]<x_continuous[node.k]) # slower
+                for i in range(self.c_num_children_vec[node.k]):
+                    if i == 0:
+                        indices = x_continuous[:,node.k] < node.thresholds[i+1]
+                    elif i == self.c_num_children_vec[node.k]-1:
+                        indices = node.thresholds[i] <= x_continuous[:,node.k]
+                    else:
+                        indices = (node.thresholds[i] <= x_continuous[:,node.k]) & (x_continuous[:,node.k] < node.thresholds[i+1])
+                    
+                    if np.any(indices):
+                        node.log_children_marginal_likelihood[i] = \
+                            self._update_posterior_recursion_batch(
+                                node.children[i],
+                                x_continuous[indices],
+                                x_categorical[indices],
+                                y[indices],
+                            )
+                    else:
+                        node.log_children_marginal_likelihood[i] = 0.0
             else:
-                index = x_categorical[node.k-self.c_dim_continuous]
-            tmp1 = self._update_posterior_recursion(node.children[index],x_continuous,x_categorical,y)
-            tmp2 = (1 - node.h_g) * self._update_posterior_leaf(node,y) + node.h_g * tmp1
-            node.h_g = node.h_g * tmp1 / tmp2
+                for i in range(self.c_num_children_vec[node.k]):
+                    indices = x_categorical[:,node.k-self.c_dim_continuous] == i
+                    if np.any(indices):
+                        node.log_children_marginal_likelihood[i] = \
+                            self._update_posterior_recursion_batch(
+                                node.children[i],
+                                x_continuous[indices],
+                                x_categorical[indices],
+                                y[indices],
+                            )
+                    else:
+                        node.log_children_marginal_likelihood[i] = 0.0
+            tmp1 = np.log(node.h_g) + node.log_children_marginal_likelihood.sum()
+            tmp2 = np.logaddexp(np.log(1 - node.h_g) + self._update_posterior_leaf_batch(node,y), tmp1)
+            node.h_g = np.exp(tmp1 - tmp2)
             return tmp2
 
-    def _update_posterior_leaf_lr(self,node:_Node,x_continuous,y):
-        node.sub_model._calc_pred_dist(x_continuous)
+    def _update_posterior_leaf_lr_batch(self,node:_Node,x_continuous,y):
         node.sub_model._update_posterior(x_continuous,y)
-        return node.sub_model._calc_pred_density(y)
+        return node.sub_model.calc_log_marginal_likelihood()
 
-    def _update_posterior_recursion_lr(self,node:_Node,x_continuous,x_categorical,y):
+    def _update_posterior_recursion_lr_batch(self,node:_Node,x_continuous,x_categorical,y):
         if node.leaf:  # leaf node
-            return self._update_posterior_leaf_lr(node,x_continuous,y)
+            return self._update_posterior_leaf_lr_batch(node,x_continuous,y)
         else:  # inner node
             if node.k < self.c_dim_continuous:
-                index = 0
-                for i in range(self.c_num_children_vec[node.k]-1):
-                    if x_continuous[node.k] < node.thresholds[i+1]:
-                        break
-                    index += 1
-                # index = np.count_nonzero(node.thresholds[1:-1]<x_continuous[node.k]) # slower
+                for i in range(self.c_num_children_vec[node.k]):
+                    if i == 0:
+                        indices = x_continuous[:,node.k] < node.thresholds[i+1]
+                    elif i == self.c_num_children_vec[node.k]-1:
+                        indices = node.thresholds[i] <= x_continuous[:,node.k]
+                    else:
+                        indices = (node.thresholds[i] <= x_continuous[:,node.k]) & (x_continuous[:,node.k] < node.thresholds[i+1])
+                    
+                    if np.any(indices):
+                        node.log_children_marginal_likelihood[i] = \
+                            self._update_posterior_recursion_lr_batch(
+                                node.children[i],
+                                x_continuous[indices],
+                                x_categorical[indices],
+                                y[indices],
+                            )
+                    else:
+                        node.log_children_marginal_likelihood[i] = 0.0
             else:
-                index = x_categorical[node.k-self.c_dim_continuous]
-            tmp1 = self._update_posterior_recursion_lr(node.children[index],x_continuous,x_categorical,y)
-            tmp2 = (1 - node.h_g) * self._update_posterior_leaf_lr(node,x_continuous,y) + node.h_g * tmp1
-            node.h_g = node.h_g * tmp1 / tmp2
+                for i in range(self.c_num_children_vec[node.k]):
+                    indices = x_categorical[:,node.k-self.c_dim_continuous] == i
+                    if np.any(indices):
+                        node.log_children_marginal_likelihood[i] = \
+                            self._update_posterior_recursion_lr_batch(
+                                node.children[i],
+                                x_continuous[indices],
+                                x_categorical[indices],
+                                y[indices],
+                            )
+                    else:
+                        node.log_children_marginal_likelihood[i] = 0.0
+            tmp1 = np.log(node.h_g) + node.log_children_marginal_likelihood.sum()
+            tmp2 = np.logaddexp(np.log(1 - node.h_g) + self._update_posterior_leaf_lr_batch(node,x_continuous,y), tmp1)
+            node.h_g = np.exp(tmp1 - tmp2)
             return tmp2
 
     def _compare_metatree_recursion(self,node1:_Node,node2:_Node):
@@ -1780,6 +1866,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                     **self.sub_constants,
                     **self.sub_h0_params).set_hn_params(**self.sub_hn_params),
                 ranges=self.c_ranges,
+                log_children_marginal_likelihood=np.zeros(2),
                 )
             for i in range(n_estimators)
             ]
@@ -1815,12 +1902,10 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         log_metatree_posteriors = np.log(self.hn_metatree_prob_vec)
         if self.SubModel is linearregression:
             for i,metatree in enumerate(self.hn_metatree_list):
-                for j in range(y.shape[0]):
-                    log_metatree_posteriors[i] += np.log(self._update_posterior_recursion_lr(metatree,x_continuous[j],x_categorical[j],y[j]))
+                log_metatree_posteriors[i] += self._update_posterior_recursion_lr_batch(metatree,x_continuous,x_categorical,y)
         else:
             for i,metatree in enumerate(self.hn_metatree_list):
-                for j in range(y.shape[0]):
-                    log_metatree_posteriors[i] += np.log(self._update_posterior_recursion(metatree,x_continuous[j],x_categorical[j],y[j]))
+                log_metatree_posteriors[i] += self._update_posterior_recursion_batch(metatree,x_continuous,x_categorical,y)
         self.hn_metatree_prob_vec[:] = np.exp(log_metatree_posteriors - log_metatree_posteriors.max())
         self.hn_metatree_prob_vec[:] /= self.hn_metatree_prob_vec.sum()
 
@@ -1946,7 +2031,8 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             else:
                 node.thresholds = None
             child_k_candidates = node.k_candidates.copy()
-            child_k_candidates.remove(node.k)
+            if self.c_num_assignment_vec[node.k] > 0:
+                child_k_candidates.remove(node.k)
             node.leaf = False
             for i in range(self.c_num_children_vec[node.k]):
                 node.children[i] = _Node(
@@ -2003,7 +2089,8 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             else:
                 copied_node.thresholds = None
             child_k_candidates = copied_node.k_candidates.copy()
-            child_k_candidates.remove(copied_node.k)
+            if self.c_num_assignment_vec[copied_node.k] > 0:
+                child_k_candidates.remove(copied_node.k)
             copied_node.leaf = False
             for i in range(self.c_num_children_vec[copied_node.k]):
                 copied_node.children[i] = _Node(
@@ -2175,7 +2262,8 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             else:
                 thresholds = None
             child_k_candidates = k_candidates.copy()
-            child_k_candidates.remove(k)
+            if self.c_num_assignment_vec[k] > 0:
+                child_k_candidates.remove(k)
         label_string += f'hn_g={self.hn_g:.2f}\\lp_s={tmp_p_s:.2f}\\l'
 
         sub_model = self.SubModel.LearnModel(
@@ -2474,38 +2562,3 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         prediction = self.make_prediction(loss=loss)
         self.update_posterior(x_continuous,x_categorical,y,alg_type='given_MT')
         return prediction
-
-    def reset_hn_params(self):
-        """Reset the hyperparameters of the posterior distribution to their initial values.
-        
-        They are reset to the output of `self.get_h0_params()`.
-        Note that the parameters of the predictive distribution are also calculated from them.
-        """
-        self.set_hn_params(
-            hn_k_weight_vec=self.h0_k_weight_vec,
-            hn_g=self.h0_g,
-            sub_hn_params=self.SubModel.LearnModel(
-                **self.sub_constants,
-                **self.sub_h0_params).get_hn_params(),
-            hn_metatree_list=self.h0_metatree_list,
-            hn_metatree_prob_vec=self.h0_metatree_prob_vec,
-        )
-        return self
-    
-    def overwrite_h0_params(self):
-        """Overwrite the initial values of the hyperparameters of the posterior distribution by the learned values.
-        
-        They are overwitten by the output of `self.get_hn_params()`.
-        Note that the parameters of the predictive distribution are also calculated from them.
-        """
-        tmp = self.SubModel.LearnModel(
-            **self.sub_constants,
-            **self.sub_h0_params).set_hn_params(**self.sub_hn_params)
-        self.set_h0_params(
-            h0_k_weight_vec=self.hn_k_weight_vec,
-            h0_g=self.hn_g,
-            sub_h0_params=tmp.overwrite_h0_params().get_h0_params(),
-            h0_metatree_list=self.hn_metatree_list,
-            h0_metatree_prob_vec=self.hn_metatree_prob_vec,
-        )
-        return self
