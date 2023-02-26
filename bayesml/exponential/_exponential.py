@@ -9,6 +9,7 @@
 import warnings
 import numpy as np
 from scipy.stats import expon as ss_expon, gamma as ss_gamma, lomax as ss_lomax
+from scipy.special import gammaln
 import matplotlib.pyplot as plt
 
 from .. import base
@@ -490,13 +491,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         log_marginal_likelihood : float
             The log marginal likelihood.
         """
-        # return (
-        #     self.h0_alpha * np.log(self.h0_beta)
-        #     - self.hn_alpha * np.log(self.hn_beta)
-        #     + gammaln(self.hn_alpha)
-        #     - gammaln(self.h0_alpha)
-        #     + 0.5 * (
-        #         np.log(self.h0_kappa)
-        #         - np.log(self.hn_kappa)
-        #         - self._n * np.log(2*np.pi))
-        #         )
+        return (self.h0_alpha * np.log(self.h0_beta)
+                - gammaln(self.h0_alpha)
+                - self.hn_alpha * np.log(self.hn_beta)
+                + gammaln(self.hn_alpha))
