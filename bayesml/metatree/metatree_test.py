@@ -1,5 +1,5 @@
 from bayesml import metatree
-from bayesml import linearregression
+from bayesml import categorical
 import numpy as np
 import time
 
@@ -12,6 +12,8 @@ gen_model = metatree.GenModel(
     c_max_depth=5,
     h_g=1.0,
     seed=0,
+    SubModel=categorical,
+    sub_constants={'c_degree':3},
 )
 gen_model.gen_params()
 true_root = gen_model.get_params()
@@ -21,9 +23,19 @@ learn_model = metatree.LearnModel(
     c_dim_continuous=dim_continuous,
     c_dim_categorical=dim_categorical,
     c_max_depth=5,
+    SubModel=categorical,
+    sub_constants={'c_degree':3},
 )
 learn_model.set_h0_params(h0_metatree_list=[true_root['root']])
 learn_model.set_h0_params(h0_g=0.5)
+
+# learn_model.update_posterior(
+#     x_continuous,
+#     x_categorical,
+#     y,
+#     alg_type='given_MT',
+# )
+# learn_model.visualize_posterior(filename='posterior3.gv')
 
 time_vec = np.empty(100)
 for i in range(100):
