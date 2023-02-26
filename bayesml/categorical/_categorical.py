@@ -9,6 +9,7 @@
 import warnings
 import numpy as np
 from scipy.stats import dirichlet as ss_dirichlet
+from scipy.special import gammaln
 import matplotlib.pyplot as plt
 
 from .. import base
@@ -553,3 +554,16 @@ class LearnModel(base.Posterior, base.PredictiveMixin):
         prediction = self.make_prediction(loss,onehot)
         self.update_posterior(x,onehot)
         return prediction
+
+    def calc_log_marginal_likelihood(self):
+        """Calculate log marginal likelihood
+
+        Returns
+        -------
+        log_marginal_likelihood : float
+            The log marginal likelihood.
+        """
+        return (gammaln(self.h0_alpha_vec.sum())
+                -gammaln(self.h0_alpha_vec).sum()
+                -gammaln(self.hn_alpha_vec.sum())
+                +gammaln(self.hn_alpha_vec).sum())
