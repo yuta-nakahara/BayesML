@@ -370,7 +370,7 @@ q_s(y_{i} | \boldsymbol{x}_{i}, \boldsymbol{x}^{i-1}, y^{i-1}, \boldsymbol{k}),&
 </ul>
 <dl class="py class">
 <dt class="sig sig-object py" id="bayesml.metatree.GenModel">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bayesml.metatree.</span></span><span class="sig-name descname"><span class="pre">GenModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">c_dim_continuous</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c_dim_categorical</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c_max_depth=2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c_num_children_vec=2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c_num_assignment_vec=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c_ranges=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">SubModel=&lt;module</span> <span class="pre">'bayesml.bernoulli'</span><span class="pre">&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sub_constants={}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">root=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h_k_weight_vec=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h_g=0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sub_h_params={}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h_metatree_list=[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h_metatree_prob_vec=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed=None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.metatree.GenModel" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bayesml.metatree.</span></span><span class="sig-name descname"><span class="pre">GenModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">c_dim_continuous</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c_dim_categorical</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c_max_depth=2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c_num_children_vec=2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c_num_assignment_vec=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c_ranges=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">SubModel=&lt;module</span> <span class="pre">'bayesml.bernoulli'</span> <span class="pre">from</span> <span class="pre">'C:\\Users\\nakahara\\Documents\\GitHub\\BayesML\\bayesml\\bernoulli\\__init__.py'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sub_constants={}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">root=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h_k_weight_vec=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h_g=0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sub_h_params={}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h_metatree_list=[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h_metatree_prob_vec=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed=None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.metatree.GenModel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="bayesml.html#bayesml.base.Generative" title="bayesml.base.Generative"><code class="xref py py-class docutils literal notranslate"><span class="pre">bayesml.base.Generative</span></code></a></p>
 <p>The stochastice data generative model and the prior distribution</p>
 <dl class="field-list simple">
@@ -395,7 +395,9 @@ If a single integer is input, it will be broadcasted.</p>
 The first <code class="docutils literal notranslate"><span class="pre">c_dim_continuous</span></code> elements represent 
 the maximum assignment numbers of continuous features 
 on a path. The other <code class="docutils literal notranslate"><span class="pre">c_dim_categorial</span></code> elements 
-represent those of categorical features.
+represent those of categorical features. If it 
+has a negative element (e.g., -1), the corresponding 
+feature will be assigned any number of times. 
 By default [c_max_depth,…,c_max_depth,1,…,1].</p>
 </dd>
 <dt><strong>c_ranges</strong><span class="classifier">numpy.ndarray, optional</span></dt><dd><p>A numpy.ndarray whose size is (c_dim_continuous,2).
@@ -413,7 +415,7 @@ by default a tree consists of only one node.</p>
 </dd>
 <dt><strong>h_k_weight_vec</strong><span class="classifier">numpy.ndarray, optional</span></dt><dd><p>A vector of positive real numbers whose length is 
 <code class="docutils literal notranslate"><span class="pre">c_dim_continuous+c_dim_categorical</span></code>, 
-by default [1/c_num_assignment_vec.sum(),…,1/c_num_assignment_vec.sum()].</p>
+by default [1,…,1].</p>
 </dd>
 <dt><strong>h_g</strong><span class="classifier">float, optional</span></dt><dd><p>A real number in <span class="math notranslate nohighlight">\([0, 1]\)</span>, by default 0.5</p>
 </dd>
@@ -514,9 +516,9 @@ by default None</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>h_k_weight_vec</strong><span class="classifier">numpy.ndarray, optional</span></dt><dd><p>A vector of real numbers in <span class="math notranslate nohighlight">\([0, 1]\)</span>, 
-by default None
-Sum of its elements must be 1.</p>
+<dt><strong>h_k_weight_vec</strong><span class="classifier">numpy.ndarray, optional</span></dt><dd><p>A vector of positive real numbers whose length is 
+<code class="docutils literal notranslate"><span class="pre">c_dim_continuous+c_dim_categorical</span></code>, 
+by default None.</p>
 </dd>
 <dt><strong>h_g</strong><span class="classifier">float, optional</span></dt><dd><p>A real number in <span class="math notranslate nohighlight">\([0, 1]\)</span>, by default None</p>
 </dd>
@@ -720,7 +722,7 @@ by default None. Each element x_categorical[i,j] must satisfy
 
 <dl class="py class">
 <dt class="sig sig-object py" id="bayesml.metatree.LearnModel">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bayesml.metatree.</span></span><span class="sig-name descname"><span class="pre">LearnModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">c_dim_continuous</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c_dim_categorical</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c_num_children_vec=2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c_max_depth=2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c_num_assignment_vec=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c_ranges=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">SubModel=&lt;module</span> <span class="pre">'bayesml.bernoulli'</span><span class="pre">&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sub_constants={}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h0_k_weight_vec=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h0_g=0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sub_h0_params={}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h0_metatree_list=[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h0_metatree_prob_vec=None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.metatree.LearnModel" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bayesml.metatree.</span></span><span class="sig-name descname"><span class="pre">LearnModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">c_dim_continuous</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c_dim_categorical</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c_num_children_vec=2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c_max_depth=2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c_num_assignment_vec=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c_ranges=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">SubModel=&lt;module</span> <span class="pre">'bayesml.bernoulli'</span> <span class="pre">from</span> <span class="pre">'C:\\Users\\nakahara\\Documents\\GitHub\\BayesML\\bayesml\\bernoulli\\__init__.py'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sub_constants={}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h0_k_weight_vec=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h0_g=0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sub_h0_params={}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h0_metatree_list=[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h0_metatree_prob_vec=None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.metatree.LearnModel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="bayesml.html#bayesml.base.Posterior" title="bayesml.base.Posterior"><code class="xref py py-class docutils literal notranslate"><span class="pre">bayesml.base.Posterior</span></code></a>, <a class="reference internal" href="bayesml.html#bayesml.base.PredictiveMixin" title="bayesml.base.PredictiveMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">bayesml.base.PredictiveMixin</span></code></a></p>
 <p>The posterior distribution and the predictive distribution.</p>
 <dl class="field-list simple">
@@ -745,7 +747,9 @@ If a single integer is input, it will be broadcasted.</p>
 The first <code class="docutils literal notranslate"><span class="pre">c_dim_continuous</span></code> elements represent 
 the maximum assignment numbers of continuous features 
 on a path. The other <code class="docutils literal notranslate"><span class="pre">c_dim_categorial</span></code> elements 
-represent those of categorical features.
+represent those of categorical features. If it 
+has a negative element (e.g., -1), the corresponding 
+feature will be assigned any number of times. 
 By default [c_max_depth,…,c_max_depth,1,…,1].</p>
 </dd>
 <dt><strong>c_ranges</strong><span class="classifier">numpy.ndarray, optional</span></dt><dd><p>A numpy.ndarray whose size is (c_dim_continuous,2).
@@ -829,13 +833,13 @@ Sum of its elements is 1.0.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="#bayesml.metatree.LearnModel.make_prediction" title="bayesml.metatree.LearnModel.make_prediction"><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_prediction</span></code></a>([loss])</p></td>
 <td><p>Predict a new data point under the given criterion.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#bayesml.metatree.LearnModel.overwrite_h0_params" title="bayesml.metatree.LearnModel.overwrite_h0_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">overwrite_h0_params</span></code></a>()</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">overwrite_h0_params</span></code>()</p></td>
 <td><p>Overwrite the initial values of the hyperparameters of the posterior distribution by the learned values.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#bayesml.metatree.LearnModel.pred_and_update" title="bayesml.metatree.LearnModel.pred_and_update"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pred_and_update</span></code></a>([x_continuous, ...])</p></td>
 <td><p>Predict a new data point and update the posterior sequentially.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#bayesml.metatree.LearnModel.reset_hn_params" title="bayesml.metatree.LearnModel.reset_hn_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">reset_hn_params</span></code></a>()</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">reset_hn_params</span></code>()</p></td>
 <td><p>Reset the hyperparameters of the posterior distribution to their initial values.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_h0_params</span></code>(filename)</p></td>
@@ -886,9 +890,9 @@ Sum of its elements is 1.0.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>h0_k_weight_vec</strong><span class="classifier">numpy.ndarray, optional</span></dt><dd><p>A vector of real numbers in <span class="math notranslate nohighlight">\([0, 1]\)</span>, 
-by default None
-Sum of its elements must be 1.</p>
+<dt><strong>h0_k_weight_vec</strong><span class="classifier">numpy.ndarray, optional</span></dt><dd><p>A vector of positive real numbers whose length is 
+<code class="docutils literal notranslate"><span class="pre">c_dim_continuous+c_dim_categorical</span></code>, 
+by default None.</p>
 </dd>
 <dt><strong>h0_g</strong><span class="classifier">float, optional</span></dt><dd><p>A real number in <span class="math notranslate nohighlight">\([0, 1]\)</span>, by default None</p>
 </dd>
@@ -933,9 +937,9 @@ Sum of its elements must be 1.0.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>hn_k_weight_vec</strong><span class="classifier">numpy.ndarray, optional</span></dt><dd><p>A vector of real numbers in <span class="math notranslate nohighlight">\([0, 1]\)</span>, 
-by default None
-Sum of its elements must be 1.</p>
+<dt><strong>hn_k_weight_vec</strong><span class="classifier">numpy.ndarray, optional</span></dt><dd><p>A vector of positive real numbers whose length is 
+<code class="docutils literal notranslate"><span class="pre">c_dim_continuous+c_dim_categorical</span></code>, 
+by default None.</p>
 </dd>
 <dt><strong>hn_g</strong><span class="classifier">float, optional</span></dt><dd><p>A real number in <span class="math notranslate nohighlight">\([0, 1]\)</span>, by default None</p>
 </dd>
@@ -1167,22 +1171,6 @@ This function supports “squared”, “0-1”, and “KL”.</p>
 </dl>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="bayesml.metatree.LearnModel.reset_hn_params">
-<span class="sig-name descname"><span class="pre">reset_hn_params</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.metatree.LearnModel.reset_hn_params" title="Permalink to this definition">¶</a></dt>
-<dd><p>Reset the hyperparameters of the posterior distribution to their initial values.</p>
-<p>They are reset to the output of <cite>self.get_h0_params()</cite>.
-Note that the parameters of the predictive distribution are also calculated from them.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="bayesml.metatree.LearnModel.overwrite_h0_params">
-<span class="sig-name descname"><span class="pre">overwrite_h0_params</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.metatree.LearnModel.overwrite_h0_params" title="Permalink to this definition">¶</a></dt>
-<dd><p>Overwrite the initial values of the hyperparameters of the posterior distribution by the learned values.</p>
-<p>They are overwitten by the output of <cite>self.get_hn_params()</cite>.
-Note that the parameters of the predictive distribution are also calculated from them.</p>
 </dd></dl>
 
 </dd></dl>
