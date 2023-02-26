@@ -220,7 +220,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self.p_theta = 0.5
 
         #statistics
-        self._log_sum_factorial = 0.0
+        self._sum_log_factorial = 0.0
 
         self.set_h0_params(h0_alpha,h0_beta)
 
@@ -274,7 +274,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         hn_beta : float, optional
             a positive real number, by default None
         """
-        self._log_sum_factorial = 0.0
+        self._sum_log_factorial = 0.0
         if hn_alpha is not None:
             self.hn_alpha = _check.pos_float(hn_alpha,'hn_alpha',ParameterFormatError)
         if hn_beta is not None:
@@ -310,7 +310,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             self.hn_beta += x.size
         except:
             self.hn_beta += 1
-        self._log_sum_factorial += gammaln(x+1).sum()
+        self._sum_log_factorial += gammaln(x+1).sum()
         return self
 
     def _update_posterior(self,x):
@@ -498,4 +498,4 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                 - gammaln(self.h0_alpha)
                 - self.hn_alpha * np.log(self.hn_beta)
                 + gammaln(self.hn_alpha)
-                - self._log_sum_factorial)
+                - self._sum_log_factorial)
