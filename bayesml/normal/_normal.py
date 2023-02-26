@@ -593,5 +593,6 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             + 0.5 * (
                 np.log(self.h0_kappa)
                 - np.log(self.hn_kappa)
-                - self._n * np.log(2*np.pi))
-                )
+                - self._n * np.log(2*np.pi)
+            )
+        )
