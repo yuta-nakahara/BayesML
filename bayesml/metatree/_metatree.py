@@ -1682,29 +1682,6 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             new_node.h_g = 0.0
             new_node.leaf = True
 
-    def _update_posterior_leaf(self,node:_Node,y):
-        node.sub_model.calc_pred_dist()
-        node.sub_model._update_posterior(y)
-        return node.sub_model._calc_pred_density(y)
-
-    def _update_posterior_recursion(self,node:_Node,x_continuous,x_categorical,y):
-        if node.leaf:  # leaf node
-            return self._update_posterior_leaf(node,y)
-        else:  # inner node
-            if node.k < self.c_dim_continuous:
-                index = 0
-                for i in range(self.c_num_children_vec[node.k]-1):
-                    if x_continuous[node.k] < node.thresholds[i+1]:
-                        break
-                    index += 1
-                # index = np.count_nonzero(node.thresholds[1:-1]<x_continuous[node.k]) # slower
-            else:
-                index = x_categorical[node.k-self.c_dim_continuous]
-            tmp1 = self._update_posterior_recursion(node.children[index],x_continuous,x_categorical,y)
-            tmp2 = (1 - node.h_g) * self._update_posterior_leaf(node,y) + node.h_g * tmp1
-            node.h_g = node.h_g * tmp1 / tmp2
-            return tmp2
-
     def _update_posterior_leaf_batch(self,node:_Node,y):
         node.sub_model._update_posterior(y)
         return node.sub_model.calc_log_marginal_likelihood()
@@ -1748,29 +1725,6 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             tmp1 = np.log(node.h_g) + node.log_children_marginal_likelihood.sum()
             tmp2 = np.logaddexp(np.log(1 - node.h_g) + self._update_posterior_leaf_batch(node,y), tmp1)
             node.h_g = np.exp(tmp1 - tmp2)
-            return tmp2
-
-    def _update_posterior_leaf_lr(self,node:_Node,x_continuous,y):
-        node.sub_model._calc_pred_dist(x_continuous)
-        node.sub_model._update_posterior(x_continuous,y)
-        return node.sub_model._calc_pred_density(y)
-
-    def _update_posterior_recursion_lr(self,node:_Node,x_continuous,x_categorical,y):
-        if node.leaf:  # leaf node
-            return self._update_posterior_leaf_lr(node,x_continuous,y)
-        else:  # inner node
-            if node.k < self.c_dim_continuous:
-                index = 0
-                for i in range(self.c_num_children_vec[node.k]-1):
-                    if x_continuous[node.k] < node.thresholds[i+1]:
-                        break
-                    index += 1
-                # index = np.count_nonzero(node.thresholds[1:-1]<x_continuous[node.k]) # slower
-            else:
-                index = x_categorical[node.k-self.c_dim_continuous]
-            tmp1 = self._update_posterior_recursion_lr(node.children[index],x_continuous,x_categorical,y)
-            tmp2 = (1 - node.h_g) * self._update_posterior_leaf_lr(node,x_continuous,y) + node.h_g * tmp1
-            node.h_g = node.h_g * tmp1 / tmp2
             return tmp2
 
     def _update_posterior_leaf_lr_batch(self,node:_Node,x_continuous,y):
@@ -1949,13 +1903,9 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         if self.SubModel is linearregression:
             for i,metatree in enumerate(self.hn_metatree_list):
                 log_metatree_posteriors[i] += self._update_posterior_recursion_lr_batch(metatree,x_continuous,x_categorical,y)
-                # for j in range(y.shape[0]):
-                #     log_metatree_posteriors[i] += np.log(self._update_posterior_recursion_lr(metatree,x_continuous[j],x_categorical[j],y[j]))
         else:
             for i,metatree in enumerate(self.hn_metatree_list):
                 log_metatree_posteriors[i] += self._update_posterior_recursion_batch(metatree,x_continuous,x_categorical,y)
-                # for j in range(y.shape[0]):
-                #     log_metatree_posteriors[i] += np.log(self._update_posterior_recursion(metatree,x_continuous[j],x_categorical[j],y[j]))
         self.hn_metatree_prob_vec[:] = np.exp(log_metatree_posteriors - log_metatree_posteriors.max())
         self.hn_metatree_prob_vec[:] /= self.hn_metatree_prob_vec.sum()
 
@@ -2612,38 +2562,3 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         prediction = self.make_prediction(loss=loss)
         self.update_posterior(x_continuous,x_categorical,y,alg_type='given_MT')
         return prediction
-
-    # def reset_hn_params(self):
-    #     """Reset the hyperparameters of the posterior distribution to their initial values.
-        
-    #     They are reset to the output of `self.get_h0_params()`.
-    #     Note that the parameters of the predictive distribution are also calculated from them.
-    #     """
-    #     self.set_hn_params(
-    #         hn_k_weight_vec=self.h0_k_weight_vec,
-    #         hn_g=self.h0_g,
-    #         sub_hn_params=self.SubModel.LearnModel(
-    #             **self.sub_constants,
-    #             **self.sub_h0_params).get_hn_params(),
-    #         hn_metatree_list=self.h0_metatree_list,
-    #         hn_metatree_prob_vec=self.h0_metatree_prob_vec,
-    #     )
-    #     return self
-    
-    # def overwrite_h0_params(self):
-    #     """Overwrite the initial values of the hyperparameters of the posterior distribution by the learned values.
-        
-    #     They are overwitten by the output of `self.get_hn_params()`.
-    #     Note that the parameters of the predictive distribution are also calculated from them.
-    #     """
-    #     tmp = self.SubModel.LearnModel(
-    #         **self.sub_constants,
-    #         **self.sub_h0_params).set_hn_params(**self.sub_hn_params)
-    #     self.set_h0_params(
-    #         h0_k_weight_vec=self.hn_k_weight_vec,
-    #         h0_g=self.hn_g,
-    #         sub_h0_params=tmp.overwrite_h0_params().get_h0_params(),
-    #         h0_metatree_list=self.hn_metatree_list,
-    #         h0_metatree_prob_vec=self.hn_metatree_prob_vec,
-    #     )
-    #     return self
