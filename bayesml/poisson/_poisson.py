@@ -317,6 +317,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         """Update opsterior without input check."""
         self.hn_alpha += x.sum()
         self.hn_beta += x.size
+        self._sum_log_factorial += gammaln(x+1).sum()
         return self
 
     def estimate_params(self,loss="squared",dict_out=False):
