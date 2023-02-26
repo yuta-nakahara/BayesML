@@ -11,6 +11,7 @@ import numpy as np
 from scipy.stats import norm as ss_norm
 from scipy.stats import gamma as ss_gamma 
 from scipy.stats import t as ss_t
+from scipy.special import gammaln
 import matplotlib.pyplot as plt
 
 from .. import base
@@ -262,6 +263,9 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self.p_nu = 2.0
         self.p_lambda = 0.5
 
+        # sample size
+        self._n = 0
+
         self.set_h0_params(
             h0_m,
             h0_kappa,
@@ -333,6 +337,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         hn_beta : float, optional
             a positive real number, by default None
         """
+        self._n = 0
         if hn_m is not None:
             self.hn_m = _check.float_(hn_m,'hn_m',ParameterFormatError)
         if hn_kappa is not None:
@@ -379,6 +384,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self.hn_m =  (self.hn_kappa * self.hn_m + n * x_bar) / (self.hn_kappa + n)
         self.hn_kappa += n
         self.hn_alpha += n*0.5
+        self._n += n
         return self
 
     def _update_posterior(self,x):
@@ -390,6 +396,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self.hn_m =  (self.hn_kappa * self.hn_m + n * x_bar) / (self.hn_kappa + n)
         self.hn_kappa += n
         self.hn_alpha += n*0.5
+        self._n += n
         return self
 
     def estimate_params(self,loss="squared",dict_out=False):
@@ -569,3 +576,23 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         prediction = self.make_prediction(loss=loss)
         self.update_posterior(x)
         return prediction
+
+    def calc_log_marginal_likelihood(self):
+        """Calculate log marginal likelihood
+
+        Returns
+        -------
+        log_marginal_likelihood : float
+            The log marginal likelihood.
+        """
+        return (
+            self.h0_alpha * np.log(self.h0_beta)
+            - self.hn_alpha * np.log(self.hn_beta)
+            + gammaln(self.hn_alpha)
+            - gammaln(self.h0_alpha)
+            + 0.5 * (
+                np.log(self.h0_kappa)
+                - np.log(self.hn_kappa)
+                - self._n * np.log(2*np.pi)
+            )
+        )
