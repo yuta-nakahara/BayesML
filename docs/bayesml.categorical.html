@@ -599,58 +599,61 @@ If a single real number is input, it will be broadcasted.</p>
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#bayesml.categorical.LearnModel.calc_pred_dist" title="bayesml.categorical.LearnModel.calc_pred_dist"><code class="xref py py-obj docutils literal notranslate"><span class="pre">calc_pred_dist</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bayesml.categorical.LearnModel.calc_log_marginal_likelihood" title="bayesml.categorical.LearnModel.calc_log_marginal_likelihood"><code class="xref py py-obj docutils literal notranslate"><span class="pre">calc_log_marginal_likelihood</span></code></a>()</p></td>
+<td><p>Calculate log marginal likelihood</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#bayesml.categorical.LearnModel.calc_pred_dist" title="bayesml.categorical.LearnModel.calc_pred_dist"><code class="xref py py-obj docutils literal notranslate"><span class="pre">calc_pred_dist</span></code></a>()</p></td>
 <td><p>Calculate the parameters of the predictive distribution.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#bayesml.categorical.LearnModel.estimate_params" title="bayesml.categorical.LearnModel.estimate_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">estimate_params</span></code></a>([loss, dict_out])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bayesml.categorical.LearnModel.estimate_params" title="bayesml.categorical.LearnModel.estimate_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">estimate_params</span></code></a>([loss, dict_out])</p></td>
 <td><p>Estimate the parameter of the stochastic data generative model under the given criterion.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#bayesml.categorical.LearnModel.get_constants" title="bayesml.categorical.LearnModel.get_constants"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_constants</span></code></a>()</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#bayesml.categorical.LearnModel.get_constants" title="bayesml.categorical.LearnModel.get_constants"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_constants</span></code></a>()</p></td>
 <td><p>Get constants of LearnModel.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#bayesml.categorical.LearnModel.get_h0_params" title="bayesml.categorical.LearnModel.get_h0_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_h0_params</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bayesml.categorical.LearnModel.get_h0_params" title="bayesml.categorical.LearnModel.get_h0_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_h0_params</span></code></a>()</p></td>
 <td><p>Get the initial values of the hyperparameters of the posterior distribution.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#bayesml.categorical.LearnModel.get_hn_params" title="bayesml.categorical.LearnModel.get_hn_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_hn_params</span></code></a>()</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#bayesml.categorical.LearnModel.get_hn_params" title="bayesml.categorical.LearnModel.get_hn_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_hn_params</span></code></a>()</p></td>
 <td><p>Get the hyperparameters of the posterior distribution.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#bayesml.categorical.LearnModel.get_p_params" title="bayesml.categorical.LearnModel.get_p_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_p_params</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bayesml.categorical.LearnModel.get_p_params" title="bayesml.categorical.LearnModel.get_p_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_p_params</span></code></a>()</p></td>
 <td><p>Get the parameters of the predictive distribution.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_h0_params</span></code>(filename)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_h0_params</span></code>(filename)</p></td>
 <td><p>Load the hyperparameters to h0_params.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_hn_params</span></code>(filename)</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_hn_params</span></code>(filename)</p></td>
 <td><p>Load the hyperparameters to hn_params.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#bayesml.categorical.LearnModel.make_prediction" title="bayesml.categorical.LearnModel.make_prediction"><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_prediction</span></code></a>([loss, onehot])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#bayesml.categorical.LearnModel.make_prediction" title="bayesml.categorical.LearnModel.make_prediction"><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_prediction</span></code></a>([loss, onehot])</p></td>
 <td><p>Predict a new data point under the given criterion.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">overwrite_h0_params</span></code>()</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">overwrite_h0_params</span></code>()</p></td>
 <td><p>Overwrite the initial values of the hyperparameters of the posterior distribution by the learned values.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#bayesml.categorical.LearnModel.pred_and_update" title="bayesml.categorical.LearnModel.pred_and_update"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pred_and_update</span></code></a>(x[, loss, onehot])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#bayesml.categorical.LearnModel.pred_and_update" title="bayesml.categorical.LearnModel.pred_and_update"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pred_and_update</span></code></a>(x[, loss, onehot])</p></td>
 <td><p>Predict a new data point and update the posterior sequentially.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">reset_hn_params</span></code>()</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">reset_hn_params</span></code>()</p></td>
 <td><p>Reset the hyperparameters of the posterior distribution to their initial values.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_h0_params</span></code>(filename)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_h0_params</span></code>(filename)</p></td>
 <td><p>Save the hyperparameters using python <code class="docutils literal notranslate"><span class="pre">pickle</span></code> module.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_hn_params</span></code>(filename)</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_hn_params</span></code>(filename)</p></td>
 <td><p>Save the hyperparameters using python <code class="docutils literal notranslate"><span class="pre">pickle</span></code> module.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#bayesml.categorical.LearnModel.set_h0_params" title="bayesml.categorical.LearnModel.set_h0_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_h0_params</span></code></a>([h0_alpha_vec])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#bayesml.categorical.LearnModel.set_h0_params" title="bayesml.categorical.LearnModel.set_h0_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_h0_params</span></code></a>([h0_alpha_vec])</p></td>
 <td><p>Set the hyperparameters of the prior distribution.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#bayesml.categorical.LearnModel.set_hn_params" title="bayesml.categorical.LearnModel.set_hn_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_hn_params</span></code></a>([hn_alpha_vec])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bayesml.categorical.LearnModel.set_hn_params" title="bayesml.categorical.LearnModel.set_hn_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_hn_params</span></code></a>([hn_alpha_vec])</p></td>
 <td><p>Set updated values of the hyperparameter of the posterior distribution.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#bayesml.categorical.LearnModel.update_posterior" title="bayesml.categorical.LearnModel.update_posterior"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_posterior</span></code></a>(x[, onehot])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#bayesml.categorical.LearnModel.update_posterior" title="bayesml.categorical.LearnModel.update_posterior"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_posterior</span></code></a>(x[, onehot])</p></td>
 <td><p>Update the hyperparameters of the posterior distribution using traning data.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#bayesml.categorical.LearnModel.visualize_posterior" title="bayesml.categorical.LearnModel.visualize_posterior"><code class="xref py py-obj docutils literal notranslate"><span class="pre">visualize_posterior</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bayesml.categorical.LearnModel.visualize_posterior" title="bayesml.categorical.LearnModel.visualize_posterior"><code class="xref py py-obj docutils literal notranslate"><span class="pre">visualize_posterior</span></code></a>()</p></td>
 <td><p>Visualize the posterior distribution for the parameter.</p></td>
 </tr>
 </tbody>
@@ -776,8 +779,8 @@ as rv_frozen object of scipy.stats.</p>
 <div class="admonition seealso">
 <p class="admonition-title">See also</p>
 <dl class="simple">
-<dt><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.rv_continuous.html#scipy.stats.rv_continuous" title="(in SciPy v1.10.0)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scipy.stats.rv_continuous</span></code></a></dt><dd></dd>
-<dt><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.rv_discrete.html#scipy.stats.rv_discrete" title="(in SciPy v1.10.0)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scipy.stats.rv_discrete</span></code></a></dt><dd></dd>
+<dt><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.rv_continuous.html#scipy.stats.rv_continuous" title="(in SciPy v1.10.1)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scipy.stats.rv_continuous</span></code></a></dt><dd></dd>
+<dt><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.rv_discrete.html#scipy.stats.rv_discrete" title="(in SciPy v1.10.1)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scipy.stats.rv_discrete</span></code></a></dt><dd></dd>
 </dl>
 </div>
 </dd></dl>
@@ -868,6 +871,20 @@ under “0-1” loss will be one-hot encoded, by default True.</p>
 <dt><strong>Predicted_value</strong><span class="classifier">{int, numpy.ndarray}</span></dt><dd><p>The predicted value under the given loss function. 
 If the loss function is “KL”, the predictive distribution itself will be returned
 as numpy.ndarray.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bayesml.categorical.LearnModel.calc_log_marginal_likelihood">
+<span class="sig-name descname"><span class="pre">calc_log_marginal_likelihood</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.categorical.LearnModel.calc_log_marginal_likelihood" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate log marginal likelihood</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>log_marginal_likelihood</strong><span class="classifier">float</span></dt><dd><p>The log marginal likelihood.</p>
 </dd>
 </dl>
 </dd>
