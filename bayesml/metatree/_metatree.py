@@ -1091,7 +1091,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
     h0_k_weight_vec : numpy.ndarray, optional
         A vector of positive real numbers whose length is 
         ``c_dim_continuous+c_dim_categorical``, 
-        by default [1/c_num_assignment_vec.sum(),...,1/c_num_assignment_vec.sum()].
+        by default [1,...,1].
     h0_g : float, optional
         A real number in :math:`[0, 1]`, by default 0.5
     sub_h0_params : dict, optional
