@@ -2218,7 +2218,7 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
                         label_string += f'\\l{key}:{value}'
             label_string += '}\\l'
         else:
-            label_string += '\\lNone}\\l'
+            label_string += 'sub_model=\\lNone\\l'
             
         tree_graph.node(name=f'{tmp_id}',label=label_string,fillcolor=f'{rgb2hex(_CMAP(tmp_p_s))}')
         if tmp_p_s > 0.65:
