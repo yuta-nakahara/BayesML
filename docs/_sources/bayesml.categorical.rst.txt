@@ -1,8 +1,6 @@
 bayesml.categorical package
 ===========================
 
-.. image:: ./images/categorical_example.png
-
 Module contents
 ---------------
 

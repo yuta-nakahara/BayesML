@@ -1,8 +1,6 @@
 bayesml.exponential package
 ===========================
 
-.. image:: ./images/exponential_example.png
-
 Module contents
 ---------------
 

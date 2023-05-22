@@ -33,7 +33,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='bayesml',
-    version='0.2.4',
+    version='0.1.0',
     packages=find_packages(),
     author='Yuta Nakahara et al.',
     author_email='yuta.nakahara@aoni.waseda.jp',
@@ -50,12 +50,11 @@ setup(
                  'Programming Language :: Python :: 3.8',
                  'Programming Language :: Python :: 3.9',
                  'Programming Language :: Python :: 3.10',
-                 'Programming Language :: Python :: 3.11',
                  'Topic :: Scientific/Engineering'
                  ],
     install_requires=['numpy >= 1.20',
                       'scipy >= 1.7',
-                      'matplotlib >= 3.5',
-                      'scikit-learn >= 1.1'],
+                      'matplotlib >= 3.5'
+                      ],
     python_requires='~=3.7',
 )
