@@ -28,7 +28,7 @@ Installation
 
 Please use the following command to install BayesML.
 
-.. code-block::
+.. code-block:: bash
 
    pip install bayesml
 
@@ -38,6 +38,7 @@ The following are required.
 * NumPy (>= 1.20)
 * SciPy (>= 1.7)
 * MatplotLib (>= 3.5)
+* Scikit-learn (>= 1.1)
 
 Example
 -------
@@ -46,44 +47,44 @@ We show an example of generating data drawn according to the Bernoulli distribut
 
 First, we create an instance of a probabilistic data generative model. Here, the parameter `theta`, which represents an occurrence probability of 1, is set to 0.7.
 
-.. code-block::
+.. code-block:: python
 
    from bayesml import bernoulli
    gen_model = bernoulli.GenModel(theta=0.7)
 
 You can visualize the characteristics of the created model by the following method.
 
-.. code-block::
+.. code-block:: python
 
    gen_model.visualize_model()
 
 Outputs:
 
    | theta:0.7  
-   | x0:[1 1 1 0 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0]  
-   | x1:[1 0 1 0 1 0 0 0 0 1 1 1 1 1 1 1 1 0 1 1]  
-   | x2:[1 0 1 0 1 1 1 1 1 1 1 0 0 0 0 1 1 0 1 1]  
-   | x3:[0 1 0 1 1 1 1 0 0 0 1 0 0 1 1 1 0 0 1 0]  
-   | x4:[1 1 1 0 1 1 0 1 1 1 1 1 1 1 1 1 0 1 1 0]  
+   | x0:[1 1 1 0 1 1 1 0 1 1 1 1 1 1 0 1 1 1 0 1]  
+   | x1:[1 1 0 1 1 1 1 1 1 1 1 1 0 1 1 1 1 1 1 0]  
+   | x2:[1 0 1 1 0 1 1 1 0 1 1 1 1 1 0 0 1 1 1 1]  
+   | x3:[1 1 1 0 1 1 0 1 0 0 0 0 1 0 1 1 1 1 1 1]  
+   | x4:[0 0 1 0 0 0 1 1 1 1 1 1 1 1 0 0 1 1 1 1]  
    .. image:: ./images/README_ex_img1.png
 
 After confirming that the frequency of occurrence of 1 is around `theta=0.7`, we generate a sample and store it to variable `x`.
 
-.. code-block::
+.. code-block:: python
 
    x = gen_model.gen_sample(sample_size=20)
 
 
 Next, we create an instance of a model for learning posterior distribution.
 
-.. code-block::
+.. code-block:: python
 
    learn_model = bernoulli.LearnModel()
 
 
 A method to visualize the posterior distribution also exists (the prior distribution is shown here because learning from data has not been performed yet).
 
-.. code-block::
+.. code-block:: python
 
    learn_model.visualize_posterior()
 
@@ -93,7 +94,7 @@ Outputs:
 
 After learning from the data, we can see that the density of the posterior distribution is concentrated around the true parameter `theta=0.7`.
 
-.. code-block::
+.. code-block:: python
 
    learn_model.update_posterior(x)
    learn_model.visualize_posterior()
@@ -106,7 +107,7 @@ In Bayesian decision theory, the optimal estimator under the Bayes criterion is 
 
 In BayesML, the above calclulation is performed by the following methods.
 
-.. code-block::
+.. code-block:: python
 
    print(learn_model.estimate_params(loss='squared'))
    print(learn_model.estimate_params(loss='abs'))
@@ -114,9 +115,9 @@ In BayesML, the above calclulation is performed by the following methods.
 
 Outputs:
 
-   | 0.6428571428571429  
-   | 0.6474720009710451  
-   | 0.6578947368421053  
+   | 0.7380952380952381  
+   | 0.7457656349087012  
+   | 0.7631578947368421  
 
 Different settings of a loss function yield different optimal estimates.
 
@@ -128,8 +129,13 @@ The following packages are currently available. In this library, a probabilistic
 * :doc:`bayesml`
 * :doc:`bayesml.autoregressive`
 * :doc:`bayesml.bernoulli`
+* :doc:`bayesml.categorical`
+* :doc:`bayesml.contexttree`
 * :doc:`bayesml.exponential`
+* :doc:`bayesml.gaussianmixture`
+* :doc:`bayesml.hiddenmarkovnormal`
 * :doc:`bayesml.linearregression`
+* :doc:`bayesml.metatree`
 * :doc:`bayesml.multivariate_normal`
 * :doc:`bayesml.normal`
 * :doc:`bayesml.poisson`
@@ -143,25 +149,20 @@ Plain text
 
 .. code-block::
 
-   Y. Nakahara, N. Ichijo, K. Shimada, 
-   K. Tajima, K. Horinouchi, L. Ruan, 
-   N. Namegaya, R. Maniwa, T. Ishiwatari, 
-   W. Yu, Y. Iikubo, S. Saito, 
-   K. Kazama, T. Matsushima, ``BayesML,'' 
+   Y. Nakahara, N. Ichijo, K. Shimada, Y. Iikubo, 
+   S. Saito, K. Kazama, T. Matsushima, BayesML Developers, ``BayesML 0.2.4,'' 
    [Online] https://github.com/yuta-nakahara/BayesML
 
 
 BibTeX
 
-.. code-block::
+.. code-block:: bibtex
    
    @misc{bayesml,
-   author = {Nakahara Yuta and Ichijo Naoki and Shimada Koshi and
-               Tajima Keito and Horinouchi Kohei and Ruan Luyu and
-               Namegaya Noboru and Maniwa Ryota and Ishiwatari Taisuke and
-               Yu Wenbin and Iikubo Yuji and Saito Shota and Kazama Koki and
-               Matsushima Toshiyasu}
-   title = {BayesML},
+   author = {Nakahara, Yuta and Ichijo, Naoki and Shimada, Koshi and
+               Iikubo, Yuji and Saito, Shota and Kazama, Koki and
+               Matsushima, Toshiyasu and {BayesML Developers}},
+   title = {BayesML 0.2.4},
    howpublished = {\url{https://github.com/yuta-nakahara/BayesML}},
    year = {2022}
    }

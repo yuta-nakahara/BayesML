@@ -1,0 +1,1030 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>bayesml.contexttree package &#8212; BayesML</title>
+    
+  <link href="_static/css/theme.css" rel="stylesheet">
+  <link href="_static/css/index.ff1ffe594081f20da1ef19478df9384b.css" rel="stylesheet">
+
+    
+  <link rel="stylesheet"
+    href="_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    
+      
+
+    
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/css/customize.css" />
+    
+  <link rel="preload" as="script" href="_static/js/index.be7d3bbb2ef33a8344ce.js">
+
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx-book-theme.9d8b4a8b9bb19db25eeaddc40d639ba2.js"></script>
+    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="shortcut icon" href="_static/BayesML_favicon.ico"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="bayesml.exponential package" href="bayesml.exponential.html" />
+    <link rel="prev" title="bayesml.categorical package" href="bayesml.categorical.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="None">
+    
+
+    <!-- Google Analytics -->
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+<!-- Checkboxes to toggle the left sidebar -->
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle navigation sidebar">
+<label class="overlay" for="__navigation">
+    <div class="visually-hidden">Toggle navigation sidebar</div>
+</label>
+<div class="col-12 col-md-3 bd-sidebar site-navigation " id="site-navigation">
+    
+        <div class="navbar-brand-box">
+    <a class="navbar-brand text-wrap" href="index.html">
+      
+        <!-- `logo` is deprecated in Sphinx 4.0, so remove this when we stop supporting 3 -->
+        
+      
+      
+      <img src="_static/BayesML_logo.png" class="logo" alt="logo">
+      
+      
+    </a>
+</div><form class="bd-search d-flex align-items-center" action="search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item active">
+        <ul class="current nav bd-sidenav">
+ <li class="toctree-l1 current active has-children">
+  <a class="reference internal" href="bayesml.html">
+   bayesml package
+  </a>
+  <input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/>
+  <label for="toctree-checkbox-1">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul class="current">
+   <li class="toctree-l2">
+    <a class="reference internal" href="bayesml.autoregressive.html">
+     bayesml.autoregressive package
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="bayesml.bernoulli.html">
+     bayesml.bernoulli package
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="bayesml.categorical.html">
+     bayesml.categorical package
+    </a>
+   </li>
+   <li class="toctree-l2 current active">
+    <a class="current reference internal" href="#">
+     bayesml.contexttree package
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="bayesml.exponential.html">
+     bayesml.exponential package
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="bayesml.gaussianmixture.html">
+     bayesml.gaussianmixture package
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="bayesml.hiddenmarkovnormal.html">
+     bayesml.hiddenmarkovnormal package
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="bayesml.linearregression.html">
+     bayesml.linearregression package
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="bayesml.metatree.html">
+     bayesml.metatree package
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="bayesml.multivariate_normal.html">
+     bayesml.multivariate_normal package
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="bayesml.normal.html">
+     bayesml.normal package
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="bayesml.poisson.html">
+     bayesml.poisson package
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="developers.html">
+   BayesML Developers
+  </a>
+ </li>
+</ul>
+
+    </div>
+</nav> <!-- To handle the deprecated key -->
+
+<div class="navbar_extra_footer">
+  Theme by the <a href="https://ebp.jupyterbook.org">Executable Book Project</a>
+</div>
+
+</div>
+
+
+          
+
+
+          
+<!-- This is an invisible pixel that we watch to see if we've scrolled. -->
+<div class="sbt-scroll-pixel-helper"></div>
+<main class="col py-md-3 pl-md-4 bd-content overflow-auto" role="main">
+    
+    <div class="topbar container-xl fixed-top">
+    <div class="topbar-contents row">
+        <div class="col-12 col-md-3 bd-topbar-whitespace site-navigation show"></div>
+        <div class="col pl-md-4 topbar-main">
+            <div class="topbar-left">
+                
+                <label class="nav-toggle-button" for="__navigation">
+                    <div class="visually-hidden">Toggle navigation</div>
+                    <i class="fas fa-bars"></i>
+                </label>
+                
+            </div>
+            
+<div class="dropdown-buttons-trigger">
+    <button id="dropdown-buttons-trigger" class="btn btn-secondary topbarbtn" aria-label="Download this page"><i
+            class="fas fa-download"></i></button>
+
+    <div class="dropdown-buttons">
+        <!-- ipynb file if we had a myst markdown file -->
+        
+        <!-- Download raw file -->
+        <a class="dropdown-buttons" href="_sources/bayesml.contexttree.rst.txt"><button type="button"
+                class="btn btn-secondary topbarbtn" title="Download source file" data-toggle="tooltip"
+                data-placement="left">.rst</button></a>
+        <!-- Download PDF via print -->
+        <button type="button" id="download-print" class="btn btn-secondary topbarbtn" title="Print to PDF"
+                onclick="printPdf(this)" data-toggle="tooltip" data-placement="left">.pdf</button>
+    </div>
+</div>
+
+            <!-- Source interaction buttons -->
+
+<div class="dropdown-buttons-trigger">
+    <button id="dropdown-buttons-trigger" class="btn btn-secondary topbarbtn"
+        aria-label="Connect with source repository"><i class="fab fa-github"></i></button>
+    <div class="dropdown-buttons sourcebuttons">
+        <a class="repository-button"
+            href="https://github.com/yuta-nakahara/BayesML/"><button type="button" class="btn btn-secondary topbarbtn"
+                data-toggle="tooltip" data-placement="left" title="Source repository"><i
+                    class="fab fa-github"></i>repository</button></a>
+        
+        
+    </div>
+</div>
+
+            <!-- Full screen (wrap in <a> to have style consistency -->
+
+<a class="full-screen-button"><button type="button" class="btn btn-secondary topbarbtn" data-toggle="tooltip"
+        data-placement="bottom" onclick="toggleFullScreen()" aria-label="Fullscreen mode"
+        title="Fullscreen mode"><i
+            class="fas fa-expand"></i></button></a>
+
+            <!-- Launch buttons -->
+
+        </div>
+
+        <!-- Table of contents -->
+        <div class="d-none d-md-block col-md-2 bd-toc show noprint">
+            
+            <div class="tocsection onthispage pt-5 pb-3">
+                <i class="fas fa-list"></i> Contents
+            </div>
+            <nav id="bd-toc-nav" aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#module-bayesml.contexttree">
+   Module contents
+  </a>
+ </li>
+</ul>
+
+            </nav>
+        </div>
+    </div>
+</div>
+    <div id="main-content" class="row">
+        <div class="col-12 col-md-9 pl-md-3 pr-md-0">
+            <!-- Table of contents that is only displayed when printing the page -->
+            <div id="jb-print-docs-body" class="onlyprint">
+                <h1>bayesml.contexttree package</h1>
+                <!-- Table of contents -->
+                <div id="print-main-content">
+                    <div id="jb-print-toc">
+                        
+                        <div>
+                            <h2> Contents </h2>
+                        </div>
+                        <nav aria-label="Page">
+                            <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#module-bayesml.contexttree">
+   Module contents
+  </a>
+ </li>
+</ul>
+
+                        </nav>
+                    </div>
+                </div>
+            </div>
+            
+              <div>
+                
+  <div class="section" id="bayesml-contexttree-package">
+<h1>bayesml.contexttree package<a class="headerlink" href="#bayesml-contexttree-package" title="Permalink to this headline">¶</a></h1>
+<img alt="_images/contexttree_example.png" src="_images/contexttree_example.png" />
+<div class="section" id="module-bayesml.contexttree">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-bayesml.contexttree" title="Permalink to this headline">¶</a></h2>
+<p>The stochastic data generative model is as follows:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(\mathcal{X}=\{1,2,\ldots,K\}\)</span> : a space of a source symbol</p></li>
+<li><p><span class="math notranslate nohighlight">\(x^n = x_1 x_2 \cdots x_n \in \mathcal{X}^n~(n\in\mathbb{N})\)</span> : an source sequence</p></li>
+<li><p><span class="math notranslate nohighlight">\(D_\mathrm{max} \in \mathbb{N}\)</span> : the maximum depth of context tree models</p></li>
+<li><p><span class="math notranslate nohighlight">\(T\)</span> : a context tree model, <span class="math notranslate nohighlight">\(K\)</span>-ary regular tree whose depth is smaller than or equal to <span class="math notranslate nohighlight">\(D_\mathrm{max}\)</span>, where “regular” means that all inner nodes have <span class="math notranslate nohighlight">\(K\)</span> child nodes</p></li>
+<li><p><span class="math notranslate nohighlight">\(\mathcal{T}\)</span> : a set of <span class="math notranslate nohighlight">\(T\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(s\)</span> : a node of a context tree model</p></li>
+<li><p><span class="math notranslate nohighlight">\(\mathcal{I}(T)\)</span> : a set of inner nodes of <span class="math notranslate nohighlight">\(T\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(\mathcal{L}(T)\)</span> : a set of leaf nodes of <span class="math notranslate nohighlight">\(T\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(\mathcal{S}(T)\)</span> : a set of all nodes of <span class="math notranslate nohighlight">\(T\)</span>, i.e., <span class="math notranslate nohighlight">\(\mathcal{S}(T) = \mathcal{I}(T) \cup \mathcal{L}(T)\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(s_T(x^{n-1}) \in \mathcal{L}(T)\)</span> : a leaf node of <span class="math notranslate nohighlight">\(T\)</span> corresponding to <span class="math notranslate nohighlight">\(x^{n-1} = x_1 x_2\cdots x_{n-1}\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(\boldsymbol{\theta}_s = (\theta_{1|s}, \theta_{2|s}, \ldots, \theta_{K|s})\)</span> : a parameter on a leaf node, where <span class="math notranslate nohighlight">\(\theta_{k|s}\)</span> denotes the occurrence probability of <span class="math notranslate nohighlight">\(k\in\mathcal{X}\)</span></p></li>
+</ul>
+<div class="math notranslate nohighlight">
+\[p(x_n | x^{n-1}, \boldsymbol{\theta}_T, T)=\theta_{x_n|s_T(x^{n-1})}.\]</div>
+<p>The prior distribution is as follows:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(g_{0,s} \in [0,1]\)</span> : a hyperparameter assigned to <span class="math notranslate nohighlight">\(s \in \mathcal{S}(T)\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(\beta_0(k|s) \in\mathbb{R}_{&gt;0}\)</span> : a hyperparameter of the Dirichlet distribution</p></li>
+<li><p><span class="math notranslate nohighlight">\(\boldsymbol{\beta}_0(s) = (\beta_0(1|s), \beta_0(2|s), \ldots, \beta_0(K|s)) \in\mathbb{R}^{K}_{&gt;0}\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(C(\boldsymbol{\beta}_0(s)) = \frac{\Gamma\left(\sum_{k=1}^{K} \beta_0(k|s)\right)}{\prod_{k=1}^{K} \Gamma\left(\beta_0(k|s)\right)}\)</span></p></li>
+</ul>
+<p>For <span class="math notranslate nohighlight">\(\boldsymbol{\theta}_s\)</span> on <span class="math notranslate nohighlight">\(s\in\mathcal{L}(T)\)</span>, the Dirichlet distribution is assumed as the prior distribution as follows:</p>
+<div class="math notranslate nohighlight">
+\[p(\boldsymbol{\theta}_s|T) = \mathrm{Dir}(\boldsymbol{\theta}_s|\,\boldsymbol{\beta}_0(s)) = C(\boldsymbol{\beta}_0(s)) \prod_{k=1}^{K} \theta_{k|s}^{\beta_0(k|s)-1}.\]</div>
+<p>For <span class="math notranslate nohighlight">\(T \in \mathcal{T}\)</span>,</p>
+<div class="math notranslate nohighlight">
+\[p(T)=\prod_{s \in \mathcal{I}(T)} g_{0,s} \prod_{s' \in \mathcal{L}(T)} (1-g_{0,s'}),\]</div>
+<p>where <span class="math notranslate nohighlight">\(g_{0,s}=0\)</span> if the depth of <span class="math notranslate nohighlight">\(s\)</span> is <span class="math notranslate nohighlight">\(D_\mathrm{max}\)</span>.</p>
+<p>The posterior distribution is as follows:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(g_{n,s} \in [0,1]\)</span> : the updated hyperparameter</p></li>
+<li><p><span class="math notranslate nohighlight">\(T_\mathrm{max}\)</span> : a superposed context tree, <span class="math notranslate nohighlight">\(K\)</span>-ary perfect tree whose depth is <span class="math notranslate nohighlight">\(D_\mathrm{max}\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(s_\lambda\)</span> : the root node</p></li>
+<li><p><span class="math notranslate nohighlight">\(\beta_n(k|s) \in\mathbb{R}_{&gt;0}\)</span> : a hyperparameter of the posterior Dirichlet distribution</p></li>
+<li><p><span class="math notranslate nohighlight">\(\boldsymbol{\beta}_n(s) = (\beta_n(1|s), \beta_n(2|s), \ldots, \beta_n(K|s)) \in\mathbb{R}^{K}_{&gt;0}\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(I \{ \cdot \}\)</span>: the indicator function</p></li>
+</ul>
+<p>For <span class="math notranslate nohighlight">\(\boldsymbol{\theta}_s \in\mathcal{L}(T_\mathrm{max})\)</span>,</p>
+<div class="math notranslate nohighlight">
+\[p(\boldsymbol{\theta}_s|x^n) = \mathrm{Dir}(\boldsymbol{\theta}_s|\,\boldsymbol{\beta}_n(s)) = C(\boldsymbol{\beta}_n(s)) \prod_{k=1}^{K} \theta_{k|s}^{\beta_n(k|s)-1},\]</div>
+<p>where the updating rule of the hyperparameter is as follows:</p>
+<div class="math notranslate nohighlight">
+\[\beta_n(k|s) = \beta_0(k|s) + \sum_{i=1}^n I \left\{ s \ \mathrm{is \ the \ ancestor \ of} \ s_{T_\mathrm{max}}(x^{i-1}) \ \mathrm{and} \ x_i=k \right\}.\]</div>
+<p>For <span class="math notranslate nohighlight">\(T \in \mathcal{T}\)</span>,</p>
+<div class="math notranslate nohighlight">
+\[p(T|x^{n-1})=\prod_{s \in \mathcal{I}(T)} g_{n,s} \prod_{s' \in \mathcal{L}(T)} (1-g_{n,s'}),\]</div>
+<p>where the updating rules of the hyperparameter are as follows:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}g_{n,s} =
+\begin{cases}
+    g_{0,s}, &amp; n=0, \\
+    \frac{ g_{n-1,s} \tilde{q}_{s_{\mathrm{child}}} (x_n|x^{n-1}) }
+    { \tilde{q}_s(x_n|x^{n-1}) } &amp; \mathrm{otherwise},
+\end{cases}\end{split}\]</div>
+<p>where <span class="math notranslate nohighlight">\(s_{\mathrm{child}}\)</span> is the child node of <span class="math notranslate nohighlight">\(s\)</span> on the path from <span class="math notranslate nohighlight">\(s_\lambda\)</span> to <span class="math notranslate nohighlight">\(s_{T_\mathrm{max}}(x^n)\)</span> and</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\tilde{q}_s(x_n|x^{n-1}) =
+\begin{cases}
+    q_s(x_n|x^{n-1}) &amp; s\in\mathcal{L}(T_\mathrm{max}), \\
+    (1-g_{n-1,s}) q_s(x_n|x^{n-1}) + g_{n-1,s} \tilde{q}_{s_{\mathrm{child}}}(x_n|x^{n-1}) &amp; \mathrm{otherwise}.
+\end{cases}\end{split}\]</div>
+<p>Here,</p>
+<div class="math notranslate nohighlight">
+\[q_s(x_n|x^{n-1}) = \frac{ \beta_{n-1}(x_n|s) }
+{\sum_{k'=1}^{K} \beta_{n-1}(k'|s)}.\]</div>
+<p>The predictive distribution is as follows:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(\boldsymbol{\theta}_\mathrm{p} = (\theta_{\mathrm{p},1}, \theta_{\mathrm{p},2}, \ldots, \theta_{\mathrm{p},K})\)</span> : a parameter of the predictive distribution, where <span class="math notranslate nohighlight">\(\theta_{\mathrm{p},k}\)</span> denotes the occurrence probability of <span class="math notranslate nohighlight">\(k\in\mathcal{X}\)</span>.</p></li>
+</ul>
+<div class="math notranslate nohighlight">
+\[p(x_n|x^{n-1}) = \theta_{\mathrm{p},x_n},\]</div>
+<p>where the updating rule of the parameters of the pridictive distribution is as follows.</p>
+<div class="math notranslate nohighlight">
+\[\theta_{\mathrm{p}, k} = \tilde{q}_{s_\lambda}(k|x^{n-1})\]</div>
+<p>References</p>
+<ul class="simple">
+<li><p>Matsushima, T.; and Hirasawa, S. Reducing the space complexity of a Bayes coding algorithm using an expanded context tree, <em>2009 IEEE International Symposium on Information Theory</em>, 2009, pp. 719-723, <a class="reference external" href="https://doi.org/10.1109/ISIT.2009.5205677">https://doi.org/10.1109/ISIT.2009.5205677</a></p></li>
+<li><p>Nakahara, Y.; Saito, S.; Kamatsuka, A.; Matsushima, T. Probability Distribution on Full Rooted Trees. <em>Entropy</em> 2022, 24, 328. <a class="reference external" href="https://doi.org/10.3390/e24030328">https://doi.org/10.3390/e24030328</a></p></li>
+</ul>
+<dl class="py class">
+<dt class="sig sig-object py" id="bayesml.contexttree.GenModel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bayesml.contexttree.</span></span><span class="sig-name descname"><span class="pre">GenModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">c_k</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c_d_max</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">root</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h_g</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h_beta_vec</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h_root</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.contexttree.GenModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="bayesml.html#bayesml.base.Generative" title="bayesml.base.Generative"><code class="xref py py-class docutils literal notranslate"><span class="pre">bayesml.base.Generative</span></code></a></p>
+<p>The stochastice data generative model and the prior distribution</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>c_k</strong><span class="classifier">int</span></dt><dd><p>A positive integer</p>
+</dd>
+<dt><strong>c_d_max</strong><span class="classifier">int, optional</span></dt><dd><p>A positive integer, by default 10</p>
+</dd>
+<dt><strong>root</strong><span class="classifier">contexttree._Node, optional</span></dt><dd><p>A root node of a context tree, 
+by default a tree consists of only one node.</p>
+</dd>
+<dt><strong>h_g</strong><span class="classifier">float, optional</span></dt><dd><p>A real number in <span class="math notranslate nohighlight">\([0, 1]\)</span>, by default 0.5</p>
+</dd>
+<dt><strong>h_beta_vec</strong><span class="classifier">numpy.ndarray, optional</span></dt><dd><p>A vector of positive real numbers, 
+by default [1/2, 1/2, … , 1/2].
+If a single real number is input, it will be broadcasted.</p>
+</dd>
+<dt><strong>h_root</strong><span class="classifier">contexttree._Node, optional</span></dt><dd><p>A root node of a superposed tree for hyperparameters 
+by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+<dt><strong>seed</strong><span class="classifier">{None, int}, optional</span></dt><dd><p>A seed to initialize numpy.random.default_rng(),
+by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bayesml.contexttree.GenModel.gen_params" title="bayesml.contexttree.GenModel.gen_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gen_params</span></code></a>([tree_fix])</p></td>
+<td><p>Generate the parameter from the prior distribution.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#bayesml.contexttree.GenModel.gen_sample" title="bayesml.contexttree.GenModel.gen_sample"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gen_sample</span></code></a>(sample_length[, initial_values])</p></td>
+<td><p>Generate a sample from the stochastic data generative model.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bayesml.contexttree.GenModel.get_constants" title="bayesml.contexttree.GenModel.get_constants"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_constants</span></code></a>()</p></td>
+<td><p>Get constants of GenModel.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#bayesml.contexttree.GenModel.get_h_params" title="bayesml.contexttree.GenModel.get_h_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_h_params</span></code></a>()</p></td>
+<td><p>Get the hyperparameters of the prior distribution.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bayesml.contexttree.GenModel.get_params" title="bayesml.contexttree.GenModel.get_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_params</span></code></a>()</p></td>
+<td><p>Get the parameter of the sthocastic data generative model.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_h_params</span></code>(filename)</p></td>
+<td><p>Load the hyperparameters to h_params.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_params</span></code>(filename)</p></td>
+<td><p>Load the parameters saved by <code class="docutils literal notranslate"><span class="pre">save_params</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_h_params</span></code>(filename)</p></td>
+<td><p>Save the hyperparameters using python <code class="docutils literal notranslate"><span class="pre">pickle</span></code> module.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_params</span></code>(filename)</p></td>
+<td><p>Save the parameters using python <code class="docutils literal notranslate"><span class="pre">pickle</span></code> module.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#bayesml.contexttree.GenModel.save_sample" title="bayesml.contexttree.GenModel.save_sample"><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_sample</span></code></a>(filename, sample_length[, ...])</p></td>
+<td><p>Save the generated sample as NumPy <code class="docutils literal notranslate"><span class="pre">.npz</span></code> format.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bayesml.contexttree.GenModel.set_h_params" title="bayesml.contexttree.GenModel.set_h_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_h_params</span></code></a>([h_g, h_beta_vec, h_root])</p></td>
+<td><p>Set the hyperparameters of the prior distribution.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#bayesml.contexttree.GenModel.set_params" title="bayesml.contexttree.GenModel.set_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_params</span></code></a>([root])</p></td>
+<td><p>Set the parameter of the sthocastic data generative model.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bayesml.contexttree.GenModel.visualize_model" title="bayesml.contexttree.GenModel.visualize_model"><code class="xref py py-obj docutils literal notranslate"><span class="pre">visualize_model</span></code></a>([filename, format, ...])</p></td>
+<td><p>Visualize the stochastic data generative model and generated samples.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="bayesml.contexttree.GenModel.get_constants">
+<span class="sig-name descname"><span class="pre">get_constants</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.contexttree.GenModel.get_constants" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get constants of GenModel.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>constants</strong><span class="classifier">dict of {str: int, numpy.ndarray}</span></dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;c_k&quot;</span></code> : the value of <code class="docutils literal notranslate"><span class="pre">self.c_k</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;c_d_max&quot;</span></code> : the value of <code class="docutils literal notranslate"><span class="pre">self.c_d_max</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bayesml.contexttree.GenModel.set_h_params">
+<span class="sig-name descname"><span class="pre">set_h_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">h_g</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h_beta_vec</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h_root</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.contexttree.GenModel.set_h_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the hyperparameters of the prior distribution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>h_g</strong><span class="classifier">float, optional</span></dt><dd><p>A real number in <span class="math notranslate nohighlight">\([0, 1]\)</span>, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+<dt><strong>h_beta_vec</strong><span class="classifier">numpy.ndarray, optional</span></dt><dd><p>A vector of positive real numbers, 
+by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+<dt><strong>h_root</strong><span class="classifier">contexttree._Node, optional</span></dt><dd><p>A root node of a superposed tree for hyperparameters 
+by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bayesml.contexttree.GenModel.get_h_params">
+<span class="sig-name descname"><span class="pre">get_h_params</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.contexttree.GenModel.get_h_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the hyperparameters of the prior distribution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>h_params</strong><span class="classifier">dict of {str: float, numpy.ndarray, contexttree._Node}</span></dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;h_g&quot;</span></code> : the value of <code class="docutils literal notranslate"><span class="pre">self.h_g</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;h_beta_vec&quot;</span></code> : the value of <code class="docutils literal notranslate"><span class="pre">self.h_beta_vec</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;h_root&quot;</span></code> : the value of <code class="docutils literal notranslate"><span class="pre">self.h_root</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bayesml.contexttree.GenModel.gen_params">
+<span class="sig-name descname"><span class="pre">gen_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tree_fix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.contexttree.GenModel.gen_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate the parameter from the prior distribution.</p>
+<p>The generated vaule is set at <code class="docutils literal notranslate"><span class="pre">self.root</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>tree_fix</strong><span class="classifier">bool</span></dt><dd><p>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, tree shape will be fixed, by default <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bayesml.contexttree.GenModel.set_params">
+<span class="sig-name descname"><span class="pre">set_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">root</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.contexttree.GenModel.set_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the parameter of the sthocastic data generative model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>root</strong><span class="classifier">contexttree._Node, optional</span></dt><dd><p>A root node of a contexttree, by default None.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bayesml.contexttree.GenModel.get_params">
+<span class="sig-name descname"><span class="pre">get_params</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.contexttree.GenModel.get_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the parameter of the sthocastic data generative model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>params</strong><span class="classifier">dict of {str:float}</span></dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;root&quot;</span></code> : The value of <code class="docutils literal notranslate"><span class="pre">self.root</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bayesml.contexttree.GenModel.gen_sample">
+<span class="sig-name descname"><span class="pre">gen_sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sample_length</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_values</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.contexttree.GenModel.gen_sample" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a sample from the stochastic data generative model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>sample_length</strong><span class="classifier">int</span></dt><dd><p>A positive integer</p>
+</dd>
+<dt><strong>initial_valules</strong><span class="classifier">numpy ndarray, optional</span></dt><dd><p>1 dimensional int array whose size coincide with <code class="docutils literal notranslate"><span class="pre">self.c_d_max</span></code>,
+by default <code class="docutils literal notranslate"><span class="pre">None</span></code>. Its elements must be in [0,c_k-1]</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>x</strong><span class="classifier">numpy ndarray</span></dt><dd><p>1 dimensional int array whose size is <code class="docutils literal notranslate"><span class="pre">sammple_length</span></code>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bayesml.contexttree.GenModel.save_sample">
+<span class="sig-name descname"><span class="pre">save_sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_length</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_values</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.contexttree.GenModel.save_sample" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save the generated sample as NumPy <code class="docutils literal notranslate"><span class="pre">.npz</span></code> format.</p>
+<p>It is saved as a NpzFile with keyword: “x”.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>filename</strong><span class="classifier">str</span></dt><dd><p>The filename to which the sample is saved.
+<code class="docutils literal notranslate"><span class="pre">.npz</span></code> will be appended if it isn’t there.</p>
+</dd>
+<dt><strong>sample_length</strong><span class="classifier">int</span></dt><dd><p>A positive integer</p>
+</dd>
+<dt><strong>initial_valules</strong><span class="classifier">numpy ndarray, optional</span></dt><dd><p>1 dimensional int array whose size coincide with <code class="docutils literal notranslate"><span class="pre">self.c_d_max</span></code>,
+by default <code class="docutils literal notranslate"><span class="pre">None</span></code>. Its elements must be in [0,c_k-1]</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.savez_compressed.html#numpy.savez_compressed" title="(in NumPy v1.24)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy.savez_compressed</span></code></a></dt><dd></dd>
+</dl>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bayesml.contexttree.GenModel.visualize_model">
+<span class="sig-name descname"><span class="pre">visualize_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_length</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.contexttree.GenModel.visualize_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visualize the stochastic data generative model and generated samples.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>filename</strong><span class="classifier">str, optional</span></dt><dd><p>Filename for saving the figure, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+<dt><strong>format</strong><span class="classifier">str, optional</span></dt><dd><p>Rendering output format (<code class="docutils literal notranslate"><span class="pre">&quot;pdf&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;png&quot;</span></code>, …).</p>
+</dd>
+<dt><strong>sample_length</strong><span class="classifier">int, optional</span></dt><dd><p>A positive integer, by default 10</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference external" href="https://graphviz.readthedocs.io/en/stable/api.html#graphviz.Digraph" title="(in graphviz)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">graphviz.Digraph</span></code></a></dt><dd></dd>
+</dl>
+</div>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">bayesml</span> <span class="kn">import</span> <span class="n">contexttree</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gen_model</span> <span class="o">=</span> <span class="n">contexttree</span><span class="o">.</span><span class="n">GenModel</span><span class="p">(</span><span class="n">c_k</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span><span class="n">c_d_max</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span><span class="n">h_g</span><span class="o">=</span><span class="mf">0.75</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gen_model</span><span class="o">.</span><span class="n">gen_params</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gen_model</span><span class="o">.</span><span class="n">visualize_model</span><span class="p">()</span>
+<span class="go">[1 0 1 0 0 0 1 0 0 0]</span>
+</pre></div>
+</div>
+<img alt="_images/contexttree_example.png" src="_images/contexttree_example.png" />
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="bayesml.contexttree.LearnModel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bayesml.contexttree.</span></span><span class="sig-name descname"><span class="pre">LearnModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">c_k</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c_d_max</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h0_g</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h0_beta_vec</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h0_root</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.contexttree.LearnModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="bayesml.html#bayesml.base.Posterior" title="bayesml.base.Posterior"><code class="xref py py-class docutils literal notranslate"><span class="pre">bayesml.base.Posterior</span></code></a>, <a class="reference internal" href="bayesml.html#bayesml.base.PredictiveMixin" title="bayesml.base.PredictiveMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">bayesml.base.PredictiveMixin</span></code></a></p>
+<p>The posterior distribution and the predictive distribution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>c_k</strong><span class="classifier">int</span></dt><dd><p>A positive integer</p>
+</dd>
+<dt><strong>c_d_max</strong><span class="classifier">int, optional</span></dt><dd><p>A positive integer, by default 10</p>
+</dd>
+<dt><strong>h0_g</strong><span class="classifier">float, optional</span></dt><dd><p>A real number in <span class="math notranslate nohighlight">\([0, 1]\)</span>, by default 0.5</p>
+</dd>
+<dt><strong>h0_beta_vec</strong><span class="classifier">numpy.ndarray, optional</span></dt><dd><p>A vector of positive real numbers, 
+by default [1/2, 1/2, … , 1/2].
+If a single real number is input, it will be broadcasted.</p>
+</dd>
+<dt><strong>h0_root</strong><span class="classifier">contexttree._Node, optional</span></dt><dd><p>A root node of a superposed tree for hyperparameters 
+by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Attributes</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>hn_g</strong><span class="classifier">float</span></dt><dd><p>A real number in <span class="math notranslate nohighlight">\([0, 1]\)</span></p>
+</dd>
+<dt><strong>hn_beta_vec</strong><span class="classifier">numpy.ndarray</span></dt><dd><p>A vector of positive real numbers.</p>
+</dd>
+<dt><strong>hn_root</strong><span class="classifier">contexttree._Node</span></dt><dd><p>A root node of a superposed tree for hyperparameters.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bayesml.contexttree.LearnModel.calc_pred_dist" title="bayesml.contexttree.LearnModel.calc_pred_dist"><code class="xref py py-obj docutils literal notranslate"><span class="pre">calc_pred_dist</span></code></a>(x)</p></td>
+<td><p>Calculate the parameters of the predictive distribution.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#bayesml.contexttree.LearnModel.estimate_params" title="bayesml.contexttree.LearnModel.estimate_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">estimate_params</span></code></a>([loss, visualize, filename, ...])</p></td>
+<td><p>Estimate the parameter under the given criterion.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bayesml.contexttree.LearnModel.get_constants" title="bayesml.contexttree.LearnModel.get_constants"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_constants</span></code></a>()</p></td>
+<td><p>Get constants of LearnModel.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#bayesml.contexttree.LearnModel.get_h0_params" title="bayesml.contexttree.LearnModel.get_h0_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_h0_params</span></code></a>()</p></td>
+<td><p>Get the hyperparameters of the prior distribution.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bayesml.contexttree.LearnModel.get_hn_params" title="bayesml.contexttree.LearnModel.get_hn_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_hn_params</span></code></a>()</p></td>
+<td><p>Get the hyperparameters of the posterior distribution.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#bayesml.contexttree.LearnModel.get_p_params" title="bayesml.contexttree.LearnModel.get_p_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_p_params</span></code></a>()</p></td>
+<td><p>Get the parameters of the predictive distribution.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_h0_params</span></code>(filename)</p></td>
+<td><p>Load the hyperparameters to h0_params.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_hn_params</span></code>(filename)</p></td>
+<td><p>Load the hyperparameters to hn_params.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bayesml.contexttree.LearnModel.make_prediction" title="bayesml.contexttree.LearnModel.make_prediction"><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_prediction</span></code></a>([loss])</p></td>
+<td><p>Predict a new data point under the given criterion.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">overwrite_h0_params</span></code>()</p></td>
+<td><p>Overwrite the initial values of the hyperparameters of the posterior distribution by the learned values.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bayesml.contexttree.LearnModel.pred_and_update" title="bayesml.contexttree.LearnModel.pred_and_update"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pred_and_update</span></code></a>(x[, loss])</p></td>
+<td><p>Predict a new data point and update the posterior sequentially.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">reset_hn_params</span></code>()</p></td>
+<td><p>Reset the hyperparameters of the posterior distribution to their initial values.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_h0_params</span></code>(filename)</p></td>
+<td><p>Save the hyperparameters using python <code class="docutils literal notranslate"><span class="pre">pickle</span></code> module.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_hn_params</span></code>(filename)</p></td>
+<td><p>Save the hyperparameters using python <code class="docutils literal notranslate"><span class="pre">pickle</span></code> module.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bayesml.contexttree.LearnModel.set_h0_params" title="bayesml.contexttree.LearnModel.set_h0_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_h0_params</span></code></a>([h0_g, h0_beta_vec, h0_root])</p></td>
+<td><p>Set the hyperparameters of the prior distribution.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#bayesml.contexttree.LearnModel.set_hn_params" title="bayesml.contexttree.LearnModel.set_hn_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_hn_params</span></code></a>([hn_g, hn_beta_vec, hn_root])</p></td>
+<td><p>Set the hyperparameter of the posterior distribution.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#bayesml.contexttree.LearnModel.update_posterior" title="bayesml.contexttree.LearnModel.update_posterior"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_posterior</span></code></a>(x)</p></td>
+<td><p>Update the hyperparameters using traning data.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#bayesml.contexttree.LearnModel.visualize_posterior" title="bayesml.contexttree.LearnModel.visualize_posterior"><code class="xref py py-obj docutils literal notranslate"><span class="pre">visualize_posterior</span></code></a>([filename, format, h_params])</p></td>
+<td><p>Visualize the posterior distribution for the parameter.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="bayesml.contexttree.LearnModel.get_constants">
+<span class="sig-name descname"><span class="pre">get_constants</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.contexttree.LearnModel.get_constants" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get constants of LearnModel.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>constants</strong><span class="classifier">dict of {str: int, numpy.ndarray}</span></dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;c_k&quot;</span></code> : the value of <code class="docutils literal notranslate"><span class="pre">self.c_k</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;c_d_max&quot;</span></code> : the value of <code class="docutils literal notranslate"><span class="pre">self.c_d_max</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bayesml.contexttree.LearnModel.set_h0_params">
+<span class="sig-name descname"><span class="pre">set_h0_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">h0_g</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h0_beta_vec</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h0_root</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.contexttree.LearnModel.set_h0_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the hyperparameters of the prior distribution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>h0_g</strong><span class="classifier">float, optional</span></dt><dd><p>A real number in <span class="math notranslate nohighlight">\([0, 1]\)</span>, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+<dt><strong>h0_beta_vec</strong><span class="classifier">numpy.ndarray, optional</span></dt><dd><p>A vector of positive real numbers, 
+by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+<dt><strong>h0_root</strong><span class="classifier">contexttree._Node, optional</span></dt><dd><p>A root node of a superposed tree for hyperparameters 
+by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bayesml.contexttree.LearnModel.get_h0_params">
+<span class="sig-name descname"><span class="pre">get_h0_params</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.contexttree.LearnModel.get_h0_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the hyperparameters of the prior distribution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>h0_params</strong><span class="classifier">dict of {str: float, numpy.ndarray, contexttre._Node}</span></dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;h0_g&quot;</span></code> : the value of <code class="docutils literal notranslate"><span class="pre">self.h0_g</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;h0_beta_vec&quot;</span></code> : the value of <code class="docutils literal notranslate"><span class="pre">self.h0_beta_vec</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;h0_root&quot;</span></code> : the value of <code class="docutils literal notranslate"><span class="pre">self.h0_root</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bayesml.contexttree.LearnModel.set_hn_params">
+<span class="sig-name descname"><span class="pre">set_hn_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hn_g</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hn_beta_vec</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hn_root</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.contexttree.LearnModel.set_hn_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the hyperparameter of the posterior distribution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>hn_g</strong><span class="classifier">float, optional</span></dt><dd><p>A real number in <span class="math notranslate nohighlight">\([0, 1]\)</span>, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+<dt><strong>hn_beta_vec</strong><span class="classifier">numpy.ndarray, optional</span></dt><dd><p>A vector of positive real numbers, 
+by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+<dt><strong>hn_root</strong><span class="classifier">contexttree._Node, optional</span></dt><dd><p>A root node of a superposed tree for hyperparameters 
+by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bayesml.contexttree.LearnModel.get_hn_params">
+<span class="sig-name descname"><span class="pre">get_hn_params</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.contexttree.LearnModel.get_hn_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the hyperparameters of the posterior distribution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>hn_params</strong><span class="classifier">dict of {str: float, numpy.ndarray, contexttre._Node}</span></dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;hn_g&quot;</span></code> : the value of <code class="docutils literal notranslate"><span class="pre">self.hn_g</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;hn_beta_vec&quot;</span></code> : the value of <code class="docutils literal notranslate"><span class="pre">self.hn_beta_vec</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;hn_root&quot;</span></code> : the value of <code class="docutils literal notranslate"><span class="pre">self.hn_root</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bayesml.contexttree.LearnModel.update_posterior">
+<span class="sig-name descname"><span class="pre">update_posterior</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.contexttree.LearnModel.update_posterior" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update the hyperparameters using traning data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>x</strong><span class="classifier">numpy ndarray</span></dt><dd><p>1-dimensional int array</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bayesml.contexttree.LearnModel.estimate_params">
+<span class="sig-name descname"><span class="pre">estimate_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loss</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'0-1'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">visualize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.contexttree.LearnModel.estimate_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimate the parameter under the given criterion.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>loss</strong><span class="classifier">str, optional</span></dt><dd><p>Loss function underlying the Bayes risk function, by default <code class="docutils literal notranslate"><span class="pre">&quot;0-1&quot;</span></code>.
+This function supports only <code class="docutils literal notranslate"><span class="pre">&quot;0-1&quot;</span></code>.</p>
+</dd>
+<dt><strong>visualize</strong><span class="classifier">bool, optional</span></dt><dd><p>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, the estimated context tree model will be visualized, by default <code class="docutils literal notranslate"><span class="pre">True</span></code>.
+This visualization requires <code class="docutils literal notranslate"><span class="pre">graphviz</span></code>.</p>
+</dd>
+<dt><strong>filename</strong><span class="classifier">str, optional</span></dt><dd><p>Filename for saving the figure, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+<dt><strong>format</strong><span class="classifier">str, optional</span></dt><dd><p>Rendering output format (<code class="docutils literal notranslate"><span class="pre">&quot;pdf&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;png&quot;</span></code>, …).</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>map_root</strong><span class="classifier">contexttree._Node</span></dt><dd><p>The root node of the estimated context tree model 
+that also contains the estimated parameters in each node.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference external" href="https://graphviz.readthedocs.io/en/stable/api.html#graphviz.Digraph" title="(in graphviz)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">graphviz.Digraph</span></code></a></dt><dd></dd>
+</dl>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bayesml.contexttree.LearnModel.visualize_posterior">
+<span class="sig-name descname"><span class="pre">visualize_posterior</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h_params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.contexttree.LearnModel.visualize_posterior" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visualize the posterior distribution for the parameter.</p>
+<p>This method requires <code class="docutils literal notranslate"><span class="pre">graphviz</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>filename</strong><span class="classifier">str, optional</span></dt><dd><p>Filename for saving the figure, by default <code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+<dt><strong>format</strong><span class="classifier">str, optional</span></dt><dd><p>Rendering output format (<code class="docutils literal notranslate"><span class="pre">&quot;pdf&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;png&quot;</span></code>, …).</p>
+</dd>
+<dt><strong>h_params</strong><span class="classifier">bool, optional</span></dt><dd><p>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, hyperparameters at each node will be visualized. 
+if <code class="docutils literal notranslate"><span class="pre">False</span></code>, estimated parameters at each node will be visulaized.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference external" href="https://graphviz.readthedocs.io/en/stable/api.html#graphviz.Digraph" title="(in graphviz)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">graphviz.Digraph</span></code></a></dt><dd></dd>
+</dl>
+</div>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">bayesml</span> <span class="kn">import</span> <span class="n">contexttree</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gen_model</span> <span class="o">=</span> <span class="n">contexttree</span><span class="o">.</span><span class="n">GenModel</span><span class="p">(</span><span class="n">c_k</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span><span class="n">c_d_max</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span><span class="n">h_g</span><span class="o">=</span><span class="mf">0.75</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gen_model</span><span class="o">.</span><span class="n">gen_params</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">gen_model</span><span class="o">.</span><span class="n">gen_sample</span><span class="p">(</span><span class="mi">500</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">learn_model</span> <span class="o">=</span> <span class="n">contexttree</span><span class="o">.</span><span class="n">LearnModel</span><span class="p">(</span><span class="n">c_k</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span><span class="n">c_d_max</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span><span class="n">h0_g</span><span class="o">=</span><span class="mf">0.75</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">learn_model</span><span class="o">.</span><span class="n">update_posterior</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">learn_model</span><span class="o">.</span><span class="n">visualize_posterior</span><span class="p">()</span>
+</pre></div>
+</div>
+<img alt="_images/contexttree_posterior.png" src="_images/contexttree_posterior.png" />
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bayesml.contexttree.LearnModel.get_p_params">
+<span class="sig-name descname"><span class="pre">get_p_params</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.contexttree.LearnModel.get_p_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the parameters of the predictive distribution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>p_params</strong><span class="classifier">dict of {str: numpy.ndarray}</span></dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;p_theta_vec&quot;</span></code> : the value of <code class="docutils literal notranslate"><span class="pre">self.p_theta_vec</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bayesml.contexttree.LearnModel.calc_pred_dist">
+<span class="sig-name descname"><span class="pre">calc_pred_dist</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.contexttree.LearnModel.calc_pred_dist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the parameters of the predictive distribution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>x</strong><span class="classifier">numpy ndarray</span></dt><dd><p>1-dimensional int array</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bayesml.contexttree.LearnModel.make_prediction">
+<span class="sig-name descname"><span class="pre">make_prediction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loss</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'KL'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.contexttree.LearnModel.make_prediction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Predict a new data point under the given criterion.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>loss</strong><span class="classifier">str, optional</span></dt><dd><p>Loss function underlying the Bayes risk function, by default “KL”.
+This function supports “KL” and “0-1”.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>predicted_value</strong><span class="classifier">{float, numpy.ndarray}</span></dt><dd><p>The predicted value under the given loss function. 
+If the loss function is “KL”, the predictive 
+distribution will be returned as a 1-dimensional 
+numpy.ndarray that consists of occurence probabilities.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bayesml.contexttree.LearnModel.pred_and_update">
+<span class="sig-name descname"><span class="pre">pred_and_update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'KL'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bayesml.contexttree.LearnModel.pred_and_update" title="Permalink to this definition">¶</a></dt>
+<dd><p>Predict a new data point and update the posterior sequentially.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>x</strong><span class="classifier">numpy.ndarray</span></dt><dd><p>1-dimensional int array</p>
+</dd>
+<dt><strong>loss</strong><span class="classifier">str, optional</span></dt><dd><p>Loss function underlying the Bayes risk function, by default “KL”.
+This function supports “KL”, and “0-1”.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>predicted_value</strong><span class="classifier">{float, numpy.ndarray}</span></dt><dd><p>The predicted value under the given loss function.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+              </div>
+              
+            
+                <!-- Previous / next buttons -->
+<div class='prev-next-area'> 
+    <a class='left-prev' id="prev-link" href="bayesml.categorical.html" title="previous page">
+        <i class="fas fa-angle-left"></i>
+        <div class="prev-next-info">
+            <p class="prev-next-subtitle">previous</p>
+            <p class="prev-next-title">bayesml.categorical package</p>
+        </div>
+    </a>
+    <a class='right-next' id="next-link" href="bayesml.exponential.html" title="next page">
+    <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">bayesml.exponential package</p>
+    </div>
+    <i class="fas fa-angle-right"></i>
+    </a>
+</div>
+            
+        </div>
+    </div>
+    <footer class="footer">
+  <p>
+    
+      By BayesML Developers<br/>
+    
+        &copy; Copyright 2022, BayesML Developers.<br/>
+  </p>
+</footer>
+</main>
+
+
+      </div>
+    </div>
+  
+  <script src="_static/js/index.be7d3bbb2ef33a8344ce.js"></script>
+
+  </body>
+</html>
