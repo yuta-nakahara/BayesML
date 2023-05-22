@@ -102,33 +102,13 @@
     </a>
    </li>
    <li class="toctree-l2">
-    <a class="reference internal" href="bayesml.contexttree.html">
-     bayesml.contexttree package
-    </a>
-   </li>
-   <li class="toctree-l2">
     <a class="reference internal" href="bayesml.exponential.html">
      bayesml.exponential package
     </a>
    </li>
    <li class="toctree-l2">
-    <a class="reference internal" href="bayesml.gaussianmixture.html">
-     bayesml.gaussianmixture package
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="bayesml.hiddenmarkovnormal.html">
-     bayesml.hiddenmarkovnormal package
-    </a>
-   </li>
-   <li class="toctree-l2">
     <a class="reference internal" href="bayesml.linearregression.html">
      bayesml.linearregression package
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="bayesml.metatree.html">
-     bayesml.metatree package
     </a>
    </li>
    <li class="toctree-l2">
@@ -378,7 +358,7 @@
 <div class="section" id="installation">
 <h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
 <p>Please use the following command to install BayesML.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip install bayesml
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">bayesml</span>
 </pre></div>
 </div>
 <p>The following are required.</p>
@@ -387,43 +367,42 @@
 <li><p>NumPy (&gt;= 1.20)</p></li>
 <li><p>SciPy (&gt;= 1.7)</p></li>
 <li><p>MatplotLib (&gt;= 3.5)</p></li>
-<li><p>Scikit-learn (&gt;= 1.1)</p></li>
 </ul>
 </div>
 <div class="section" id="example">
 <h2>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h2>
 <p>We show an example of generating data drawn according to the Bernoulli distribution and learning from them.</p>
 <p>First, we create an instance of a probabilistic data generative model. Here, the parameter <cite>theta</cite>, which represents an occurrence probability of 1, is set to 0.7.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">bayesml</span> <span class="kn">import</span> <span class="n">bernoulli</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">bayesml</span> <span class="kn">import</span> <span class="n">bernoulli</span>
 <span class="n">gen_model</span> <span class="o">=</span> <span class="n">bernoulli</span><span class="o">.</span><span class="n">GenModel</span><span class="p">(</span><span class="n">theta</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>You can visualize the characteristics of the created model by the following method.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">gen_model</span><span class="o">.</span><span class="n">visualize_model</span><span class="p">()</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">gen_model</span><span class="o">.</span><span class="n">visualize_model</span><span class="p">()</span>
 </pre></div>
 </div>
 <p>Outputs:</p>
 <blockquote>
 <div><div class="line-block">
 <div class="line">theta:0.7</div>
-<div class="line">x0:[1 1 1 0 1 1 1 0 1 1 1 1 1 1 0 1 1 1 0 1]</div>
-<div class="line">x1:[1 1 0 1 1 1 1 1 1 1 1 1 0 1 1 1 1 1 1 0]</div>
-<div class="line">x2:[1 0 1 1 0 1 1 1 0 1 1 1 1 1 0 0 1 1 1 1]</div>
-<div class="line">x3:[1 1 1 0 1 1 0 1 0 0 0 0 1 0 1 1 1 1 1 1]</div>
-<div class="line">x4:[0 0 1 0 0 0 1 1 1 1 1 1 1 1 0 0 1 1 1 1]</div>
+<div class="line">x0:[1 1 1 0 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 0]</div>
+<div class="line">x1:[1 0 1 0 1 0 0 0 0 1 1 1 1 1 1 1 1 0 1 1]</div>
+<div class="line">x2:[1 0 1 0 1 1 1 1 1 1 1 0 0 0 0 1 1 0 1 1]</div>
+<div class="line">x3:[0 1 0 1 1 1 1 0 0 0 1 0 0 1 1 1 0 0 1 0]</div>
+<div class="line">x4:[1 1 1 0 1 1 0 1 1 1 1 1 1 1 1 1 0 1 1 0]</div>
 </div>
 <img alt="_images/README_ex_img1.png" src="_images/README_ex_img1.png" />
 </div></blockquote>
 <p>After confirming that the frequency of occurrence of 1 is around <cite>theta=0.7</cite>, we generate a sample and store it to variable <cite>x</cite>.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">x</span> <span class="o">=</span> <span class="n">gen_model</span><span class="o">.</span><span class="n">gen_sample</span><span class="p">(</span><span class="n">sample_size</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">x</span> <span class="o">=</span> <span class="n">gen_model</span><span class="o">.</span><span class="n">gen_sample</span><span class="p">(</span><span class="n">sample_size</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Next, we create an instance of a model for learning posterior distribution.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">learn_model</span> <span class="o">=</span> <span class="n">bernoulli</span><span class="o">.</span><span class="n">LearnModel</span><span class="p">()</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">learn_model</span> <span class="o">=</span> <span class="n">bernoulli</span><span class="o">.</span><span class="n">LearnModel</span><span class="p">()</span>
 </pre></div>
 </div>
 <p>A method to visualize the posterior distribution also exists (the prior distribution is shown here because learning from data has not been performed yet).</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">learn_model</span><span class="o">.</span><span class="n">visualize_posterior</span><span class="p">()</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">learn_model</span><span class="o">.</span><span class="n">visualize_posterior</span><span class="p">()</span>
 </pre></div>
 </div>
 <p>Outputs:</p>
@@ -431,7 +410,7 @@
 <div><img alt="_images/README_ex_img2.png" src="_images/README_ex_img2.png" />
 </div></blockquote>
 <p>After learning from the data, we can see that the density of the posterior distribution is concentrated around the true parameter <cite>theta=0.7</cite>.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">learn_model</span><span class="o">.</span><span class="n">update_posterior</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">learn_model</span><span class="o">.</span><span class="n">update_posterior</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 <span class="n">learn_model</span><span class="o">.</span><span class="n">visualize_posterior</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -441,7 +420,7 @@
 </div></blockquote>
 <p>In Bayesian decision theory, the optimal estimator under the Bayes criterion is derived as follows. First, we set a loss function, e.g., a squared-error loss, absolute-error loss, and 0-1 loss. Then, the Bayes risk function is defined by taking the expectation of the loss function with respect to the distribution of data and parameters. By minimizing the Bayes risk function, we obtain the optimal estimator under the Bayes criterion. For example, if we set a squared-error loss, the optimal estimator under the Bayes criterion of the parameter <cite>theta</cite> is the mean of the posterior distribution.</p>
 <p>In BayesML, the above calclulation is performed by the following methods.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">learn_model</span><span class="o">.</span><span class="n">estimate_params</span><span class="p">(</span><span class="n">loss</span><span class="o">=</span><span class="s1">&#39;squared&#39;</span><span class="p">))</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">learn_model</span><span class="o">.</span><span class="n">estimate_params</span><span class="p">(</span><span class="n">loss</span><span class="o">=</span><span class="s1">&#39;squared&#39;</span><span class="p">))</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">learn_model</span><span class="o">.</span><span class="n">estimate_params</span><span class="p">(</span><span class="n">loss</span><span class="o">=</span><span class="s1">&#39;abs&#39;</span><span class="p">))</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">learn_model</span><span class="o">.</span><span class="n">estimate_params</span><span class="p">(</span><span class="n">loss</span><span class="o">=</span><span class="s1">&#39;0-1&#39;</span><span class="p">))</span>
 </pre></div>
@@ -449,9 +428,9 @@
 <p>Outputs:</p>
 <blockquote>
 <div><div class="line-block">
-<div class="line">0.7380952380952381</div>
-<div class="line">0.7457656349087012</div>
-<div class="line">0.7631578947368421</div>
+<div class="line">0.6428571428571429</div>
+<div class="line">0.6474720009710451</div>
+<div class="line">0.6578947368421053</div>
 </div>
 </div></blockquote>
 <p>Different settings of a loss function yield different optimal estimates.</p>
@@ -463,13 +442,8 @@
 <li><p><a class="reference internal" href="bayesml.html"><span class="doc">bayesml package</span></a></p></li>
 <li><p><a class="reference internal" href="bayesml.autoregressive.html"><span class="doc">bayesml.autoregressive package</span></a></p></li>
 <li><p><a class="reference internal" href="bayesml.bernoulli.html"><span class="doc">bayesml.bernoulli package</span></a></p></li>
-<li><p><a class="reference internal" href="bayesml.categorical.html"><span class="doc">bayesml.categorical package</span></a></p></li>
-<li><p><a class="reference internal" href="bayesml.contexttree.html"><span class="doc">bayesml.contexttree package</span></a></p></li>
 <li><p><a class="reference internal" href="bayesml.exponential.html"><span class="doc">bayesml.exponential package</span></a></p></li>
-<li><p><a class="reference internal" href="bayesml.gaussianmixture.html"><span class="doc">bayesml.gaussianmixture package</span></a></p></li>
-<li><p><a class="reference internal" href="bayesml.hiddenmarkovnormal.html"><span class="doc">bayesml.hiddenmarkovnormal package</span></a></p></li>
 <li><p><a class="reference internal" href="bayesml.linearregression.html"><span class="doc">bayesml.linearregression package</span></a></p></li>
-<li><p><a class="reference internal" href="bayesml.metatree.html"><span class="doc">bayesml.metatree package</span></a></p></li>
 <li><p><a class="reference internal" href="bayesml.multivariate_normal.html"><span class="doc">bayesml.multivariate_normal package</span></a></p></li>
 <li><p><a class="reference internal" href="bayesml.normal.html"><span class="doc">bayesml.normal package</span></a></p></li>
 <li><p><a class="reference internal" href="bayesml.poisson.html"><span class="doc">bayesml.poisson package</span></a></p></li>
@@ -479,20 +453,25 @@
 <h2>Citation<a class="headerlink" href="#citation" title="Permalink to this headline">¶</a></h2>
 <p>When you use BayesML for your academic work, please provide the following bibliographic reference.</p>
 <p>Plain text</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>Y. Nakahara, N. Ichijo, K. Shimada, Y. Iikubo,
-S. Saito, K. Kazama, T. Matsushima, BayesML Developers, ``BayesML 0.2.4,&#39;&#39;
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>Y. Nakahara, N. Ichijo, K. Shimada,
+K. Tajima, K. Horinouchi, L. Ruan,
+N. Namegaya, R. Maniwa, T. Ishiwatari,
+W. Yu, Y. Iikubo, S. Saito,
+K. Kazama, T. Matsushima, ``BayesML,&#39;&#39;
 [Online] https://github.com/yuta-nakahara/BayesML
 </pre></div>
 </div>
 <p>BibTeX</p>
-<div class="highlight-bibtex notranslate"><div class="highlight"><pre><span></span><span class="nc">@misc</span><span class="p">{</span><span class="nl">bayesml</span><span class="p">,</span><span class="w"></span>
-<span class="na">author</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">{Nakahara, Yuta and Ichijo, Naoki and Shimada, Koshi and</span>
-<span class="s">            Iikubo, Yuji and Saito, Shota and Kazama, Koki and</span>
-<span class="s">            Matsushima, Toshiyasu and {BayesML Developers}}</span><span class="p">,</span><span class="w"></span>
-<span class="na">title</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">{BayesML 0.2.4}</span><span class="p">,</span><span class="w"></span>
-<span class="na">howpublished</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">{\url{https://github.com/yuta-nakahara/BayesML}}</span><span class="p">,</span><span class="w"></span>
-<span class="na">year</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">{2022}</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@misc</span><span class="p">{</span><span class="n">bayesml</span><span class="p">,</span>
+<span class="n">author</span> <span class="o">=</span> <span class="p">{</span><span class="n">Nakahara</span> <span class="n">Yuta</span> <span class="ow">and</span> <span class="n">Ichijo</span> <span class="n">Naoki</span> <span class="ow">and</span> <span class="n">Shimada</span> <span class="n">Koshi</span> <span class="ow">and</span>
+            <span class="n">Tajima</span> <span class="n">Keito</span> <span class="ow">and</span> <span class="n">Horinouchi</span> <span class="n">Kohei</span> <span class="ow">and</span> <span class="n">Ruan</span> <span class="n">Luyu</span> <span class="ow">and</span>
+            <span class="n">Namegaya</span> <span class="n">Noboru</span> <span class="ow">and</span> <span class="n">Maniwa</span> <span class="n">Ryota</span> <span class="ow">and</span> <span class="n">Ishiwatari</span> <span class="n">Taisuke</span> <span class="ow">and</span>
+            <span class="n">Yu</span> <span class="n">Wenbin</span> <span class="ow">and</span> <span class="n">Iikubo</span> <span class="n">Yuji</span> <span class="ow">and</span> <span class="n">Saito</span> <span class="n">Shota</span> <span class="ow">and</span> <span class="n">Kazama</span> <span class="n">Koki</span> <span class="ow">and</span>
+            <span class="n">Matsushima</span> <span class="n">Toshiyasu</span><span class="p">}</span>
+<span class="n">title</span> <span class="o">=</span> <span class="p">{</span><span class="n">BayesML</span><span class="p">},</span>
+<span class="n">howpublished</span> <span class="o">=</span> <span class="p">{</span>\<span class="n">url</span><span class="p">{</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">yuta</span><span class="o">-</span><span class="n">nakahara</span><span class="o">/</span><span class="n">BayesML</span><span class="p">}},</span>
+<span class="n">year</span> <span class="o">=</span> <span class="p">{</span><span class="mi">2022</span><span class="p">}</span>
+<span class="p">}</span>
 </pre></div>
 </div>
 </div>

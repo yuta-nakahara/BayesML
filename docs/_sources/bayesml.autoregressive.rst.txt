@@ -1,8 +1,6 @@
 bayesml.autoregressive package
 ==============================
 
-.. image:: ./images/autoregressive_example.png
-
 Module contents
 ---------------
 
