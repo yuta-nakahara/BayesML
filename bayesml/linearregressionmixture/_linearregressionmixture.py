@@ -574,21 +574,19 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         Parameters
         ----------
         h0_gamma_vec : float or numpy.ndarray, optional
-            A vector of positive real numbers, by default [1/2, 1/2, ... , 1/2]
+            A vector of positive real numbers, by default None.
             If a single real number is input, it will be broadcasted.
         h0_mu_vecs : numpy.ndarray, optional
-            Vectors of real numbers, by default zero vectors
+            Vectors of real numbers, by default None.
         h0_lambda_mats : numpy.ndarray, optional
             Positive definite symetric matrices, 
             by default the identity matrices.
             If a single matrix is input, it will be broadcasted.
         h0_alphas : float or numpy.ndarray, optional
-            Positive real numbers, 
-            by default [1.0, 1.0, ... , 1.0]
+            Positive real numbers, by default None.
             If a single real number is input, it will be broadcasted.
         h0_betas : float or numpy.ndarray, optional
-            Positive real numbers, 
-            by default [1.0, 1.0, ... , 1.0]
+            Positive real numbers, by default None.
             If a single real number is input, it will be broadcasted.
         """
         if h0_gamma_vec is not None:
@@ -624,6 +622,17 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self.reset_hn_params()
 
     def get_h0_params(self):
+        """Get the hyperparameters of the prior distribution.
+
+        Returns
+        -------
+        h0_params : dict of {str: numpy.ndarray}
+            * ``"h0_gamma_vec"`` : the value of ``self.h0_gamma_vec``
+            * ``"h0_mu_vecs"`` : the value of ``self.h0_mu_vecs``
+            * ``"h0_lambda_mats"`` : the value of ``self.h0_lambda_mats``
+            * ``"h0_alphas"`` : the value of ``self.h0_alphas``
+            * ``"h0_betas"`` : the value of ``self.h0_betas``
+        """
         return {'h0_gamma_vec':self.h0_gamma_vec,
                 'h0_mu_vecs':self.h0_mu_vecs,
                 'h0_lambda_mats':self.h0_lambda_mats,
@@ -638,6 +647,26 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             hn_alphas=None,
             hn_betas=None,
             ):
+        """Set the hyperparameter of the posterior distribution.
+
+        Parameters
+        ----------
+        hn_gamma_vec : float or numpy.ndarray, optional
+            A vector of positive real numbers, by default None.
+            If a single real number is input, it will be broadcasted.
+        hn_mu_vecs : numpy.ndarray, optional
+            Vectors of real numbers, by default None.
+        hn_lambda_mats : numpy.ndarray, optional
+            Positive definite symetric matrices, 
+            by default the identity matrices.
+            If a single matrix is input, it will be broadcasted.
+        hn_alphas : float or numpy.ndarray, optional
+            Positive real numbers, by default None.
+            If a single real number is input, it will be broadcasted.
+        hn_betas : float or numpy.ndarray, optional
+            Positive real numbers, by default None.
+            If a single real number is input, it will be broadcasted.
+        """
         if hn_gamma_vec is not None:
             _check.pos_floats(hn_gamma_vec,'hn_gamma_vec',ParameterFormatError)
             self.hn_gamma_vec[:] = hn_gamma_vec
@@ -671,6 +700,17 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         self.calc_pred_dist()
 
     def get_hn_params(self):
+        """Get the hyperparameters of the posterior distribution.
+
+        Returns
+        -------
+        hn_params : dict of {str: numpy.ndarray}
+            * ``"hn_gamma_vec"`` : the value of ``self.hn_gamma_vec``
+            * ``"hn_mu_vecs"`` : the value of ``self.hn_mu_vecs``
+            * ``"hn_lambda_mats"`` : the value of ``self.hn_lambda_mats``
+            * ``"hn_alphas"`` : the value of ``self.hn_alphas``
+            * ``"hn_betas"`` : the value of ``self.hn_betas``
+        """
         return {'hn_gamma_vec':self.hn_gamma_vec,
                 'hn_mu_vecs':self.hn_mu_vecs,
                 'hn_lambda_mats':self.hn_lambda_mats,
@@ -687,6 +727,16 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         pass
         
     def get_p_params(self):
+        """Get the parameters of the predictive distribution.
+
+        Returns
+        -------
+        p_params : dict of {str: numpy.ndarray}
+            * ``"p_pi_vec"`` : the value of ``self.p_pi_vec``
+            * ``"p_ms"`` : the value of ``self.p_ms``
+            * ``"p_lambdas"`` : the value of ``self.p_lambdas``
+            * ``"p_nus"`` : the value of ``self.p_nus``
+        """
         return {'p_pi_vec':self.p_pi_vec,
                 'p_ms':self.p_ms,
                 'p_lambdas':self.p_lambdas,
