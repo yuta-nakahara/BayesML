@@ -408,6 +408,9 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
         positive real numbers
     s_mats : numpy.ndarray
         positive difinite symmetric matrices
+    p_pi_vecs : numpy.ndarray
+        A vector of real numbers in :math:`[0, 1]`. 
+        Sum of its elements must be 1.0.
     p_mu_vecs : numpy.ndarray
         vectors of real numbers
     p_nus : numpy.ndarray

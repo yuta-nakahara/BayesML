@@ -449,6 +449,62 @@ class GenModel(base.Generative):
             )
 
 class LearnModel(base.Posterior,base.PredictiveMixin):
+    """The posterior distribution and the predictive distribution.
+
+    Parameters
+    ----------
+    c_num_classes : int
+        a positive integer
+    c_degree : int
+        a positive integer
+    h0_gamma_vec : float or numpy.ndarray, optional
+        A vector of positive real numbers, by default [1/2, 1/2, ... , 1/2]
+        If a single real number is input, it will be broadcasted.
+    h0_mu_vecs : numpy.ndarray, optional
+        Vectors of real numbers, by default zero vectors
+    h0_lambda_mats : numpy.ndarray, optional
+        Positive definite symetric matrices, 
+        by default the identity matrices.
+        If a single matrix is input, it will be broadcasted.
+    h0_alphas : float or numpy.ndarray, optional
+        Positive real numbers, 
+        by default [1.0, 1.0, ... , 1.0]
+        If a single real number is input, it will be broadcasted.
+    h0_betas : float or numpy.ndarray, optional
+        Positive real numbers, 
+        by default [1.0, 1.0, ... , 1.0]
+        If a single real number is input, it will be broadcasted.
+    seed : {None, int}, optional
+        A seed to initialize numpy.random.default_rng(),
+        by default None
+
+    Attributes
+    ----------
+    hn_gamma_vec : float or numpy.ndarray
+        A vector of positive real numbers.
+        If a single real number is input, it will be broadcasted.
+    hn_mu_vecs : numpy.ndarray
+        Vectors of real numbers.
+    hn_lambda_mats : numpy.ndarray
+        Positive definite symetric matrices. 
+    hn_alphas : float or numpy.ndarray
+        Positive real numbers. 
+    hn_betas : float or numpy.ndarray
+        Positive real numbers. 
+    r_vecs : numpy.ndarray
+        vectors of real numbers. The sum of its elenemts is 1.
+    ns : numpy.ndarray
+        positive real numbers
+    p_pi_vecs : numpy.ndarray
+        A vector of real numbers in :math:`[0, 1]`. 
+        Sum of its elements must be 1.0.
+    p_ms : numpy.ndarray
+        Real numbers
+    p_lambdas : numpy.ndarray
+        Positive real numbers
+    p_nus : numpy.ndarray
+        Positive real numbers
+    """
     def __init__(
             self,
             c_num_classes,
@@ -494,6 +550,17 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             h0_betas,
         )
 
+    def get_constants(self):
+        """Get constants of LearnModel.
+
+        Returns
+        -------
+        constants : dict of {str: int, numpy.ndarray}
+            * ``"c_num_classes"`` : the value of ``self.c_num_classes``
+            * ``"c_degree"`` : the value of ``self.c_degree``
+        """
+        return {"c_num_classes":self.c_num_classes, "c_degree":self.c_degree}
+
     def set_h0_params(
             self,
             h0_gamma_vec=None,
@@ -502,6 +569,28 @@ class LearnModel(base.Posterior,base.PredictiveMixin):
             h0_alphas=None,
             h0_betas=None,
             ):
+        """Set the hyperparameters of the prior distribution.
+
+        Parameters
+        ----------
+        h0_gamma_vec : float or numpy.ndarray, optional
+            A vector of positive real numbers, by default [1/2, 1/2, ... , 1/2]
+            If a single real number is input, it will be broadcasted.
+        h0_mu_vecs : numpy.ndarray, optional
+            Vectors of real numbers, by default zero vectors
+        h0_lambda_mats : numpy.ndarray, optional
+            Positive definite symetric matrices, 
+            by default the identity matrices.
+            If a single matrix is input, it will be broadcasted.
+        h0_alphas : float or numpy.ndarray, optional
+            Positive real numbers, 
+            by default [1.0, 1.0, ... , 1.0]
+            If a single real number is input, it will be broadcasted.
+        h0_betas : float or numpy.ndarray, optional
+            Positive real numbers, 
+            by default [1.0, 1.0, ... , 1.0]
+            If a single real number is input, it will be broadcasted.
+        """
         if h0_gamma_vec is not None:
             _check.pos_floats(h0_gamma_vec,'h0_gamma_vec',ParameterFormatError)
             self.h0_gamma_vec[:] = h0_gamma_vec
