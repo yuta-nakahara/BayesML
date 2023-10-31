@@ -199,6 +199,8 @@ class GenModel(base.Generative):
         ax[0].set_title("True distribution")
         for j in range(self.c_degree):
             ax[0].barh(0,self.theta_vec[j],left=self.theta_vec[:j].sum(),color=cmap(j / self.c_degree))
+        ax[0].tick_params(labelleft=False)
+        ax[0].tick_params(left=False)
         ax[1].set_title("Generated sample")
         for i in range(sample_num):
             x = self.gen_sample(sample_size)
@@ -211,7 +213,7 @@ class GenModel(base.Generative):
                         i,
                         count,
                         left=tmp_sum,
-                        label=j,
+                        label=f'{j}',
                         color=cmap(j / self.c_degree),
                     )
                     tmp_sum += count
