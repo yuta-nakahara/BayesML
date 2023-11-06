@@ -81,7 +81,7 @@ autodoc_default_options = {
 
 #numpydoc_show_class_members = False
 
-html_style = 'css/customize.css'
+# html_style = 'css/customize.css'
 
 autosummary_generate = True
 
