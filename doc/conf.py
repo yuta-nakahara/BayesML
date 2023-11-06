@@ -22,7 +22,7 @@ copyright = '2022, BayesML Developers'
 author = 'BayesML Developers'
 
 # The full version, including alpha/beta/rc tags
-release = '0.2.1'
+release = '0.2.5'
 
 
 # -- General configuration ---------------------------------------------------
@@ -81,7 +81,7 @@ autodoc_default_options = {
 
 #numpydoc_show_class_members = False
 
-html_style = 'css/customize.css'
+# html_style = 'css/customize.css'
 
 autosummary_generate = True
 
