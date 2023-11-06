@@ -134,7 +134,7 @@ BayesMLへのコントリビューションを考えてくださってありが�
 
 ```
 Y. Nakahara, N. Ichijo, K. Shimada, Y. Iikubo, 
-S. Saito, K. Kazama, T. Matsushima, BayesML Developers, ``BayesML 0.2.4,'' 
+S. Saito, K. Kazama, T. Matsushima, BayesML Developers, ``BayesML 0.2.5,'' 
 [Online] https://github.com/yuta-nakahara/BayesML
 ```
 
@@ -145,7 +145,7 @@ BibTeX
   author = {Nakahara, Yuta and Ichijo, Naoki and Shimada, Koshi and
             Iikubo, Yuji and Saito, Shota and Kazama, Koki and
             Matsushima, Toshiyasu and {BayesML Developers}},
-  title = {BayesML 0.2.4},
+  title = {BayesML 0.2.5},
   howpublished = {\url{https://github.com/yuta-nakahara/BayesML}},
   year = {2022}
 }

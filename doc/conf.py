@@ -22,7 +22,7 @@ copyright = '2022, BayesML Developers'
 author = 'BayesML Developers'
 
 # The full version, including alpha/beta/rc tags
-release = '0.2.1'
+release = '0.2.5'
 
 
 # -- General configuration ---------------------------------------------------
